@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataWorks Audio Perception Lab</title>
+<meta name="description" content="Home of the DataWorks Audio Perception Lab: audio for perception on the edge, self-supervised cross-modal learning, and audio-visual sound source localization.">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="home" data-root="">
+<a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
+<header class="site-header" id="site-header">
+  <a class="brand" href="index.html">
+    <svg class="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="11.5" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+      <g stroke-linecap="round" stroke-width="2">
+        <line x1="6" y1="11" x2="6" y2="15" style="stroke:var(--d-blue)"/>
+        <line x1="9.5" y1="7.5" x2="9.5" y2="18.5" style="stroke:var(--d-blue)"/>
+        <line x1="13" y1="5" x2="13" y2="21" style="stroke:var(--accent)"/>
+        <line x1="16.5" y1="9" x2="16.5" y2="17" style="stroke:var(--d-amber)"/>
+        <line x1="20" y1="11.5" x2="20" y2="14.5" style="stroke:var(--d-red)"/>
+      </g>
+    </svg>
+    <span class="brand-text">DataWorks <span class="dim">Audio Perception Lab</span></span>
+  </a>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Course pages">
+    <noscript><a href="index.html">Home</a> · <a href="setup.html">Setup</a> · <a href="concepts/01-digital-audio.html">Concepts</a> · <a href="project-ideas.html">Project ideas</a> · <a href="resources.html">Resources</a></noscript>
+  </nav>
+  <main class="main" id="content">
+    <article class="content">
+      <div class="hero">
+        <div class="eyebrow">UCSD DataWorks · Research lab</div>
+        <h1>DataWorks Audio Perception Lab</h1>
+        <p class="people">Lab lead: <strong>Rami Abukhater</strong></p>
+        <p class="lede">We build systems that understand the world through sound: tiny classifiers that survive noise on a microcontroller, audio models that teach themselves by watching a camera, and localizers that know where the walls are. This site teaches the concepts every member needs and lays out the three research modules.</p>
+      </div>
+
+      <h2>What this lab is about</h2>
+      <p>Most audio machine learning assumes clean clips, plenty of labels, and a big GPU. Perception in the real world gets none of those. A smoke-alarm detector has to run on a coin-sized board next to a running dishwasher. A home assistant cannot ask anyone to label ten thousand kitchen sounds. A robot that hears a crash has to work out whether it came from the doorway, the wall it echoed off, or the next room.</p>
+      <p>Our three modules each take on one of those gaps:</p>
+      <ol>
+        <li><strong>Edge audio classification and robustness.</strong> Compress audio CNNs to 8-bit integers, prune them, and measure exactly how much accuracy they lose as noise and reverberation get worse.</li>
+        <li><strong>Self-supervised audio learning via vision grounding.</strong> Let a frozen object detector watching a room supply pseudo-labels for the sounds it hears, and train an audio classifier from those, generation after generation.</li>
+        <li><strong>Audio-visual sound source localization with spatial physics.</strong> Combine microphone-array directions with a 3-D map of the room to tell visible sources from occluded ones and true sources from echoes.</li>
+      </ol>
+      <p>The details, including the repository folders each module owns, are on <a href="project-ideas.html">Project ideas</a>.</p>
+
+      <h2>Start here</h2>
+      <p>Everyone does setup and the six core concept pages, in order. They cover what all three modules rely on.</p>
+      <ol class="start-path">
+        <li><a href="setup.html"><span><span class="t">Environment setup</span><span class="d">Python, PyTorch, torchaudio, the lab's other tools, and a smoke test that must pass.</span></span></a></li>
+        <li><a href="concepts/01-digital-audio.html"><span><span class="t">Digital audio: sampling, bit depth, decibels</span><span class="d">What the numbers in an audio file mean, the Nyquist limit, aliasing, and dB.</span></span></a></li>
+        <li><a href="concepts/02-fourier-stft.html"><span><span class="t">The Fourier transform and the STFT</span><span class="d">From waveform to spectrogram, and the time-frequency trade-off.</span></span></a></li>
+        <li><a href="concepts/03-mel-spectrograms.html"><span><span class="t">Mel spectrograms and log-mel features</span><span class="d">The perceptual front end every model in the lab shares.</span></span></a></li>
+        <li><a href="concepts/04-noise-reverb-augmentation.html"><span><span class="t">Noise, SNR, reverberation, and augmentation</span><span class="d">Mixing at an exact SNR, room impulse responses, and SpecAugment.</span></span></a></li>
+        <li><a href="concepts/05-audio-cnns.html"><span><span class="t">Training CNNs on spectrograms</span><span class="d">Depthwise-separable networks, UrbanSound8K's folds, and a clean training loop.</span></span></a></li>
+        <li><a href="concepts/06-evaluation.html"><span><span class="t">Evaluation and experimental rigor</span><span class="d">Leakage, macro-F1, degradation curves, angular error, and reporting.</span></span></a></li>
+      </ol>
+
+      <h2>Then read your module's pages</h2>
+      <div class="table-scroll"><table class="plain">
+        <tr><th>Module</th><th>Concept pages</th></tr>
+        <tr><td><span class="track-tag m1" style="margin:0">M1</span> Edge audio classification</td><td><a href="concepts/07-edge-compression.html">7 · Quantization, pruning, and edge benchmarking</a></td></tr>
+        <tr><td><span class="track-tag m2" style="margin:0">M2</span> Vision-grounded self-supervision</td><td><a href="concepts/08-embeddings-ssl.html">8 · Embeddings, clustering, and SSL</a><br><a href="concepts/09-cross-modal-pseudo-labels.html">9 · Object detection, sync, and pseudo-labels</a></td></tr>
+        <tr><td><span class="track-tag m3" style="margin:0">M3</span> Audio-visual localization</td><td><a href="concepts/10-mic-arrays-gcc-phat.html">10 · Mic arrays, TDOA, and GCC-PHAT</a><br><a href="concepts/11-3d-geometry.html">11 · RGB-D, point clouds, and room geometry</a><br><a href="concepts/12-room-acoustics-occlusion.html">12 · Room acoustics, mirror sources, and occlusion</a></td></tr>
+      </table></div>
+      <p>Reading the other modules' pages is encouraged: Module 2 reuses Module 1's front end and augmentations, and Module 3's occlusion question is the spatial version of Module 2's "can the model hear what the camera cannot see?"</p>
+
+      <h2>How each concept page works</h2>
+      <ul>
+        <li><strong>The big idea</strong> in plain language first, then the math, with every symbol explained.</li>
+        <li><strong>Diagrams</strong> and, on many pages, an <strong>interactive demo</strong> you can play with in the browser: aliasing, the STFT trade-off, mel filters, SNR mixing (with audio), int8 quantization, two-mic delays, and a draggable mirror-source room.</li>
+        <li><strong>Code</strong> you can copy, with tensor shapes and a line-by-line walkthrough. Every snippet on this site was run before it was published.</li>
+        <li><strong>Where it shows up in the lab</strong>, linking the concept to repository folders.</li>
+        <li><strong>Check your understanding</strong> questions with click-to-reveal answers, and a list of <strong>common mistakes</strong>.</li>
+      </ul>
+
+      <div class="callout">
+        <span class="callout-title">How long will this take?</span>
+        <p>Setup takes about 30 minutes. Each concept page takes 30 to 45 minutes to read properly with the demos and questions. Budget a week for the six core pages alongside your other commitments, then a few days for your module's pages.</p>
+      </div>
+
+      <h2>What you need to know already</h2>
+      <ul>
+        <li><strong>Python and NumPy</strong>: functions, arrays, slicing, and reading other people's code.</li>
+        <li><strong>Basic linear algebra</strong>: vectors, dot products, matrix multiplication.</li>
+        <li><strong>A little calculus and trigonometry</strong>: sines and cosines, logarithms. The pages explain everything else, including complex numbers where they appear.</li>
+        <li><strong>Some PyTorch</strong> helps but is not required.</li>
+      </ul>
+
+      <div class="link-row">
+        <a href="setup.html">Setup</a>
+        <a href="concepts/01-digital-audio.html">Concept 1</a>
+        <a href="project-ideas.html">Project ideas</a>
+        <a href="resources.html">Resources and glossary</a>
+      </div>
+
+      <nav class="pager" id="pager"></nav>
+      <footer class="site-footer" id="site-footer">
+        <noscript><p>DataWorks Audio Perception Lab, UCSD DataWorks. Lab lead: Rami Abukhater.</p></noscript>
+      </footer>
+    </article>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="assets/js/site.js"></script>
+</body>
+</html>

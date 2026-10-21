@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Secrets and local environment
+.env
+.env.*
+*.key
+
+# Data, recordings, and model weights never go in the repo
+datasets/
+recordings/
+*.wav
+*.flac
+*.mp3
+*.ogg
+*.m4a
+*.mp4
+*.mov
+*.avi
+*.bag
+*.ply
+*.pcd
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.tflite
+runs/
+wandb/
+
+# Smoke test outputs
+smoke_test.wav
+smoke_test.png
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/

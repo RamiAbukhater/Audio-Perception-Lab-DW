@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Microphone arrays, TDOA, and GCC-PHAT · DataWorks Audio Perception Lab</title>
+<meta name="description" content="Time difference of arrival, far-field geometry, cross-correlation, the phase transform, and turning delays into azimuth and elevation.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-page="c10" data-root="../">
+<a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
+<header class="site-header" id="site-header">
+  <a class="brand" href="../index.html">
+    <svg class="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="11.5" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+      <g stroke-linecap="round" stroke-width="2">
+        <line x1="6" y1="11" x2="6" y2="15" style="stroke:var(--d-blue)"/>
+        <line x1="9.5" y1="7.5" x2="9.5" y2="18.5" style="stroke:var(--d-blue)"/>
+        <line x1="13" y1="5" x2="13" y2="21" style="stroke:var(--accent)"/>
+        <line x1="16.5" y1="9" x2="16.5" y2="17" style="stroke:var(--d-amber)"/>
+        <line x1="20" y1="11.5" x2="20" y2="14.5" style="stroke:var(--d-red)"/>
+      </g>
+    </svg>
+    <span class="brand-text">DataWorks <span class="dim">Audio Perception Lab</span></span>
+  </a>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Course pages">
+    <noscript><a href="../index.html">Home</a> · <a href="../setup.html">Setup</a> · <a href="../concepts/01-digital-audio.html">Concepts</a> · <a href="../project-ideas.html">Project ideas</a> · <a href="../resources.html">Resources</a></noscript>
+  </nav>
+  <main class="main" id="content">
+    <article class="content">
+      <div class="eyebrow">Concept 10 of 12 · Module 3 · Audio-visual localization</div>
+      <h1>Microphone arrays, TDOA, and GCC-PHAT</h1>
+      <p class="lede">You can tell where a sound comes from with your eyes closed because it reaches one ear slightly before the other. A microphone array does the same thing with several "ears" a few centimetres apart. This page covers how to measure those tiny delays robustly with GCC-PHAT, and how to turn them into azimuth and elevation angles, which is Stream A of Module 3.</p>
+
+      <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
+        <li><a href="#idea">The big idea</a></li><li><a href="#geometry">Far-field geometry</a></li><li><a href="#xcorr">Cross-correlation</a></li>
+        <li><a href="#phat">The phase transform (PHAT)</a></li><li><a href="#code">GCC-PHAT in code</a></li><li><a href="#multi">From delays to azimuth and elevation</a></li>
+        <li><a href="#limits">Resolution, aliasing, and ambiguity</a></li><li><a href="#hardware">Hardware and beyond GCC-PHAT</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
+
+      <h2 id="idea">The big idea</h2>
+      <p>Sound travels at about \(c = 343\) m/s in room-temperature air. Over 10 cm that takes 0.29 ms. If a sound arrives at microphone 2 that much later than at microphone 1, it came from microphone 1's side, along the line through both. Smaller delays mean the source is more in front. The delay between two microphones is the <strong>time difference of arrival</strong> (TDOA), and every classical direction-of-arrival (DOA) method is a way of measuring TDOAs, or their frequency-domain equivalent, robustly.</p>
+
+      <h2 id="geometry">Far-field geometry</h2>
+      <p>When the source is much farther away than the array is wide (a few metres versus a few centimetres), the arriving wavefronts are effectively flat: the <strong>far-field</strong> or plane-wave assumption. For two mics a distance \(d\) apart and a source at angle \(\theta\) from broadside (the direction perpendicular to the line between them), the extra distance to the far mic is \(d \sin\theta\), so</p>
+      \[ \tau = \frac{d\,\sin\theta}{c}, \qquad \theta = \arcsin\!\left(\frac{c\,\tau}{d}\right). \]
+      <p>The largest possible delay is \(d/c\), when the source is end-on (\(\theta = \pm 90°\)). Any measured \(|\tau|\) larger than that is physically impossible and must be an error, which is why we limit the search to \(|\tau| \le d/c\).</p>
+
+      <div class="demo" id="demo-doa">
+        <span class="demo-title">Two microphones, one plane wave</span>
+        <p class="demo-sub">Amber lines are wavefronts arriving from the source direction. Green ticks are the only angles you can report if you measure the delay in whole samples. Shrink the spacing or the sample rate and watch the resolution fall apart.</p>
+        <canvas width="700" height="350" aria-label="Two microphones with an incoming plane wave"></canvas>
+        <div class="controls">
+          <label>Source angle θ <output for="theta"></output><input type="range" name="theta" min="-90" max="90" value="35"></label>
+          <label>Mic spacing d <output for="d"></output><input type="range" name="d" min="2" max="30" value="6"></label>
+          <label>Sample rate <select><option value="16000" selected>16 kHz</option><option value="48000">48 kHz</option></select></label>
+        </div>
+        <div class="readout"></div>
+        <noscript>This demo needs JavaScript.</noscript>
+      </div>
+
+      <h2 id="xcorr">Cross-correlation</h2>
+      <p>To find the delay between two recordings \(x_1\) and \(x_2\), slide one against the other and see where they match best. That is the <strong>cross-correlation</strong>:</p>
+      \[ R_{12}[\ell] = \sum_n x_1[n]\, x_2[n - \ell], \qquad \hat\tau = \frac{1}{f_s}\arg\max_\ell R_{12}[\ell]. \]
+      <p>Computed directly this is slow; via the FFT it is fast, because correlation in time is multiplication by a conjugate in frequency: \(R_{12} = \mathcal F^{-1}\{X_1 X_2^*\}\).</p>
+      <p>Plain cross-correlation works badly in rooms. Most everyday sounds are dominated by low frequencies and harmonics, so the correlation peak is broad and wobbly, and reverberation adds side peaks from reflections. The peak you want gets buried.</p>
+
+      <h2 id="phat">The phase transform (PHAT)</h2>
+      <p>A pure delay \(\tau\) does one thing in the frequency domain: it rotates the phase of each frequency \(f\) by \(2\pi f\tau\). Its magnitude is irrelevant. <strong>Generalized cross-correlation with phase transform</strong> (GCC-PHAT; Knapp and Carter, 1976) therefore throws the magnitude away and keeps only phase, by dividing the cross-spectrum by its own magnitude:</p>
+      \[ R^{\text{PHAT}}_{12}(\tau) = \mathcal F^{-1}\!\left\{ \frac{X_1(f)\, X_2^*(f)}{\lvert X_1(f)\, X_2^*(f)\rvert} \right\}. \]
+      <p>Every frequency now votes with equal weight for the same delay, so in the ideal case the result is a sharp spike at the true \(\tau\). That whitening makes GCC-PHAT much more robust to reverberation and to sounds with uneven spectra. The cost: frequencies containing only noise also get equal weight, so at low SNR it helps to apply PHAT only where the signal is present (by masking bins or gating on activity).</p>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 720 200" role="img" aria-labelledby="d10t d10d">
+          <title id="d10t">Plain cross-correlation versus GCC-PHAT</title>
+          <desc id="d10d">Left: plain cross-correlation in a room has a broad peak with several side lobes from reflections. Right: GCC-PHAT has a single sharp peak at the true delay with small side peaks.</desc>
+          <text x="180" y="22" text-anchor="middle" class="t-md">plain cross-correlation</text>
+          <line x1="30" y1="170" x2="330" y2="170" class="ln"/>
+          <path d="M30,165 C60,160 80,150 100,140 C120,125 135,100 150,70 C160,50 170,48 180,60 C195,85 205,110 215,118 C225,123 235,95 245,92 C255,95 265,130 280,145 C300,158 315,162 330,165" class="ln s-blue" stroke-width="2" fill="none"/>
+          <line x1="168" y1="40" x2="168" y2="175" class="ln s-red" stroke-dasharray="3 3"/>
+          <text x="168" y="192" text-anchor="middle" class="t-sm" style="fill:var(--d-red)">true τ</text>
+          <text x="250" y="80" class="t-sm muted">reflection</text>
+          <line x1="360" y1="30" x2="360" y2="190" class="ln" stroke-dasharray="2 4" opacity=".5"/>
+          <text x="545" y="22" text-anchor="middle" class="t-md">GCC-PHAT</text>
+          <line x1="395" y1="170" x2="695" y2="170" class="ln"/>
+          <path d="M395,168 L470,167 L500,165 L520,166 L528,162 L533,40 L538,162 L545,166 L590,164 L600,140 L606,165 L640,167 L695,168" class="ln s-blue" stroke-width="2" fill="none"/>
+          <line x1="533" y1="40" x2="533" y2="175" class="ln s-red" stroke-dasharray="3 3"/>
+          <text x="533" y="192" text-anchor="middle" class="t-sm" style="fill:var(--d-red)">true τ</text>
+          <text x="610" y="132" class="t-sm muted">reflection</text>
+        </svg>
+        <figcaption>Schematic. Whitening the cross-spectrum turns a broad, reflection-confused bump into a sharp peak. Reflections still leave smaller peaks, which is what Module 3's physics layer has to reason about.</figcaption>
+      </figure>
+
+      <h2 id="code">GCC-PHAT in code</h2>
+<pre><code class="language-python">import numpy as np
+
+def gcc_phat(sig, ref, fs, max_tau=None, interp=16):
+    """Delay of `sig` relative to `ref` in seconds (positive: sig arrives later)."""
+    n = len(sig) + len(ref)                       # zero-pad: avoid circular wrap-around
+    SIG = np.fft.rfft(sig, n=n)
+    REF = np.fft.rfft(ref, n=n)
+    R = SIG * np.conj(REF)
+    R /= np.abs(R) + 1e-15                        # PHAT: keep phase, drop magnitude
+    cc = np.fft.irfft(R, n=interp * n)            # zero-padded inverse = interpolated correlation
+
+    max_shift = interp * n // 2
+    if max_tau is not None:                       # physically possible lags only
+        max_shift = min(int(interp * fs * max_tau), max_shift)
+    cc = np.concatenate((cc[-max_shift:], cc[:max_shift + 1]))   # lags -max..+max
+    shift = np.argmax(np.abs(cc)) - max_shift
+    return shift / float(interp * fs), cc
+
+C, d, fs = 343.0, 0.10, 16_000
+tau, _ = gcc_phat(mic2, mic1, fs, max_tau=d / C)
+theta = np.degrees(np.arcsin(np.clip(C * tau / d, -1, 1)))
+</code></pre>
+      <div class="walk">
+        <ul>
+          <li><strong>Zero-padding to <code>len(sig) + len(ref)</code></strong> makes the FFT correlation linear rather than circular, so large lags do not wrap around.</li>
+          <li><strong><code>interp</code></strong>: computing the inverse FFT at 16× the length interpolates the correlation, giving sub-sample delay estimates. At 16 kHz one sample is 62.5 µs, which for a 10 cm array is a 12° step near broadside. Interpolation is how you get below that.</li>
+          <li><strong><code>max_tau = d / C</code></strong> discards impossible lags, which removes many spurious peaks.</li>
+          <li><strong><code>np.clip</code></strong> before <code>arcsin</code>: noise can push \(c\tau/d\) slightly past ±1.</li>
+          <li>In practice, run this on short frames (for example 64–128 ms), keep only frames where the sound is active, and combine estimates over time (median, or a histogram of angles).</li>
+        </ul>
+      </div>
+      <p>Tested on a synthetic broadband signal delayed by 3.4 samples at 16 kHz with 10 cm spacing, this returns 3.375 samples and an angle within half a degree of the truth.</p>
+
+      <h2 id="multi">From delays to azimuth and elevation</h2>
+      <p>With more than two microphones at known positions \(p_1, \dots, p_M\) (metres, in the array's own frame), and a far-field source in direction \(u\) (a unit vector), the delay of mic \(i\) relative to mic \(j\) is</p>
+      \[ \tau_{ij} = \frac{(p_j - p_i)\cdot u}{c}. \]
+      <p>Each pair gives one linear equation in \(u\). Stack all pairs and solve by least squares, then normalise \(u\) and convert to angles: azimuth \(\phi = \operatorname{atan2}(u_y, u_x)\) and elevation \(\epsilon = \arcsin(u_z)\).</p>
+<pre><code class="language-python">import itertools
+
+def doa_from_tdoas(mic_pos, fs, frames, c=343.0):
+    """mic_pos: (M, 3) mic positions in metres. frames: (M, N) synchronised audio block."""
+    B, taus = [], []
+    for i, j in itertools.combinations(range(len(mic_pos)), 2):
+        d = np.linalg.norm(mic_pos[j] - mic_pos[i])
+        tau, _ = gcc_phat(frames[i], frames[j], fs, max_tau=d / c)   # delay of i relative to j
+        B.append(mic_pos[j] - mic_pos[i])
+        taus.append(tau)
+    u, *_ = np.linalg.lstsq(np.array(B), c * np.array(taus), rcond=None)
+    u /= np.linalg.norm(u)
+    azimuth = np.degrees(np.arctan2(u[1], u[0]))
+    elevation = np.degrees(np.arcsin(np.clip(u[2], -1, 1)))
+    return azimuth, elevation
+</code></pre>
+      <p>With a simulated 4-mic tetrahedral array (3–3.5 cm radius) at 48 kHz and a source at 120° azimuth, 20° elevation, this recovers 120.0° and 19.9°. In a real room expect errors of several degrees, and occasional large errors from reflections.</p>
+      <ul>
+        <li><strong>2 mics</strong>: one angle only, with a front-back ambiguity (a "cone of confusion": every direction at the same angle to the mic axis gives the same delay).</li>
+        <li><strong>3+ mics in a plane</strong> (a circular array): full 360° azimuth, but elevation is ambiguous above versus below the plane.</li>
+        <li><strong>4+ mics not in one plane</strong>: azimuth and elevation.</li>
+      </ul>
+      <p>To use the direction with the camera, you need the array's pose in the camera's coordinate frame: a rotation and translation measured once with a ruler or calibrated by playing sounds from known positions (<a href="11-3d-geometry.html">Concept 11</a>).</p>
+
+      <h2 id="limits">Resolution, aliasing, and ambiguity</h2>
+      <ul>
+        <li><strong>Resolution</strong>: wider spacing gives larger delays and finer angles. Higher sample rates give finer delay steps. Both help.</li>
+        <li><strong>Spatial aliasing</strong>: if the spacing exceeds half a wavelength (\(d > \lambda/2\), that is, frequencies above \(f = c/2d\)), the phase difference wraps past \(\pi\) and several directions explain it equally well. For \(d = 10\) cm that limit is 1,715 Hz. GCC-PHAT on broadband sounds survives this because different frequencies alias differently and only the true delay is consistent across all of them, but narrowband sounds (a pure beep) above the limit will give ghost directions.</li>
+        <li><strong>Near field</strong>: if the source is within about \(2D^2/\lambda\) of an array of aperture \(D\), wavefronts are curved and the far-field formula is biased. For small arrays this is rarely a problem beyond 0.5 m.</li>
+        <li><strong>Reverberation</strong>: strong reflections create correlation peaks pointing at walls. That is the problem Module 3's physics layer (<a href="12-room-acoustics-occlusion.html">Concept 12</a>) is built to handle.</li>
+        <li><strong>Synchronisation</strong>: all channels must be sampled by the same clock. Two USB microphones each have their own clock that drifts; delays measured between them are meaningless after a few seconds. Use a single multichannel array.</li>
+      </ul>
+
+      <h2 id="hardware">Hardware and beyond GCC-PHAT</h2>
+      <p>Affordable synchronised arrays: the ReSpeaker 4-mic and 6-mic arrays, the miniDSP UMA-8, and the microphone arrays on some development boards. Record raw multichannel audio (no beamforming or noise suppression on the device, which destroys inter-channel timing), at 16 or 48 kHz.</p>
+      <p>Beyond pairwise GCC-PHAT, know the names of these; <a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a> implements most of them in <code>pyroomacoustics.doa</code>:</p>
+      <ul>
+        <li><strong>SRP-PHAT</strong> (steered response power): sum GCC-PHAT over all pairs for each candidate direction on a grid and pick the maximum. More robust than solving pairs separately; a strong baseline for Module 3.</li>
+        <li><strong>MUSIC</strong>: a subspace method with sharp peaks and the ability to find several sources at once; sensitive to reverberation.</li>
+        <li><strong>Learned DOA</strong>: networks (for example SELDnet, from the DCASE sound event localization and detection challenge) that predict direction from multichannel spectrograms and phase features.</li>
+      </ul>
+
+      <h2 id="check">Check your understanding</h2>
+      <details class="q"><summary><span class="qn">Q1.</span>Mics are 5 cm apart, \(f_s\) = 16 kHz. What is the largest possible delay in samples?</summary>
+        <div class="answer"><p>\(d/c = 0.05/343 = 146\) µs, times 16,000 = 2.3 samples. Only lags −2 to +2 are possible as whole samples, which is just five angles. This is why interpolation, a higher sample rate, or wider spacing matter.</p></div></details>
+      <details class="q"><summary><span class="qn">Q2.</span>Why does PHAT divide by the magnitude of the cross-spectrum?</summary>
+        <div class="answer"><p>A delay affects only phase. Removing magnitude makes every frequency contribute equally to the delay estimate, giving a sharp peak and preventing a few strong low-frequency components (or the room's resonances) from dominating.</p></div></details>
+      <details class="q"><summary><span class="qn">Q3.</span>A 2-mic array reports θ = 30°. Where could the source be?</summary>
+        <div class="answer"><p>Anywhere on a cone around the mic axis making that angle: in front at 30°, behind at the mirrored angle, or above or below. Two mics alone cannot resolve it; more mics, or a camera, can.</p></div></details>
+      <details class="q"><summary><span class="qn">Q4.</span>A 3 kHz beep is localised with a 10 cm array and gives two conflicting answers. Why?</summary>
+        <div class="answer"><p>3 kHz is above the spatial aliasing limit of \(343/(2 \times 0.1) \approx 1.7\) kHz. For a narrowband sound the phase difference wraps, so several delays fit equally well.</p></div></details>
+
+      <h2 id="mistakes">Common mistakes</h2>
+      <ul class="mistakes">
+        <li><strong>Getting the sign convention wrong</strong> (which mic is the reference), so every angle is mirrored. Test with a sound played from a known side.</li>
+        <li><strong>Not limiting lags to \(\pm d/c\)</strong>, so impossible peaks win.</li>
+        <li><strong>Circular correlation</strong> from FFTs without zero-padding.</li>
+        <li><strong>Separate USB mics</strong> with independent clocks.</li>
+        <li><strong>Running on silence</strong>: GCC-PHAT on noise-only frames returns random angles with full confidence. Gate on activity.</li>
+        <li><strong>Wrong mic coordinates</strong>, or coordinates in the wrong frame or units (millimetres versus metres).</li>
+      </ul>
+
+      <nav class="pager" id="pager"></nav>
+      <footer class="site-footer" id="site-footer">
+        <noscript><p>DataWorks Audio Perception Lab, UCSD DataWorks. Lab lead: Rami Abukhater.</p></noscript>
+      </footer>
+    </article>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../assets/js/site.js"></script>
+<script src="../assets/js/demos.js"></script>
+</body>
+</html>

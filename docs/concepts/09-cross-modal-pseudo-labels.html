@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Object detection, sync, and cross-modal pseudo-labels · DataWorks Audio Perception Lab</title>
+<meta name="description" content="YOLO outputs, audio-video time alignment, confidence-gated pseudo-labelling, and teacher-student self-training.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-page="c9" data-root="../">
+<a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
+<header class="site-header" id="site-header">
+  <a class="brand" href="../index.html">
+    <svg class="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="11.5" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+      <g stroke-linecap="round" stroke-width="2">
+        <line x1="6" y1="11" x2="6" y2="15" style="stroke:var(--d-blue)"/>
+        <line x1="9.5" y1="7.5" x2="9.5" y2="18.5" style="stroke:var(--d-blue)"/>
+        <line x1="13" y1="5" x2="13" y2="21" style="stroke:var(--accent)"/>
+        <line x1="16.5" y1="9" x2="16.5" y2="17" style="stroke:var(--d-amber)"/>
+        <line x1="20" y1="11.5" x2="20" y2="14.5" style="stroke:var(--d-red)"/>
+      </g>
+    </svg>
+    <span class="brand-text">DataWorks <span class="dim">Audio Perception Lab</span></span>
+  </a>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Course pages">
+    <noscript><a href="../index.html">Home</a> · <a href="../setup.html">Setup</a> · <a href="../concepts/01-digital-audio.html">Concepts</a> · <a href="../project-ideas.html">Project ideas</a> · <a href="../resources.html">Resources</a></noscript>
+  </nav>
+  <main class="main" id="content">
+    <article class="content">
+      <div class="eyebrow">Concept 9 of 12 · Module 2 · Self-supervised learning</div>
+      <h1>Object detection, sync, and cross-modal pseudo-labels</h1>
+      <p class="lede">Module 2's central trick is to let a camera do the labelling. When the audio cluster for "beep-beep-beep" keeps showing up while a frozen object detector reports a microwave in view, we can guess that cluster means "microwave" and train an audio classifier on that guess. This page covers the detector, getting audio and video onto the same clock, deciding when a guess is trustworthy, and the iterative loop that improves the student model generation by generation.</p>
+
+      <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
+        <li><a href="#idea">The big idea</a></li><li><a href="#yolo">What an object detector outputs</a></li><li><a href="#sync">Getting audio and video on one clock</a></li>
+        <li><a href="#cooccur">Co-occurrence: linking clusters to objects</a></li><li><a href="#gate">Confidence gating</a></li><li><a href="#loop">The teacher-student loop</a></li>
+        <li><a href="#pitfalls">Confirmation bias and other traps</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
+
+      <h2 id="idea">The big idea</h2>
+      <p>Labelling sounds by hand is slow. Labelling images is a solved problem for many everyday objects: detectors trained on COCO find microwaves, keyboards, laptops, and sinks reliably. Sound and sight are correlated in time: a microwave beeps when someone is standing at it, typing happens when a person sits at a keyboard. Module 2 turns that correlation into labels:</p>
+      <ol>
+        <li>Record synchronised audio and video in an indoor space.</li>
+        <li>Run a frozen detector on video frames → "what is visible, and where" over time.</li>
+        <li>Embed and cluster the audio → "which windows sound alike" (<a href="08-embeddings-ssl.html">Concept 8</a>).</li>
+        <li>Find clusters that reliably co-occur with a visual class → assign a <strong>pseudo-label</strong>, but only when confidence is high.</li>
+        <li>Train a student audio classifier on the pseudo-labels, re-embed, re-cluster, repeat.</li>
+      </ol>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 720 300" role="img" aria-labelledby="d9t d9d">
+          <title id="d9t">The vision-grounded pseudo-labelling loop</title>
+          <desc id="d9d">Camera frames go through a frozen YOLO detector to give time-stamped object tags. Microphone audio goes through the student encoder and clustering. A gating step combines the two to produce pseudo-labels, which train the student encoder; the loop repeats each generation.</desc>
+          <defs><marker id="a9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--d-line)"/></marker></defs>
+          <g class="t-md">
+            <rect x="20" y="30" width="120" height="50" rx="6" class="box"/><text x="80" y="60" text-anchor="middle">camera</text>
+            <rect x="180" y="30" width="160" height="50" rx="6" class="box" style="stroke:var(--d-blue)"/><text x="260" y="52" text-anchor="middle">YOLO (frozen)</text><text x="260" y="70" text-anchor="middle" class="t-sm muted">class, box, conf, t</text>
+            <rect x="20" y="190" width="120" height="50" rx="6" class="box"/><text x="80" y="220" text-anchor="middle">microphone</text>
+            <rect x="180" y="190" width="160" height="50" rx="6" class="box" style="stroke:var(--d-green)"/><text x="260" y="212" text-anchor="middle">student encoder</text><text x="260" y="230" text-anchor="middle" class="t-sm muted">embed + cluster</text>
+            <rect x="390" y="110" width="150" height="60" rx="6" class="box2"/><text x="465" y="135" text-anchor="middle">gate</text><text x="465" y="155" text-anchor="middle" class="t-sm muted">co-occurrence + conf</text>
+            <rect x="580" y="110" width="120" height="60" rx="6" class="box"/><text x="640" y="135" text-anchor="middle">pseudo-</text><text x="640" y="155" text-anchor="middle">labels</text>
+          </g>
+          <rect x="18" y="98" width="124" height="74" rx="6" fill="none" class="ln" stroke-dasharray="3 3"/>
+          <text x="80" y="130" text-anchor="middle" class="t-sm">core/sync</text><text x="80" y="148" text-anchor="middle" class="t-sm muted">shared clock</text>
+          <g class="ln" stroke-width="1.5">
+            <line x1="140" y1="55" x2="178" y2="55" marker-end="url(#a9)"/>
+            <line x1="140" y1="215" x2="178" y2="215" marker-end="url(#a9)"/>
+            <line x1="340" y1="55" x2="420" y2="108" marker-end="url(#a9)"/>
+            <line x1="340" y1="215" x2="420" y2="172" marker-end="url(#a9)"/>
+            <line x1="540" y1="140" x2="578" y2="140" marker-end="url(#a9)"/>
+            <path d="M640,170 L640,275 L260,275 L260,243" fill="none" marker-end="url(#a9)"/>
+          </g>
+          <text x="450" y="292" text-anchor="middle" class="t-sm">fine-tune the student, then re-embed and repeat (generation g → g+1)</text>
+        </svg>
+        <figcaption>The Module 2 loop. The vision side never changes; the audio side gets better every generation, and the gate decides how much of the student's own output it is allowed to learn from.</figcaption>
+      </figure>
+
+      <h2 id="yolo">What an object detector outputs</h2>
+      <p>A detector like YOLOv8 takes an image and returns a list of detections. Each has a <strong>bounding box</strong> (pixel coordinates), a <strong>class</strong> from its training vocabulary, and a <strong>confidence</strong> in [0, 1]. Internally it predicts many candidate boxes and removes duplicates with <strong>non-maximum suppression</strong> (NMS): keep the most confident box, drop any other box of the same class that overlaps it by more than an IoU threshold.</p>
+<pre><code class="language-python">from ultralytics import YOLO
+
+detector = YOLO("yolov8n.pt")                      # nano model, COCO's 80 classes, frozen
+results = detector(frame, conf=0.25, verbose=False)[0]
+for box in results.boxes:
+    cls_name = results.names[int(box.cls)]          # e.g. "microwave", "keyboard", "person"
+    conf = float(box.conf)
+    x1, y1, x2, y2 = box.xyxy[0].tolist()
+</code></pre>
+      <div class="callout warn">
+        <span class="callout-title">Check the vocabulary before you design the study</span>
+        <p>COCO's 80 classes include <em>microwave, oven, toaster, sink, refrigerator, keyboard, mouse, laptop, cell phone, tv, clock, hair drier,</em> and <em>person</em>. They do <strong>not</strong> include doorbell, kettle, blender, door, or faucet. For classes outside the vocabulary you need an open-vocabulary detector (for example YOLO-World or OWL-ViT, prompted with text like "doorbell"), a fine-tuned detector, or a different visual cue (a door opening, a person at the door). Decide this early; it shapes the class list.</p>
+      </div>
+      <p>Two other facts to keep in mind. First, <strong>visible is not sounding</strong>: a keyboard is in view all day but makes noise only when someone types. Useful visual cues are often about <em>activity</em> (a person's hands near the keyboard, the microwave door opening, a box that appears or moves) rather than mere presence. Second, the detector has its own errors; a confidence threshold of 0.5 or higher, plus requiring a detection to persist over several frames, removes most flicker.</p>
+      <p><em>Licensing note:</em> Ultralytics YOLOv8 is AGPL-3.0. Fine for research use; if we ever ship code that bundles it, we must follow that license.</p>
+
+      <h2 id="sync">Getting audio and video on one clock</h2>
+      <p>Pseudo-labels are only as good as the alignment. If video runs 400 ms behind audio, a door slam gets paired with the frame before the door moved. The <code>/core/sync</code> engine must put both streams on one timeline:</p>
+      <ul>
+        <li><strong>Use one clock.</strong> Stamp audio buffers and video frames with the same monotonic clock on the same machine at capture time (<code>time.monotonic_ns()</code>), not with file creation times or two devices' wall clocks.</li>
+        <li><strong>Audio time is sample-accurate.</strong> Sample \(n\) of a buffer that started at \(t_0\) happened at \(t_0 + n/f_s\). Video timestamps jitter (frames are dropped, exposure varies); trust the per-frame timestamp, not "frame index ÷ 30".</li>
+        <li><strong>Measure the offset once.</strong> Clap in front of the camera. The clap's onset in audio and the frame where the hands meet should agree; their difference is the capture latency to subtract. Re-check after any hardware change.</li>
+        <li><strong>Window both streams the same way.</strong> For each audio window \([t, t + 1\,\text{s})\), aggregate detections from frames whose timestamps fall in that window: for example the maximum confidence per class, or the fraction of frames in which the class appears.</li>
+      </ul>
+<pre><code class="language-python">import numpy as np
+
+def visual_tags_per_window(win_starts, win_len, frame_times, frame_dets, classes, min_conf=0.5):
+    """For each audio window, the max detector confidence of each class over the frames inside it.
+
+    win_starts: (W,) window start times in seconds, on the shared clock
+    frame_times: (F,) frame timestamps on the same clock
+    frame_dets: list of F lists of (class_name, conf)
+    returns: (W, C) array of confidences in [0, 1]
+    """
+    idx = {c: k for k, c in enumerate(classes)}
+    tags = np.zeros((len(win_starts), len(classes)), dtype=np.float32)
+    for w, t0 in enumerate(win_starts):
+        lo, hi = np.searchsorted(frame_times, [t0, t0 + win_len])
+        for dets in frame_dets[lo:hi]:
+            for name, conf in dets:
+                if name in idx and conf >= min_conf:
+                    tags[w, idx[name]] = max(tags[w, idx[name]], conf)
+    return tags
+</code></pre>
+
+      <h2 id="cooccur">Co-occurrence: linking clusters to objects</h2>
+      <p>With a cluster id per audio window and a tag vector per window, count how often each cluster appears together with each visual class. Raw counts are misleading, because a class that is visible all day (the keyboard) co-occurs with everything. Normalise by how often each appears on its own. <strong>Lift</strong> (a form of pointwise mutual information) does that:</p>
+      \[ \text{lift}(c, y) = \frac{P(\text{cluster}=c,\ \text{tag}=y)}{P(\text{cluster}=c)\,P(\text{tag}=y)}. \]
+      <p>Lift is 1 when cluster and tag are independent and large when they appear together far more than chance. A cluster \(c\) is a candidate for label \(y\) if its lift with \(y\) is high <em>and</em> clearly higher than with any other class, and the pair has been seen enough times to trust (say at least 20 windows).</p>
+<pre><code class="language-python">def cluster_tag_lift(cluster_id, tags, n_clusters, thresh=0.5, eps=1e-9):
+    present = (tags >= thresh).astype(np.float32)                   # (W, C) binary
+    onehot = np.eye(n_clusters, dtype=np.float32)[cluster_id]       # (W, K)
+    joint = onehot.T @ present / len(cluster_id)                    # (K, C)  P(c, y)
+    p_c = onehot.mean(0)[:, None]                                   # (K, 1)  P(c)
+    p_y = present.mean(0)[None, :]                                  # (1, C)  P(y)
+    counts = onehot.T @ present                                     # (K, C)  support
+    return joint / (p_c * p_y + eps), counts
+</code></pre>
+
+      <h2 id="gate">Confidence gating</h2>
+      <p>The spec's "confidence-scoring policy" is the heart of Module 2: a pseudo-label is assigned only when several independent signals agree. A sensible first policy, applied per audio window:</p>
+      <ol>
+        <li><strong>Visual confidence</strong>: the matching class is detected in this window with confidence ≥ \(\tau_v\) (for example 0.6), and persists across frames.</li>
+        <li><strong>Cluster–class association</strong>: the window's cluster has lift ≥ \(\tau_\ell\) with that class, based on enough support.</li>
+        <li><strong>Audio confidence</strong>: the window is close to its cluster centroid (distance below a percentile threshold), or, from generation 2 on, the student classifier itself agrees with probability ≥ \(\tau_a\).</li>
+        <li><strong>Temporal agreement</strong> (optional, stronger): the audio onset falls within a short tolerance of a visual change (door opening, person arriving).</li>
+      </ol>
+      <p>Windows that fail any check get <strong>no label</strong>, not a "background" label. The output is a small, high-precision labelled set. Measure that precision on your hand-labelled check set every generation, and report the trade-off curve of pseudo-label precision versus how many windows got labelled as you vary the thresholds.</p>
+
+      <h2 id="loop">The teacher-student loop</h2>
+      <p>This is <strong>self-training</strong>, in the family of noisy student training (Xie et al., 2020) and pseudo-labelling (Lee, 2013):</p>
+      <ol>
+        <li><strong>Generation 0</strong>: a pretrained or contrastively trained encoder produces embeddings; clustering plus gating gives the first pseudo-labels.</li>
+        <li><strong>Train the student</strong> (encoder + classification head) on those labels, with strong augmentation (noise, SpecAugment, mixup). Augmentation is what lets the student generalise <em>beyond</em> its teacher instead of copying its mistakes.</li>
+        <li><strong>Relabel</strong>: run the student over all unlabelled windows. Its confident predictions, still gated by visual evidence, become the next generation's labels. Re-embed and re-cluster with the new encoder.</li>
+        <li><strong>Repeat</strong> and track, per generation: accuracy and macro-F1 on the hand-labelled test set, pseudo-label precision and coverage, and cluster quality. Those curves are the "classification convergence over generation cycles" the spec asks for.</li>
+      </ol>
+      <p>A useful extra result: once trained, does the audio classifier recognise sounds when the object is <em>out of view</em>? That is the whole point of learning from sound, and it connects directly to Module 3's occlusion question.</p>
+
+      <h2 id="pitfalls">Confirmation bias and other traps</h2>
+      <ul>
+        <li><strong>Confirmation bias</strong>: a wrong pseudo-label trains the student to be confidently wrong, which produces more of the same wrong label next generation. Keep thresholds high, keep the visual gate on every generation, cap how many labels any class can gain per generation, and watch precision on the check set. If precision falls, stop.</li>
+        <li><strong>Class imbalance</strong>: frequent sounds (typing) swamp rare ones (doorbell). Balance the pseudo-labelled set per class, or weight the loss.</li>
+        <li><strong>Spurious correlation</strong>: if the coffee machine is always used right after the microwave, the "microwave" label may attach to coffee-machine sounds. Data from several days and rooms, and the lift test, reduce this; looking at (and listening to) each cluster removes most of it.</li>
+        <li><strong>Leakage through time</strong>: split train and test by day or session (<a href="06-evaluation.html">Concept 6</a>).</li>
+        <li><strong>Privacy</strong>: an always-on camera and microphone in a shared space records people. Get consent from everyone who uses the space, post a notice, keep raw recordings off public repositories, and delete video once detections are extracted if you do not need it. Check with the faculty advisor whether IRB review applies.</li>
+      </ul>
+
+      <h2 id="check">Check your understanding</h2>
+      <details class="q"><summary><span class="qn">Q1.</span>The keyboard is detected in 90% of all windows. Cluster 12 co-occurs with "keyboard" in 92% of its windows. Is cluster 12 typing?</summary>
+        <div class="answer"><p>Not on this evidence. Lift is 0.92 / 0.90 ≈ 1.02, essentially independent. Almost every cluster co-occurs with the keyboard because it is always visible. You need an activity cue (hands on keys) or a cluster whose lift is clearly above 1.</p></div></details>
+      <details class="q"><summary><span class="qn">Q2.</span>Video timestamps lag the audio by 300 ms and windows are 1 s long. What goes wrong, and how do you detect it?</summary>
+        <div class="answer"><p>Short events near window edges get paired with the wrong window's detections, weakening co-occurrence and creating wrong labels. Detect it with a clap test or by cross-correlating audio onsets with visual change events; subtract the measured offset.</p></div></details>
+      <details class="q"><summary><span class="qn">Q3.</span>Why give failing windows no label rather than a "background" label?</summary>
+        <div class="answer"><p>Failing the gate means "not sure", not "nothing happened". Labelling them background would teach the student that real but unconfirmed events (an off-screen microwave) are background, which is exactly the generalisation we want it to make the other way.</p></div></details>
+      <details class="q"><summary><span class="qn">Q4.</span>What role does strong augmentation play in the student's training?</summary>
+        <div class="answer"><p>It forces the student to match the pseudo-labels under harder conditions than the teacher saw, so it learns more robust features and can end up better than the teacher, rather than just memorising the teacher's outputs and errors.</p></div></details>
+
+      <h2 id="mistakes">Common mistakes</h2>
+      <ul class="mistakes">
+        <li><strong>Assuming the detector knows your classes</strong> (doorbell is not in COCO).</li>
+        <li><strong>Treating presence as sound</strong>: the visible object is usually silent.</li>
+        <li><strong>Aligning by frame index</strong> instead of timestamps on a shared clock.</li>
+        <li><strong>Using raw co-occurrence counts</strong> instead of lift or PMI.</li>
+        <li><strong>No hand-labelled check set</strong>, so confirmation bias goes unnoticed until the end.</li>
+        <li><strong>Committing recordings of people</strong> to the repository.</li>
+      </ul>
+
+      <nav class="pager" id="pager"></nav>
+      <footer class="site-footer" id="site-footer">
+        <noscript><p>DataWorks Audio Perception Lab, UCSD DataWorks. Lab lead: Rami Abukhater.</p></noscript>
+      </footer>
+    </article>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

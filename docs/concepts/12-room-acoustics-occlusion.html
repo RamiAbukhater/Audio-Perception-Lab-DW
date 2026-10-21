@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Room acoustics, mirror sources, and occlusion · DataWorks Audio Perception Lab</title>
+<meta name="description" content="Reverberation time, the image-source method, line-of-sight checks, and fusing acoustic directions with room geometry.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-page="c12" data-root="../">
+<a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
+<header class="site-header" id="site-header">
+  <a class="brand" href="../index.html">
+    <svg class="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="11.5" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+      <g stroke-linecap="round" stroke-width="2">
+        <line x1="6" y1="11" x2="6" y2="15" style="stroke:var(--d-blue)"/>
+        <line x1="9.5" y1="7.5" x2="9.5" y2="18.5" style="stroke:var(--d-blue)"/>
+        <line x1="13" y1="5" x2="13" y2="21" style="stroke:var(--accent)"/>
+        <line x1="16.5" y1="9" x2="16.5" y2="17" style="stroke:var(--d-amber)"/>
+        <line x1="20" y1="11.5" x2="20" y2="14.5" style="stroke:var(--d-red)"/>
+      </g>
+    </svg>
+    <span class="brand-text">DataWorks <span class="dim">Audio Perception Lab</span></span>
+  </a>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Course pages">
+    <noscript><a href="../index.html">Home</a> · <a href="../setup.html">Setup</a> · <a href="../concepts/01-digital-audio.html">Concepts</a> · <a href="../project-ideas.html">Project ideas</a> · <a href="../resources.html">Resources</a></noscript>
+  </nav>
+  <main class="main" id="content">
+    <article class="content">
+      <div class="eyebrow">Concept 12 of 12 · Module 3 · Audio-visual localization</div>
+      <h1>Room acoustics, mirror sources, and occlusion</h1>
+      <p class="lede">In a real room, the microphone array hears the source <em>and</em> its reflections off every wall, and sometimes only the reflections. Audio-visual localizers that ignore this point at walls and glowing visual "sources" that cannot be making the sound. Stream C of Module 3 is a physics layer that knows where the walls are. This page gives you the acoustics it needs: how sound behaves in rooms, the mirror-source model of reflections, and how to combine an acoustic direction with a 3-D room map to decide what is visible, what is occluded, and what is an echo.</p>
+
+      <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
+        <li><a href="#idea">The big idea</a></li><li><a href="#propagation">How sound travels in a room</a></li><li><a href="#ism">The image-source method</a></li>
+        <li><a href="#try">Try it: reflections and occlusion</a></li><li><a href="#sim">Simulating rooms with pyroomacoustics</a></li><li><a href="#fusion">The physics fusion layer</a></li>
+        <li><a href="#eval">Evaluating it</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
+
+      <h2 id="idea">The big idea</h2>
+      <p>Light and sound behave differently around obstacles, and that difference is the opportunity in Module 3:</p>
+      <ul>
+        <li>A camera cannot see a kettle behind a wall or through a doorway. A microphone can hear it, because sound <strong>diffracts</strong> around edges (especially low frequencies, whose wavelengths are metres long) and <strong>reflects</strong> off walls into the array.</li>
+        <li>So an acoustic direction estimate may point at a doorway (the sound came <em>through</em> it), or at a blank wall (the strongest arrival was a <em>reflection</em>). A purely visual or purely learned audio-visual model would then highlight whatever object happens to be in that direction, which is wrong.</li>
+      </ul>
+      <p>If we know the room's geometry (<a href="11-3d-geometry.html">Concept 11</a>), we can predict where reflections of a source <em>should</em> appear, check whether a visual candidate is actually reachable along the acoustic ray, and say "the source is occluded" instead of guessing.</p>
+
+      <h2 id="propagation">How sound travels in a room</h2>
+      <ul>
+        <li><strong>Spreading</strong>: from a small source, intensity falls with the square of distance; pressure amplitude falls as \(1/r\). Doubling the distance costs 6 dB.</li>
+        <li><strong>Speed</strong>: about 343 m/s, so each metre of extra path adds 2.9 ms of delay.</li>
+        <li><strong>Reflection</strong>: hard surfaces (concrete, glass, whiteboards) reflect most energy; soft ones (curtains, carpets, people) absorb more. The fraction absorbed is the surface's <strong>absorption coefficient</strong> \(\alpha\), between 0 and 1, and it varies with frequency.</li>
+        <li><strong>Specular versus diffuse</strong>: a large flat wall reflects like a mirror (angle in equals angle out). Bookshelves and clutter scatter sound in many directions. The mirror model below assumes specular reflection, which is a good approximation for the early reflections off large walls.</li>
+        <li><strong>Diffraction</strong>: sound bends around edges and through openings. Wavelength is \(\lambda = c/f\): 3.4 m at 100 Hz, 34 cm at 1 kHz, 3.4 cm at 10 kHz. Obstacles much smaller than the wavelength barely block it; a wall blocks high frequencies much more than low ones, which is why a party next door sounds bass-heavy.</li>
+      </ul>
+      <p><strong>Reverberation time.</strong> Sabine's formula estimates RT60 from room volume \(V\) (m³) and total absorption \(A = \sum_i \alpha_i S_i\) (surface areas \(S_i\) in m²):</p>
+      \[ \text{RT}_{60} \approx 0.161\,\frac{V}{A}. \]
+      <p>Bigger, harder rooms ring longer. You will use this in reverse: given a target RT60, pick absorption values for a simulated room.</p>
+      <p><strong>The precedence effect.</strong> Humans localise a sound by its <em>first</em> arrival and suppress echoes arriving within a few tens of milliseconds. A good localizer should do the same: give the earliest strong arrival more weight than later, possibly louder, reflections. When the direct path is blocked, the first arrival is itself a reflection or a diffraction around an edge, and even humans get it wrong.</p>
+
+      <h2 id="ism">The image-source method</h2>
+      <p>A specular reflection off a flat wall looks, from the listener's side, exactly as if the sound came straight from a <strong>mirror image</strong> of the source on the far side of the wall. So instead of tracing bouncing rays, we place virtual sources (Allen and Berkley, 1979):</p>
+      <ul>
+        <li>Reflecting a source at \(p\) across the plane \(n\cdot x + d = 0\) (unit normal \(n\)) gives the image \(p' = p - 2\,(n \cdot p + d)\,n\).</li>
+        <li>The reflected path has the same length as the straight line from \(p'\) to the microphone, so its delay is \(\lVert p' - m\rVert / c\) and its level is roughly \(1/\lVert p' - m\rVert\) times the wall's reflection factor \(\sqrt{1-\alpha}\).</li>
+        <li>It arrives at the array from the <strong>direction of the image</strong>, not the direction of the source. That is exactly why a DOA estimator can point at a wall.</li>
+        <li>Reflecting the images again gives second-order images (two bounces), and so on. In a shoebox room \([0, L_x] \times [0, L_y] \times [0, L_z]\), the six first-order images are just coordinate flips:</li>
+      </ul>
+<pre><code class="language-python">import numpy as np
+
+def first_order_images(src, room):
+    """Six first-order mirror sources of `src` in a shoebox room with corner at the origin."""
+    Lx, Ly, Lz = room
+    x, y, z = src
+    return {"x=0": np.array([-x, y, z]),        "x=Lx": np.array([2*Lx - x, y, z]),
+            "y=0": np.array([x, -y, z]),        "y=Ly": np.array([x, 2*Ly - y, z]),
+            "floor": np.array([x, y, -z]),      "ceiling": np.array([x, y, 2*Lz - z])}
+
+def mirror_point(p, plane):
+    """Image of p across an arbitrary plane [a, b, c, d] with unit normal (a, b, c)."""
+    n, d = plane[:3], plane[3]
+    return p - 2 * (n @ p + d) * n
+</code></pre>
+      <p>For a 5 × 4 × 3 m room, a source at (1, 2, 1.5) and a mic at (4, 1, 1.2), the direct path is 3.18 m and the six first-order paths range from 4.16 m (floor) to 5.84 m (the \(y = L_y\) wall), arriving 2.9 to 7.7 ms after the direct sound.</p>
+      <p>A full image-source simulation also needs to check that each image is <strong>valid</strong> (the reflection point actually lies on the finite wall, and nothing blocks either leg of the path). For a shoebox all first-order images are valid; with partitions, doorways, and furniture you must check, which is the same line-of-sight test the fusion layer uses.</p>
+
+      <h2 id="try">Try it: reflections and occlusion</h2>
+      <div class="demo" id="demo-ism">
+        <span class="demo-title">Mirror sources in a 6 × 4 m room</span>
+        <p class="demo-sub">Top-down view. Drag the source S and the microphone M. Blue is the direct path, amber the four first-order wall reflections, with faint mirror sources outside the room. Turn on the partition (a wall with a doorway at the top) and move S behind it.</p>
+        <canvas width="700" height="440" aria-label="Top-down room with source, microphone, and reflection paths"></canvas>
+        <div class="row"><label style="flex-direction:row;align-items:center;gap:.4rem"><input type="checkbox" name="partition" checked> partition wall with a doorway</label></div>
+        <div class="readout"></div>
+        <noscript>This demo needs JavaScript.</noscript>
+      </div>
+      <p>With the partition on and S behind it, the direct path is blocked (red dashed), and the earliest unblocked arrival comes from a wall reflection. A DOA estimator will report that reflection's direction. Note what the readout ignores: diffraction through the doorway and over the partition, which in reality also reaches the mic, from the direction of the doorway edge.</p>
+
+      <h2 id="sim">Simulating rooms with pyroomacoustics</h2>
+      <p><a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a> (Scheibler, Bezzam, and Dokmanić, 2018) simulates shoebox or polygonal rooms with the image-source method (plus optional ray tracing for the late tail), places microphone arrays, and includes DOA algorithms. It is the fastest way to build a labelled Module 3 test set with exact source positions.</p>
+<pre><code class="language-python">import numpy as np
+import pyroomacoustics as pra
+
+fs, room_dim, rt60 = 16_000, [6.0, 4.0, 3.0], 0.5
+e_absorption, max_order = pra.inverse_sabine(rt60, room_dim)          # Sabine in reverse
+room = pra.ShoeBox(room_dim, fs=fs, materials=pra.Material(e_absorption), max_order=max_order)
+room.add_source([1.5, 2.8, 1.0], signal=np.random.randn(fs))          # 1 s of noise as the source
+
+centre = np.array([4.5, 1.5, 1.0])
+mics_xy = pra.circular_2D_array(center=centre[:2], M=6, phi0=0, radius=0.05)   # 6 mics, 5 cm radius
+room.add_microphone_array(np.vstack([mics_xy, np.full(6, centre[2])]))
+room.simulate()                                                       # room.mic_array.signals: (6, samples)
+
+X = np.array([pra.transform.stft.analysis(s, 512, 256).T for s in room.mic_array.signals])
+doa = pra.doa.algorithms["SRP"](mics_xy, fs, 512, c=343.0, num_src=1)   # SRP-PHAT
+doa.locate_sources(X, freq_range=[300, 3500])
+print(np.degrees(doa.azimuth_recon))
+</code></pre>
+      <p>We ran exactly this. The true azimuth from array to source is 156.6°.</p>
+      <div class="table-scroll"><table class="plain">
+        <tr><th>Room</th><th>SRP-PHAT</th><th>MUSIC</th></tr>
+        <tr><td>Anechoic (<code>max_order=0</code>)</td><td>157°</td><td>157°</td></tr>
+        <tr><td>RT60 = 0.5 s</td><td>175° (18° off)</td><td>255° (wrong)</td></tr>
+      </table></div>
+      <p>Same source, same array, same algorithms: reverberation alone moves SRP-PHAT by 18° and breaks MUSIC entirely. That gap is the problem Module 3 exists to attack, and a table like this, over many rooms and positions, is a natural first baseline.</p>
+
+      <h2 id="fusion">The physics fusion layer</h2>
+      <p>Inputs for one time window: a few acoustic direction candidates from Stream A (peaks of the GCC-PHAT or SRP map, with strengths and arrival order), the room planes and occupancy from Stream B, and visual candidate sources (detections with 3-D positions from depth). All are expressed in one frame. The layer then reasons in three steps, matching the spec's three bullets.</p>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 720 260" role="img" aria-labelledby="d12t d12d">
+          <title id="d12t">Decision logic of the physics fusion layer</title>
+          <desc id="d12d">For each acoustic direction, cast a ray into the room map. If a visual candidate lies on the ray before the first wall hit, label the source visible. If the ray hits a wall or doorway with no candidate, check whether the direction matches a mirror image of a known candidate: if so, it is a reflection; otherwise the source is occluded or off-screen.</desc>
+          <defs><marker id="a12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--d-line)"/></marker></defs>
+          <g class="t-sm">
+            <rect x="20" y="105" width="130" height="50" rx="6" class="box"/><text x="85" y="126" text-anchor="middle">acoustic DOA</text><text x="85" y="143" text-anchor="middle" class="muted">(Stream A)</text>
+            <rect x="185" y="105" width="150" height="50" rx="6" class="box2"/><text x="260" y="126" text-anchor="middle">cast ray in room map</text><text x="260" y="143" text-anchor="middle" class="muted">(Stream B)</text>
+            <rect x="375" y="20" width="160" height="52" rx="6" class="box" style="stroke:var(--d-green)"/><text x="455" y="42" text-anchor="middle">candidate on ray,</text><text x="455" y="60" text-anchor="middle">before first hit</text>
+            <rect x="375" y="104" width="160" height="52" rx="6" class="box" style="stroke:var(--d-amber)"/><text x="455" y="126" text-anchor="middle">matches a mirror</text><text x="455" y="144" text-anchor="middle">image of a candidate</text>
+            <rect x="375" y="188" width="160" height="52" rx="6" class="box" style="stroke:var(--d-red)"/><text x="455" y="210" text-anchor="middle">hits wall / doorway,</text><text x="455" y="228" text-anchor="middle">no candidate explains it</text>
+            <text x="560" y="51" style="fill:var(--d-green)" class="t-md">VISIBLE → localise</text>
+            <text x="560" y="135" style="fill:var(--d-amber)" class="t-md">REFLECTION → reassign</text>
+            <text x="560" y="219" style="fill:var(--d-red)" class="t-md">OCCLUDED / OFF-SCREEN</text>
+          </g>
+          <g class="ln" stroke-width="1.5">
+            <line x1="150" y1="130" x2="183" y2="130" marker-end="url(#a12)"/>
+            <line x1="335" y1="120" x2="373" y2="52" marker-end="url(#a12)"/>
+            <line x1="335" y1="130" x2="373" y2="130" marker-end="url(#a12)"/>
+            <line x1="335" y1="140" x2="373" y2="210" marker-end="url(#a12)"/>
+          </g>
+        </svg>
+        <figcaption>One acoustic direction, three possible explanations. The layer prefers the explanation that geometry supports, instead of trusting whatever is visible in that direction.</figcaption>
+      </figure>
+
+      <h3>1. Line-of-sight check</h3>
+      <p>Cast a ray from the array centre along the DOA. Find the distance \(s_{\text{wall}}\) to the first surface it hits (<a href="11-3d-geometry.html#rays">ray casting</a>). For each visual candidate at position \(q\), compute its angle to the ray and its distance along it. A candidate is <strong>line-of-sight consistent</strong> if its angular offset is within the DOA's uncertainty (say 10–15°) and it lies <em>before</em> the wall (\(\lVert q - o\rVert < s_{\text{wall}}\)). Also check the reverse: is the straight segment from the array to the candidate free of walls? A candidate behind a partition fails even if the angle matches.</p>
+
+      <h3>2. Occlusion and out-of-sight handling</h3>
+      <p>If the ray hits a wall, a doorway, or leaves the camera's field of view, and no candidate passes the check, do not force a visual match. Suppress the visual heatmap in that direction (this is the spec's "filter out false-positive visual heatmaps") and output <strong>occluded</strong> (ray enters a wall or a doorway) or <strong>off-screen</strong> (direction outside the camera's view), along with the direction itself. A doorway hit is especially informative: the source is probably in the next room, and the sound came through the opening.</p>
+
+      <h3>3. Multi-path reflection mapping</h3>
+      <p>For each visual candidate (or each source already confirmed visible), compute its first-order mirror images across the detected wall planes, and the direction from the array to each image. If an acoustic peak matches one of those directions, and its arrival is later than the candidate's direct-path peak by about the expected extra path length divided by \(c\), label that peak a <strong>reflection of that source</strong>. It is then removed from the list of sources instead of becoming a hallucinated second source on the wall.</p>
+<pre><code class="language-python">def angle_between(u, v):
+    u, v = u / np.linalg.norm(u), v / np.linalg.norm(v)
+    return np.degrees(np.arccos(np.clip(u @ v, -1, 1)))
+
+def explain_doa(doa_dir, array_pos, candidates, planes, room_hit_dist, tol_deg=12):
+    """Classify one acoustic direction as visible / reflection / occluded.
+
+    doa_dir: unit vector (room frame); candidates: list of (name, 3-D position);
+    planes: wall planes [a, b, c, d]; room_hit_dist: distance to first surface along doa_dir.
+    """
+    for name, q in candidates:                                    # 1. direct, line of sight
+        if (angle_between(doa_dir, q - array_pos) &lt; tol_deg
+                and np.linalg.norm(q - array_pos) &lt; room_hit_dist
+                and segment_is_clear(array_pos, q, planes)):
+            return "visible", name
+    for name, q in candidates:                                    # 3. first-order reflection
+        for plane in planes:
+            img = mirror_point(q, plane)
+            if angle_between(doa_dir, img - array_pos) &lt; tol_deg:
+                return "reflection", name
+    return "occluded", None                                       # 2. nothing explains it
+</code></pre>
+      <p><code>segment_is_clear</code> is the line-of-sight test: cast the segment from the array to the candidate against the room mesh or planes (<a href="11-3d-geometry.html#rays">Concept 11</a>) and return <code>False</code> if any surface is hit before the candidate. This is deliberately simple. Good projects will replace hard thresholds with probabilities (each explanation gets a likelihood from angular error, arrival order, and level), handle several simultaneous sources, and reason over time (a source that was visible a second ago and now produces a doorway DOA probably walked out).</p>
+
+      <h2 id="eval">Evaluating it</h2>
+      <p>The spec's benchmark (<code>/eval/ssl</code>) splits results by scenario. Build the test set so every clip has a known source position and a known category:</p>
+      <ul>
+        <li><strong>Visible</strong>: line of sight from array and camera to the source.</li>
+        <li><strong>Occluded</strong>: behind a partition or furniture, in the room.</li>
+        <li><strong>Off-screen / other room</strong>: outside the camera's view or through a doorway.</li>
+      </ul>
+      <p>Report, for each category: median and mean angular error (<a href="06-evaluation.html#angle">wrapped</a>), the fraction within 10° and 20°, the accuracy of the visible / occluded / off-screen classification itself (a confusion matrix), and the rate of hallucinated sources (visual heatmap peaks where nothing is making sound). Compare against two baselines: Stream A alone (plain GCC-PHAT or SRP-PHAT), and a naive fusion that picks the visual detection closest to the DOA. Add an ablation for each of the three physics steps.</p>
+
+      <h2 id="check">Check your understanding</h2>
+      <details class="q"><summary><span class="qn">Q1.</span>A source is at \(x = 1\) m in a room whose wall is the plane \(x = 0\). Where is its mirror image, and how much longer is the reflected path to a mic at \(x = 3\), same \(y\) and \(z\)?</summary>
+        <div class="answer"><p>The image is at \(x = -1\). Direct path: 2 m. Reflected path: distance from \(-1\) to \(3\) = 4 m, so 2 m longer, arriving \(2/343 \approx 5.8\) ms later and about 6 dB weaker before wall absorption.</p></div></details>
+      <details class="q"><summary><span class="qn">Q2.</span>Why can you hear a kettle in the next room but not see it?</summary>
+        <div class="answer"><p>Sound diffracts through the doorway and around edges, and reflects off surfaces into your room, because its wavelengths (centimetres to metres) are comparable to the openings. Light's wavelength is far too small to bend noticeably around a doorframe.</p></div></details>
+      <details class="q"><summary><span class="qn">Q3.</span>The strongest acoustic peak points at a blank wall, and a second, earlier, weaker peak points at a person talking. What should the fusion layer conclude?</summary>
+        <div class="answer"><p>The earlier peak is the direct path (precedence), and the person is the source. Check whether the wall peak matches the person's mirror image across that wall; if it does, it is a reflection of the same source and should not be reported as a second source.</p></div></details>
+      <details class="q"><summary><span class="qn">Q4.</span>Using Sabine's formula, what happens to RT60 if you hang curtains that double the room's total absorption?</summary>
+        <div class="answer"><p>It halves, since \(\text{RT}_{60} \propto V/A\).</p></div></details>
+
+      <h2 id="mistakes">Common mistakes</h2>
+      <ul class="mistakes">
+        <li><strong>Treating the loudest peak as the source.</strong> Use arrival order, not only strength.</li>
+        <li><strong>Assuming sound is blocked like light.</strong> Occluded sources are still heard, mostly through reflections and diffraction, and mostly at low frequencies.</li>
+        <li><strong>Mirroring across a plane whose normal is not unit length</strong>, which puts the image in the wrong place. Normalise \((a, b, c)\) first and divide \(d\) by the same factor.</li>
+        <li><strong>Forgetting to check that each image is valid</strong> (reflection point on the actual wall, both legs unblocked).</li>
+        <li><strong>Evaluating only on visible sources</strong>, which hides the cases the physics layer exists for.</li>
+        <li><strong>Testing in the same simulated rooms you tuned on.</strong> Hold out room shapes and RT60s.</li>
+      </ul>
+
+      <nav class="pager" id="pager"></nav>
+      <footer class="site-footer" id="site-footer">
+        <noscript><p>DataWorks Audio Perception Lab, UCSD DataWorks. Lab lead: Rami Abukhater.</p></noscript>
+      </footer>
+    </article>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../assets/js/site.js"></script>
+<script src="../assets/js/demos.js"></script>
+</body>
+</html>

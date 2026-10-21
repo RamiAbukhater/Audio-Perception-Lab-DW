@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mel spectrograms and log-mel features · DataWorks Audio Perception Lab</title>
+<meta name="description" content="The mel scale, mel filterbanks, log compression, normalisation, and the exact log-mel front end the lab uses.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-page="c3" data-root="../">
+<a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
+<header class="site-header" id="site-header">
+  <a class="brand" href="../index.html">
+    <svg class="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="11.5" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+      <g stroke-linecap="round" stroke-width="2">
+        <line x1="6" y1="11" x2="6" y2="15" style="stroke:var(--d-blue)"/>
+        <line x1="9.5" y1="7.5" x2="9.5" y2="18.5" style="stroke:var(--d-blue)"/>
+        <line x1="13" y1="5" x2="13" y2="21" style="stroke:var(--accent)"/>
+        <line x1="16.5" y1="9" x2="16.5" y2="17" style="stroke:var(--d-amber)"/>
+        <line x1="20" y1="11.5" x2="20" y2="14.5" style="stroke:var(--d-red)"/>
+      </g>
+    </svg>
+    <span class="brand-text">DataWorks <span class="dim">Audio Perception Lab</span></span>
+  </a>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Course pages">
+    <noscript><a href="../index.html">Home</a> · <a href="../setup.html">Setup</a> · <a href="../concepts/01-digital-audio.html">Concepts</a> · <a href="../project-ideas.html">Project ideas</a> · <a href="../resources.html">Resources</a></noscript>
+  </nav>
+  <main class="main" id="content">
+    <article class="content">
+      <div class="eyebrow">Concept 3 of 12 · Core · Everyone</div>
+      <h1>Mel spectrograms and log-mel features</h1>
+      <p class="lede">The input to nearly every model in this lab is a <strong>log-mel spectrogram</strong>: a small image of how energy is spread over time and over perceptually spaced frequency bands. This page builds it from the STFT, one step at a time, and fixes the exact front end the lab uses so that everyone's numbers are comparable.</p>
+
+      <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
+        <li><a href="#idea">The big idea</a></li><li><a href="#mel">The mel scale</a></li><li><a href="#fbank">Mel filterbanks</a></li>
+        <li><a href="#log">Why take the log</a></li><li><a href="#norm">Normalisation</a></li><li><a href="#mfcc">MFCCs, briefly</a></li>
+        <li><a href="#code">The lab's front end</a></li><li><a href="#lab">Where this shows up</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
+
+      <h2 id="idea">The big idea</h2>
+      <p>A raw STFT with <code>n_fft = 1024</code> has 513 frequency bins spaced evenly every 15.6 Hz. That is wasteful in two ways. First, it spends as many bins on 7,000–8,000 Hz as on 0–1,000 Hz, although most of the information that tells sounds apart sits in the lower range. Second, 513 rows per frame is a lot of input for a model that has to fit on a microcontroller.</p>
+      <p>The log-mel spectrogram fixes both, with three steps:</p>
+      <ol>
+        <li><strong>Power spectrogram</strong> from the STFT (<a href="02-fourier-stft.html">Concept 2</a>).</li>
+        <li><strong>Mel filterbank</strong>: pool the 513 linear bins into, say, 64 bands that are narrow at low frequencies and wide at high frequencies.</li>
+        <li><strong>Logarithm</strong>: convert each band's energy to decibels, so loud and quiet sounds land on a similar numeric scale.</li>
+      </ol>
+      <p>The result for a 4-second clip is a <span class="shape">(64, 201)</span> array, small enough to treat as a grayscale image and feed to a CNN.</p>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 720 170" role="img" aria-labelledby="d3t d3d">
+          <title id="d3t">The log-mel pipeline</title>
+          <desc id="d3d">Waveform goes to STFT, then magnitude squared, then mel filterbank, then log, then normalise, producing the model input.</desc>
+          <g class="t-md">
+            <rect x="10" y="50" width="105" height="56" rx="6" class="box"/><text x="62" y="76" text-anchor="middle">waveform</text><text x="62" y="96" text-anchor="middle" class="t-sm mono">(L,)</text>
+            <rect x="140" y="50" width="105" height="56" rx="6" class="box"/><text x="192" y="76" text-anchor="middle">|STFT|²</text><text x="192" y="96" text-anchor="middle" class="t-sm mono">(513, T)</text>
+            <rect x="270" y="50" width="120" height="56" rx="6" class="box2"/><text x="330" y="76" text-anchor="middle">mel filterbank</text><text x="330" y="96" text-anchor="middle" class="t-sm mono">(64, 513) @</text>
+            <rect x="415" y="50" width="105" height="56" rx="6" class="box"/><text x="467" y="76" text-anchor="middle">10·log₁₀</text><text x="467" y="96" text-anchor="middle" class="t-sm mono">(64, T)</text>
+            <rect x="545" y="50" width="165" height="56" rx="6" class="box"/><text x="627" y="76" text-anchor="middle">normalise → model</text><text x="627" y="96" text-anchor="middle" class="t-sm mono">(1, 64, T)</text>
+          </g>
+          <g class="ln" stroke-width="1.6"><line x1="115" y1="78" x2="138" y2="78"/><line x1="245" y1="78" x2="268" y2="78"/><line x1="390" y1="78" x2="413" y2="78"/><line x1="520" y1="78" x2="543" y2="78"/></g>
+          <text x="360" y="140" text-anchor="middle" class="t-sm muted">16 kHz audio · n_fft 1024 · hop 320 (20 ms) · 64 mel bands · T = 1 + L / 320</text>
+        </svg>
+        <figcaption>The front end every module shares. The filterbank is just a fixed matrix, so applying it is one matrix multiplication per clip.</figcaption>
+      </figure>
+
+      <h2 id="mel">The mel scale</h2>
+      <p>Human pitch perception is roughly linear below about 1 kHz and roughly logarithmic above it. A jump from 100 to 200 Hz sounds large; a jump from 7,000 to 7,100 Hz is barely noticeable. The <strong>mel scale</strong> is a warping of frequency built so that equal steps in mels sound like equal steps in pitch. The common (HTK) formula is</p>
+      \[ m = 2595 \log_{10}\!\left(1 + \frac{f}{700}\right), \qquad f = 700\left(10^{m/2595} - 1\right). \]
+      <p>By construction 1000 Hz is about 1000 mel. 8000 Hz is only about 2840 mel: the whole top half of a 16 kHz recording is squeezed into a fraction of the scale. (librosa defaults to a slightly different "Slaney" formula; torchaudio defaults to HTK. Either is fine as long as you use the same one everywhere.)</p>
+
+      <h2 id="fbank">Mel filterbanks</h2>
+      <p>To get \(M\) mel bands, place \(M + 2\) points evenly on the mel scale between <code>f_min</code> and <code>f_max</code>, convert them back to Hz, and draw a triangle from each point to the point two steps later, peaking in the middle. Each triangle is a <strong>filter</strong>: a set of weights over the linear STFT bins. A mel band's energy is the weighted sum of the power in the bins under its triangle.</p>
+      <p>Stack the \(M\) filters as rows of a matrix \(F\) of shape <span class="shape">(M, n_fft/2 + 1)</span>. Then the whole step is a single product:</p>
+      \[ \text{Mel} = F\, |X|^2 \qquad (M \times K)(K \times T) \to (M \times T). \]
+
+      <div class="demo" id="demo-mel">
+        <span class="demo-title">The mel filterbank</span>
+        <p class="demo-sub">Each triangle is one mel band. Notice how crowded the low frequencies are and how wide the top bands get.</p>
+        <canvas width="700" height="260" aria-label="Triangular mel filters over frequency"></canvas>
+        <div class="controls">
+          <label>Number of mel bands <output for="nmels"></output><input type="range" name="nmels" min="8" max="128" step="8" value="40"></label>
+          <label>Sample rate <select><option value="16000" selected>16 kHz</option><option value="22050">22.05 kHz</option><option value="44100">44.1 kHz</option></select></label>
+        </div>
+        <div class="readout"></div>
+        <noscript>This demo needs JavaScript.</noscript>
+      </div>
+      <p>One practical consequence: with too many mel bands for your <code>n_fft</code>, the lowest triangles become narrower than a single STFT bin and come out all zeros. torchaudio warns about "empty filterbanks". Fix it by using fewer bands, a larger <code>n_fft</code>, or a higher <code>f_min</code>.</p>
+
+      <h2 id="log">Why take the log</h2>
+      <p>Band energies span a huge range: a jackhammer band might be a million times stronger than the quietest band of a whisper. Fed raw, a network would see a few enormous numbers and a sea of near-zeros. Taking \(10\log_{10}\) compresses that range to something like −100 to 0 dB, which matches how loudness is perceived and keeps gradients well behaved.</p>
+      <p>Two details matter:</p>
+      <ul>
+        <li><strong>Add a floor</strong> before the log: \(\log(0)\) is \(-\infty\). <code>AmplitudeToDB</code> clamps at a tiny value for you; with raw <code>torch.log</code> add <code>1e-6</code> or so.</li>
+        <li><strong><code>top_db</code></strong> clips everything more than, say, 80 dB below the clip's loudest value. This stops near-silent regions from dominating the input with extremely negative values.</li>
+      </ul>
+      <p>The log also turns gain into an offset: making a clip 10 dB louder adds 10 to every cell. That is why normalising per clip, or per frequency band, removes most of the effect of recording level.</p>
+
+      <h2 id="norm">Normalisation</h2>
+      <p>Networks train best when inputs are roughly zero-mean, unit-variance. Two common choices:</p>
+      <ul>
+        <li><strong>Dataset statistics</strong>: compute the mean and standard deviation of log-mel values on the <em>training set only</em>, per mel band, and apply them everywhere. This is the standard choice and what Module 1 should use.</li>
+        <li><strong>Per-clip normalisation</strong>: subtract each clip's own mean. It removes gain differences completely, but it also removes the information that a clip is genuinely loud or quiet.</li>
+      </ul>
+      <p>Whatever you choose, save the statistics with the model. On the device you will compute the same front end, and the numbers must match bit for bit.</p>
+
+      <h2 id="mfcc">MFCCs, briefly</h2>
+      <p>Older systems take one more step: a discrete cosine transform over the log-mel bands, keeping the first 13 to 20 coefficients. These are <strong>MFCCs</strong> (mel-frequency cepstral coefficients). They were designed for speech recognition with small models. CNNs generally do better on log-mels directly, because the DCT mixes neighbouring bands and destroys the local, image-like structure that convolutions exploit. You will still see MFCCs in tinyML examples and in classical baselines (an SVM on mean MFCCs is a good sanity-check baseline for UrbanSound8K).</p>
+
+      <h2 id="code">The lab's front end</h2>
+      <p>Use these settings unless your project has a written reason to change them. Put the module in <code>models/edge_audio/frontend.py</code> and import it everywhere, rather than re-typing the parameters.</p>
+<pre><code class="language-python">import torch
+import torchaudio.transforms as T
+
+class LogMel(torch.nn.Module):
+    """Waveform (batch, samples) at 16 kHz -> log-mel (batch, 1, 64, frames)."""
+    def __init__(self, sr=16_000, n_fft=1024, hop=320, n_mels=64, f_min=20, f_max=8_000):
+        super().__init__()
+        self.mel = T.MelSpectrogram(
+            sample_rate=sr, n_fft=n_fft, win_length=n_fft, hop_length=hop,
+            n_mels=n_mels, f_min=f_min, f_max=f_max, power=2.0,
+        )
+        self.to_db = T.AmplitudeToDB(stype="power", top_db=80)
+
+    def forward(self, wav):
+        return self.to_db(self.mel(wav)).unsqueeze(1)   # add a channel axis for Conv2d
+
+frontend = LogMel()
+x = frontend(torch.randn(8, 4 * 16_000) * 0.1)          # eight 4-second clips
+print(x.shape)                                          # torch.Size([8, 1, 64, 201])
+</code></pre>
+      <div class="walk">
+        <ul>
+          <li><code>hop=320</code> is 20 ms at 16 kHz, so a 4-second clip gives \(1 + 64000/320 = 201\) frames.</li>
+          <li><code>power=2.0</code> gives a power spectrogram, which pairs with <code>stype="power"</code> (10·log₁₀). Using <code>power=1.0</code> with <code>stype="power"</code> halves every dB value, a silent bug.</li>
+          <li><code>f_max=8000</code> is Nyquist at 16 kHz. <code>f_min=20</code> drops DC and rumble below hearing.</li>
+          <li>Because <code>LogMel</code> is an <code>nn.Module</code>, it moves to the GPU with the model, and it runs inside the training loop so waveform augmentation can happen first.</li>
+        </ul>
+      </div>
+      <p>Then normalise with training-set statistics:</p>
+<pre><code class="language-python"># computed once over the training folds only; shape (1, 64, 1) so it broadcasts over time
+mean, std = stats["mean"], stats["std"]
+x = (x - mean) / (std + 1e-5)
+</code></pre>
+
+      <h2 id="lab">Where this shows up in the lab</h2>
+      <ul>
+        <li><strong>Module 1</strong>, <code>/models/edge_audio</code>: the model's input. On a microcontroller the front end itself costs time and RAM; count it in your latency numbers.</li>
+        <li><strong>Module 2</strong>: the student audio encoder consumes log-mels. Pretrained encoders (PANNs, BEATs, AST) each expect their <em>own</em> front-end settings, so check theirs before feeding them yours.</li>
+        <li><strong>Module 3</strong>: if you classify <em>what</em> is making the sound you localise, use this front end on one channel or on a beamformed signal.</li>
+      </ul>
+
+      <h2 id="check">Check your understanding</h2>
+      <details class="q"><summary><span class="qn">Q1.</span>What is the shape of the mel filterbank matrix for <code>n_fft = 1024</code> and 64 mel bands?</summary>
+        <div class="answer"><p><span class="shape">(64, 513)</span>: one row per mel band, one column per linear frequency bin (\(1024/2 + 1\)).</p></div></details>
+      <details class="q"><summary><span class="qn">Q2.</span>A clip is played 6 dB louder. What happens to its log-mel spectrogram (ignoring clipping and <code>top_db</code>)?</summary>
+        <div class="answer"><p>Every cell increases by 6 dB, a constant offset. Normalising with a per-clip mean would remove it entirely; dataset normalisation leaves it in.</p></div></details>
+      <details class="q"><summary><span class="qn">Q3.</span>Why are mel bands narrow at low frequency and wide at high frequency?</summary>
+        <div class="answer"><p>They are evenly spaced on the mel scale, which is nearly linear below 1 kHz and logarithmic above it, mirroring human pitch resolution. Evenly spaced mels become wider and wider in Hz.</p></div></details>
+      <details class="q"><summary><span class="qn">Q4.</span>Why should normalisation statistics be computed on the training folds only?</summary>
+        <div class="answer"><p>Using test data to compute them leaks information about the test set into the model's preprocessing. The effect is usually small for means and variances, but it is still leakage, and it breaks the rule that the test set is untouched until the end.</p></div></details>
+
+      <h2 id="mistakes">Common mistakes</h2>
+      <ul class="mistakes">
+        <li><strong>Mismatched <code>power</code> and <code>stype</code></strong> (magnitude spectrogram converted as if it were power).</li>
+        <li><strong>Forgetting the log</strong>, or feeding linear mel energies to a CNN. Training is slow and unstable.</li>
+        <li><strong>Empty mel filters</strong> from too many bands at a small <code>n_fft</code>. Read torchaudio's warnings.</li>
+        <li><strong>Different front ends</strong> in training, evaluation, and on device. Treat the front end as part of the model and version it.</li>
+        <li><strong>Feeding your log-mels to a pretrained model</strong> that expects 128 bands at 32 kHz, or its own normalisation constants.</li>
+        <li><strong>Displaying the spectrogram upside down</strong>: use <code>origin="lower"</code> in <code>imshow</code> so low frequencies are at the bottom.</li>
+      </ul>
+
+      <nav class="pager" id="pager"></nav>
+      <footer class="site-footer" id="site-footer">
+        <noscript><p>DataWorks Audio Perception Lab, UCSD DataWorks. Lab lead: Rami Abukhater.</p></noscript>
+      </footer>
+    </article>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../assets/js/site.js"></script>
+<script src="../assets/js/demos.js"></script>
+</body>
+</html>

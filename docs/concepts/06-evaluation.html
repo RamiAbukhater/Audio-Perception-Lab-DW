@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation and experimental rigor · DataWorks Audio Perception Lab</title>
+<meta name="description" content="Accuracy, macro-F1, confusion matrices, SNR degradation curves, angular error, leakage, seeds, and reporting.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-page="c6" data-root="../">
+<a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
+<header class="site-header" id="site-header">
+  <a class="brand" href="../index.html">
+    <svg class="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="11.5" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+      <g stroke-linecap="round" stroke-width="2">
+        <line x1="6" y1="11" x2="6" y2="15" style="stroke:var(--d-blue)"/>
+        <line x1="9.5" y1="7.5" x2="9.5" y2="18.5" style="stroke:var(--d-blue)"/>
+        <line x1="13" y1="5" x2="13" y2="21" style="stroke:var(--accent)"/>
+        <line x1="16.5" y1="9" x2="16.5" y2="17" style="stroke:var(--d-amber)"/>
+        <line x1="20" y1="11.5" x2="20" y2="14.5" style="stroke:var(--d-red)"/>
+      </g>
+    </svg>
+    <span class="brand-text">DataWorks <span class="dim">Audio Perception Lab</span></span>
+  </a>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Course pages">
+    <noscript><a href="../index.html">Home</a> · <a href="../setup.html">Setup</a> · <a href="../concepts/01-digital-audio.html">Concepts</a> · <a href="../project-ideas.html">Project ideas</a> · <a href="../resources.html">Resources</a></noscript>
+  </nav>
+  <main class="main" id="content">
+    <article class="content">
+      <div class="eyebrow">Concept 6 of 12 · Core · Everyone</div>
+      <h1>Evaluation and experimental rigor</h1>
+      <p class="lede">Every module ends in an evaluation suite: accuracy versus SNR in Module 1, convergence over pseudo-label generations in Module 2, angular error on visible versus occluded sources in Module 3. A research result is only as good as the measurement behind it. This page covers the metrics we use, the traps that inflate them, and how to report numbers other people can trust.</p>
+
+      <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
+        <li><a href="#idea">The big idea</a></li><li><a href="#splits">Splits and leakage</a></li><li><a href="#metrics">Classification metrics</a></li>
+        <li><a href="#curves">Degradation curves</a></li><li><a href="#angle">Angular error</a></li><li><a href="#variance">Seeds, variance, and baselines</a></li>
+        <li><a href="#report">Reporting checklist</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
+
+      <h2 id="idea">The big idea</h2>
+      <p>An evaluation answers one question: <em>how well will this work on data it has never seen, under the conditions we care about?</em> Three things must hold for the answer to mean anything:</p>
+      <ol>
+        <li>The test data is <strong>truly unseen</strong>: not used for training, not used for choosing hyperparameters, and not a near-copy of anything that was.</li>
+        <li>The metric <strong>matches the question</strong>: accuracy for balanced classes, macro-F1 when some classes are rare, angular error for directions.</li>
+        <li>The number comes with its <strong>uncertainty</strong>: how much it moves across seeds, folds, or recordings.</li>
+      </ol>
+
+      <h2 id="splits">Splits and leakage</h2>
+      <p>Use three disjoint sets: <strong>train</strong> (fit weights), <strong>validation</strong> (choose hyperparameters, epochs, thresholds), and <strong>test</strong> (report once, at the end). <strong>Leakage</strong> is anything that lets test information influence the model. Audio is especially prone to it, because one long recording is usually cut into many clips:</p>
+      <ul>
+        <li><strong>Recording-level leakage</strong>: clips from the same source recording, room, or session in both train and test. Split by recording or session, not by clip. (UrbanSound8K's folds do this for you; your own Module 2 and Module 3 recordings will not.)</li>
+        <li><strong>Augmentation leakage</strong>: the same noise or RIR files used in training augmentation and in the robustness test.</li>
+        <li><strong>Preprocessing leakage</strong>: normalisation statistics or cluster centroids fitted on all data.</li>
+        <li><strong>Selection leakage</strong>: looking at test results while iterating. The fix is discipline, not code.</li>
+      </ul>
+      <p>For Module 2 and Module 3, where you record your own data, decide the split <strong>before</strong> recording: for example, sessions on Mondays and Tuesdays are training, Wednesday is validation, Thursday is test; or room A is train and room B is test (which also measures generalisation to new rooms).</p>
+
+      <h2 id="metrics">Classification metrics</h2>
+      <ul>
+        <li><strong>Accuracy</strong>: fraction correct. Fine when classes are roughly balanced, as in UrbanSound8K (mostly).</li>
+        <li><strong>Per-class precision and recall</strong>: of the clips the model called "siren", what fraction were sirens (precision); of the real sirens, what fraction did it find (recall).</li>
+        <li><strong>F1</strong> is their harmonic mean; <strong>macro-F1</strong> averages F1 over classes equally, so rare classes count as much as common ones. Use it for Module 2, where indoor classes like "doorbell" are rare.</li>
+        <li><strong>Confusion matrix</strong>: rows are true classes, columns are predictions. It tells you <em>which</em> mistakes happen (air conditioner vs engine idling is the classic UrbanSound8K confusion). Always look at it.</li>
+      </ul>
+<pre><code class="language-python">from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
+
+acc = accuracy_score(y_true, y_pred)
+macro_f1 = f1_score(y_true, y_pred, average="macro")
+cm = confusion_matrix(y_true, y_pred, normalize="true")    # each row sums to 1
+print(classification_report(y_true, y_pred, target_names=CLASSES, digits=3))
+</code></pre>
+
+      <h2 id="curves">Degradation curves</h2>
+      <p>Module 1's headline figure is <strong>accuracy versus SNR</strong>: one line per model (float32 baseline, int8, pruned, each with and without noise augmentation), SNR on the x-axis from −10 dB to clean. The same pattern works for any stressor: RT60 on the x-axis for reverberation, gain in dB for level drops.</p>
+      <figure class="diagram">
+        <svg viewBox="0 0 720 260" role="img" aria-labelledby="d6t d6d">
+          <title id="d6t">Example accuracy versus SNR curves</title>
+          <desc id="d6d">Three illustrative curves rising from low accuracy at minus 10 dB to high accuracy for clean audio. The noise-augmented model degrades more gracefully than the baseline; the int8 model tracks the float model closely.</desc>
+          <line x1="70" y1="220" x2="680" y2="220" class="ln"/><line x1="70" y1="220" x2="70" y2="30" class="ln"/>
+          <g class="t-sm muted" text-anchor="middle">
+            <text x="100" y="240">−10</text><text x="200" y="240">−5</text><text x="300" y="240">0</text><text x="400" y="240">5</text><text x="500" y="240">10</text><text x="600" y="240">20</text><text x="660" y="240">clean</text>
+          </g>
+          <text x="375" y="257" text-anchor="middle" class="t-sm">SNR (dB)</text>
+          <g class="t-sm muted" text-anchor="end"><text x="62" y="224">10%</text><text x="62" y="130">50%</text><text x="62" y="40">90%</text></g>
+          <polyline points="100,205 200,180 300,135 400,95 500,72 600,60 660,55" fill="none" class="ln s-green" stroke-width="2.4"/>
+          <polyline points="100,212 200,200 300,170 400,120 500,82 600,62 660,55" fill="none" class="ln s-blue" stroke-width="2.4"/>
+          <polyline points="100,213 200,203 300,176 400,128 500,88 600,67 660,60" fill="none" class="ln s-red" stroke-width="2" stroke-dasharray="5 4"/>
+          <text x="420" y="85" class="t-sm" style="fill:var(--d-green)">float32 + noise augmentation</text>
+          <text x="330" y="190" class="t-sm" style="fill:var(--d-blue)">float32 baseline</text>
+          <text x="440" y="150" class="t-sm" style="fill:var(--d-red)">int8 baseline</text>
+        </svg>
+        <figcaption>Illustrative shape only, not real results. Good degradation figures share an x-axis across models, include the clean point, show error bars across seeds or folds, and use held-out noise.</figcaption>
+      </figure>
+      <p>Summarise a curve with one number when you need to rank models: for example, accuracy at 0 dB, or the SNR at which accuracy falls to half its clean value.</p>
+
+      <h2 id="angle">Angular error</h2>
+      <p>Module 3 measures how far the estimated direction is from the true one. Angles wrap around: 350° and 10° are 20° apart, not 340°. Always wrap the difference into \([-180°, 180°)\):</p>
+<pre><code class="language-python">import numpy as np
+
+def angular_error_deg(pred, true):
+    """Absolute azimuth error in degrees, handling wrap-around."""
+    d = (pred - true + 180) % 360 - 180
+    return np.abs(d)
+
+angular_error_deg(np.array([350, 10, 180]), np.array([10, 350, -180]))   # -> [20, 20, 0]
+</code></pre>
+      <p>For full 3-D directions (azimuth and elevation), convert both to unit vectors and use the great-circle angle: \(\arccos(\hat u \cdot \hat v)\), with the dot product clipped to \([-1, 1]\). Report the <strong>median</strong> and the <strong>fraction within a tolerance</strong> (for example within 10° and within 20°), not just the mean, because a few reflections pointing the wrong way can dominate the mean.</p>
+
+      <h2 id="variance">Seeds, variance, and baselines</h2>
+      <ul>
+        <li><strong>Seeds.</strong> Fix them (<code>torch.manual_seed</code>, <code>numpy</code>, <code>random</code>) so runs are repeatable, then run at least three seeds and report mean ± standard deviation. A 0.8-point improvement inside a 1.5-point seed spread is not an improvement.</li>
+        <li><strong>Folds.</strong> On UrbanSound8K, cross-validation across the 10 folds gives you a spread for free.</li>
+        <li><strong>Baselines.</strong> Every result needs something to beat: majority class, an SVM on mean MFCCs, the uncompressed model, or (for Module 3) plain GCC-PHAT without the physics layer. A fancy method that does not beat a simple baseline is a finding too; report it.</li>
+        <li><strong>Ablations.</strong> When a pipeline has several parts (Module 3's line-of-sight check, occlusion filter, and reflection mapping), remove one at a time to show what each contributes.</li>
+      </ul>
+
+      <h2 id="report">Reporting checklist</h2>
+      <ol class="checklist">
+        <li>Data: which dataset, which split, how many clips per class, and how the split prevents leakage.</li>
+        <li>Front end and model: every parameter needed to rebuild them, or a link to the config file and commit.</li>
+        <li>Training: optimiser, schedule, epochs, augmentation, and seeds.</li>
+        <li>Metric: exact definition, with mean ± std over seeds or folds.</li>
+        <li>Baselines and ablations alongside the main result.</li>
+        <li>For edge results: hardware or simulator, batch size 1, warm-up runs, and how latency and memory were measured (<a href="07-edge-compression.html">Concept 7</a>).</li>
+        <li>Failure cases: a few examples the model gets wrong, ideally with audio.</li>
+      </ol>
+
+      <h2 id="check">Check your understanding</h2>
+      <details class="q"><summary><span class="qn">Q1.</span>You record Module 2 data for two weeks, then shuffle all 10-second windows and split 80/20. Why is the test accuracy too optimistic?</summary>
+        <div class="answer"><p>Neighbouring windows share the same events, the same background, and the same day's conditions. Many test windows are near-copies of training windows. Split by day or session instead.</p></div></details>
+      <details class="q"><summary><span class="qn">Q2.</span>A model predicts "dog bark" for everything in a dataset that is 60% dog barks. What are its accuracy and macro-F1 over, say, 5 classes?</summary>
+        <div class="answer"><p>Accuracy is 60%. Macro-F1 is low: the dog-bark class has F1 = 2(0.6·1)/(0.6+1) = 0.75 and the other four have 0, so macro-F1 = 0.15. Macro-F1 exposes the model; accuracy hides it.</p></div></details>
+      <details class="q"><summary><span class="qn">Q3.</span>Predicted azimuth −175°, true azimuth 170°. What is the error?</summary>
+        <div class="answer"><p>\((-175 - 170 + 180) \bmod 360 - 180 = (-165 \bmod 360) - 180 = 195 - 180 = 15°\).</p></div></details>
+      <details class="q"><summary><span class="qn">Q4.</span>Why report the median angular error alongside the mean?</summary>
+        <div class="answer"><p>Localization errors are heavy-tailed: most estimates are close, and a few lock onto a reflection 90° or more away. The mean mixes both behaviours; the median and "within 10°" rate describe typical performance, and the tail can be reported separately.</p></div></details>
+
+      <h2 id="mistakes">Common mistakes</h2>
+      <ul class="mistakes">
+        <li><strong>Splitting by clip</strong> instead of by recording, session, or room.</li>
+        <li><strong>Choosing the epoch or threshold on the test set.</strong></li>
+        <li><strong>Subtracting angles without wrapping.</strong></li>
+        <li><strong>One seed, no error bars</strong>, and a conclusion drawn from a difference smaller than the noise.</li>
+        <li><strong>No baseline</strong>, so nobody can tell whether 78% is good.</li>
+        <li><strong>Different test sets for different models</strong>, for example re-sampling noise for each model's robustness test. Generate the stressed test set once, save it, and reuse it.</li>
+      </ul>
+
+      <nav class="pager" id="pager"></nav>
+      <footer class="site-footer" id="site-footer">
+        <noscript><p>DataWorks Audio Perception Lab, UCSD DataWorks. Lab lead: Rami Abukhater.</p></noscript>
+      </footer>
+    </article>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

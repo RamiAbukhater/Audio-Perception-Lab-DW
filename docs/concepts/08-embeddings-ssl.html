@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Embeddings, clustering, and self-supervised learning · DataWorks Audio Perception Lab</title>
+<meta name="description" content="Audio embeddings, cosine similarity, k-means and its pitfalls, contrastive learning, and pretrained audio encoders.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-page="c8" data-root="../">
+<a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
+<header class="site-header" id="site-header">
+  <a class="brand" href="../index.html">
+    <svg class="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="11.5" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+      <g stroke-linecap="round" stroke-width="2">
+        <line x1="6" y1="11" x2="6" y2="15" style="stroke:var(--d-blue)"/>
+        <line x1="9.5" y1="7.5" x2="9.5" y2="18.5" style="stroke:var(--d-blue)"/>
+        <line x1="13" y1="5" x2="13" y2="21" style="stroke:var(--accent)"/>
+        <line x1="16.5" y1="9" x2="16.5" y2="17" style="stroke:var(--d-amber)"/>
+        <line x1="20" y1="11.5" x2="20" y2="14.5" style="stroke:var(--d-red)"/>
+      </g>
+    </svg>
+    <span class="brand-text">DataWorks <span class="dim">Audio Perception Lab</span></span>
+  </a>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Course pages">
+    <noscript><a href="../index.html">Home</a> · <a href="../setup.html">Setup</a> · <a href="../concepts/01-digital-audio.html">Concepts</a> · <a href="../project-ideas.html">Project ideas</a> · <a href="../resources.html">Resources</a></noscript>
+  </nav>
+  <main class="main" id="content">
+    <article class="content">
+      <div class="eyebrow">Concept 8 of 12 · Module 2 · Self-supervised learning</div>
+      <h1>Embeddings, clustering, and self-supervised learning</h1>
+      <p class="lede">Module 2 starts with no sound labels at all. To find structure in hours of unlabelled kitchen and office audio, we first turn each short window into an <strong>embedding</strong>, a vector where similar sounds land close together, and then look for groups. This page covers what makes a good embedding, how to learn one without labels, and how to cluster it without fooling yourself.</p>
+
+      <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
+        <li><a href="#idea">The big idea</a></li><li><a href="#embed">What an embedding is</a></li><li><a href="#cos">Distances and cosine similarity</a></li>
+        <li><a href="#ssl">Self-supervised learning</a></li><li><a href="#contrastive">Contrastive learning and InfoNCE</a></li><li><a href="#cluster">Clustering embeddings</a></li>
+        <li><a href="#viz">Looking at embeddings</a></li><li><a href="#lab">Where this shows up</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
+
+      <h2 id="idea">The big idea</h2>
+      <p>A classifier maps a sound to one of a fixed set of labels. An <strong>encoder</strong> maps a sound to a point in a space of, say, 128 or 512 dimensions, with no labels involved. If the encoder is good, microwave beeps form one tight cloud, keyboard clatter another, and running water a third, even though nobody told it those words. Once the clouds exist, naming them takes very few labels, or, in Module 2, none: we borrow the names from what the camera sees at the same moment.</p>
+
+      <h2 id="embed">What an embedding is</h2>
+      <p>Take any trained audio network and cut off its final classification layer. The vector going into that layer (after global pooling) is an embedding. In TinyAudioNet (<a href="05-audio-cnns.html">Concept 5</a>) that is the 128-dimensional output of <code>self.pool(x).flatten(1)</code>.</p>
+<pre><code class="language-python">class Encoder(torch.nn.Module):
+    """Everything in TinyAudioNet except the classification head."""
+    def __init__(self, net):
+        super().__init__()
+        self.stem, self.blocks, self.pool = net.stem, net.blocks, net.pool
+    def forward(self, x):                            # (B, 1, 64, T)
+        return self.pool(self.blocks(self.stem(x))).flatten(1)   # (B, 128)
+</code></pre>
+      <p>Where do good encoders come from?</p>
+      <ul>
+        <li><strong>Supervised pretraining</strong> on a big labelled set such as AudioSet (PANNs, YAMNet). Strong, and a good starting point for Module 2's first generation.</li>
+        <li><strong>Self-supervised pretraining</strong> on unlabelled audio (below). This is what lets Module 2 adapt to <em>your</em> room's sounds, which AudioSet may describe poorly.</li>
+        <li><strong>Cross-modal pretraining</strong>, aligning audio with images or text (for example CLAP for audio–text). A neighbour of what Module 2 does with vision.</li>
+      </ul>
+
+      <h2 id="cos">Distances and cosine similarity</h2>
+      <p>To decide whether two sounds are "close", we compare their embeddings. The standard choice is <strong>cosine similarity</strong>, which compares direction and ignores length:</p>
+      \[ \cos(u, v) = \frac{u \cdot v}{\lVert u\rVert\,\lVert v\rVert} \in [-1, 1]. \]
+      <p>Length often tracks boring things like loudness, while direction tracks what the sound is. In practice we <strong>L2-normalise</strong> every embedding to length 1 first. Then cosine similarity is just the dot product, and Euclidean distance becomes a monotone function of it: \(\lVert u - v\rVert^2 = 2 - 2\cos(u, v)\). That is why running k-means (which uses Euclidean distance) on normalised embeddings behaves like clustering by angle.</p>
+
+      <h2 id="ssl">Self-supervised learning</h2>
+      <p>Self-supervised learning (SSL) invents a training task from the data itself, so no human labels are needed. The task is a pretext; what we want is the encoder it produces. Common pretext tasks for audio:</p>
+      <ul>
+        <li><strong>Contrastive</strong>: two augmented views of the same clip should have similar embeddings, and views of different clips should not (SimCLR-style, COLA for audio).</li>
+        <li><strong>Masked prediction</strong>: hide patches of the spectrogram and predict them (masked autoencoders, BEATs, wav2vec 2.0 for speech).</li>
+        <li><strong>Cross-modal correspondence</strong>: does this audio go with this video frame? (Audio-visual correspondence, Arandjelović and Zisserman, 2017.) This is closest to Module 2's spirit.</li>
+      </ul>
+
+      <h2 id="contrastive">Contrastive learning and InfoNCE</h2>
+      <p>Take a batch of \(B\) clips. Make two random augmentations of each (different noise, gain, time shift, SpecAugment masks; see <a href="04-noise-reverb-augmentation.html">Concept 4</a>). Encode both views and normalise, giving \(z_i\) and \(z'_i\). For each clip \(i\), the matching view \(z'_i\) is the <strong>positive</strong> and the other \(B - 1\) clips' views are <strong>negatives</strong>. The InfoNCE loss is a softmax classification problem: "which of the \(B\) candidates is my partner?"</p>
+      \[ \mathcal L = -\frac1B\sum_{i=1}^{B} \log \frac{\exp(z_i \cdot z'_i / \tau)}{\sum_{j=1}^{B} \exp(z_i \cdot z'_j / \tau)}. \]
+<pre><code class="language-python">import torch
+import torch.nn.functional as F
+
+def info_nce(z1, z2, temperature=0.1):
+    """z1, z2: (B, D) embeddings of two views; row i of each comes from the same clip."""
+    z1 = F.normalize(z1, dim=1)
+    z2 = F.normalize(z2, dim=1)
+    logits = z1 @ z2.T / temperature                # (B, B): every view-1 against every view-2
+    targets = torch.arange(z1.shape[0], device=z1.device)   # the diagonal holds the positives
+    return F.cross_entropy(logits, targets)
+</code></pre>
+      <div class="walk">
+        <ul>
+          <li>The temperature \(\tau\) sharpens the softmax. Smaller values push harder on the most similar negatives; 0.05–0.2 is typical.</li>
+          <li>Bigger batches give more negatives and usually better embeddings. A batch of 256 one-second clips of log-mels fits easily on a Colab or Kaggle GPU.</li>
+          <li>The augmentations decide what the encoder learns to ignore. Noise and gain augmentation teach invariance to the room's hum and to distance, exactly what we want indoors.</li>
+          <li>A subtle trap: two random clips from the same quiet minute are both "fridge hum", yet they are treated as negatives. With unlabelled ambient audio, many negatives are really positives. Larger, more varied batches and dropping near-silent windows both help.</li>
+        </ul>
+      </div>
+
+      <h2 id="cluster">Clustering embeddings</h2>
+      <p><strong>k-means</strong> picks \(k\) centroids and assigns each point to the nearest one, alternating until stable. It is fast and simple, and it is the default in Module 2's spec, but know its assumptions: you must choose \(k\), and it assumes round, similarly sized clusters.</p>
+<pre><code class="language-python">from sklearn.cluster import KMeans
+from sklearn.preprocessing import normalize
+
+emb = normalize(embeddings)                         # (N, 128), each row unit length
+km = KMeans(n_clusters=24, n_init=10, random_state=0).fit(emb)
+cluster_id = km.labels_                             # (N,) cluster of each window
+dist = km.transform(emb).min(axis=1)                # distance to own centroid: a confidence signal
+</code></pre>
+      <ul>
+        <li><strong>Over-cluster.</strong> Choose \(k\) larger than the number of classes you expect (say 2–3×). Several clusters can later map to the same label ("microwave hum" and "microwave beep"), and a cluster that is never claimed is just background.</li>
+        <li><strong>Background dominates ambient audio.</strong> Most windows are silence, HVAC, or chatter. Remove near-silent windows by energy before clustering, or the clusters will mostly describe the room's hum.</li>
+        <li><strong>Alternatives</strong>: HDBSCAN finds clusters of varying density and labels outliers as noise (useful: not every window should get a label); agglomerative clustering lets you cut a tree at different levels.</li>
+        <li><strong>Measuring cluster quality</strong> without labels: silhouette score. With a small labelled check set: purity, adjusted Rand index, or normalised mutual information. Hand-label 100–200 windows early; you will need them for every evaluation in Module 2.</li>
+      </ul>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 720 230" role="img" aria-labelledby="d8t d8d">
+          <title id="d8t">Embeddings, clusters, and the background problem</title>
+          <desc id="d8d">A 2-D projection of embeddings: a large diffuse cloud of background windows and several small tight clusters for distinct events, each with a centroid.</desc>
+          <rect x="20" y="20" width="680" height="190" rx="8" class="box2"/>
+          <ellipse cx="300" cy="125" rx="150" ry="70" style="fill:var(--d-line);opacity:.08"/>
+          <g style="fill:var(--d-line);opacity:.35">
+            <circle cx="210" cy="110" r="3"/><circle cx="240" cy="140" r="3"/><circle cx="270" cy="100" r="3"/><circle cx="300" cy="150" r="3"/><circle cx="330" cy="120" r="3"/><circle cx="360" cy="95" r="3"/><circle cx="385" cy="140" r="3"/><circle cx="250" cy="170" r="3"/><circle cx="320" cy="170" r="3"/><circle cx="280" cy="130" r="3"/><circle cx="350" cy="155" r="3"/><circle cx="230" cy="90" r="3"/><circle cx="410" cy="115" r="3"/><circle cx="190" cy="140" r="3"/>
+          </g>
+          <text x="300" y="215" text-anchor="middle" class="t-sm muted" dy="-8">background: HVAC, silence, chatter</text>
+          <g style="fill:var(--d-blue)"><circle cx="520" cy="60" r="3.5"/><circle cx="530" cy="70" r="3.5"/><circle cx="512" cy="72" r="3.5"/><circle cx="526" cy="55" r="3.5"/><circle cx="537" cy="62" r="3.5"/></g>
+          <text x="555" y="50" class="t-sm" style="fill:var(--d-blue)">cluster 7 (microwave beep?)</text>
+          <g style="fill:var(--d-green)"><circle cx="590" cy="150" r="3.5"/><circle cx="600" cy="160" r="3.5"/><circle cx="582" cy="160" r="3.5"/><circle cx="604" cy="145" r="3.5"/><circle cx="595" cy="170" r="3.5"/><circle cx="612" cy="158" r="3.5"/></g>
+          <text x="560" y="195" class="t-sm" style="fill:var(--d-green)">cluster 12 (keyboard?)</text>
+          <g style="fill:var(--d-amber)"><circle cx="470" cy="160" r="3.5"/><circle cx="478" cy="170" r="3.5"/><circle cx="462" cy="172" r="3.5"/></g>
+          <text x="430" y="195" class="t-sm" style="fill:var(--d-amber)">cluster 3</text>
+          <g class="ln" stroke-width="2"><path d="M520,58 l8,8 M528,58 l-8,8"/><path d="M592,153 l8,8 M600,153 l-8,8"/></g>
+        </svg>
+        <figcaption>Ambient indoor audio: a huge diffuse background cloud and small tight event clusters. Clusters only become labels when a visual detection backs them up (<a href="09-cross-modal-pseudo-labels.html">Concept 9</a>).</figcaption>
+      </figure>
+
+      <h2 id="viz">Looking at embeddings</h2>
+      <p>You cannot see 128 dimensions, so project them to 2-D with <strong>PCA</strong> (linear, fast, preserves global layout), <strong>t-SNE</strong>, or <strong>UMAP</strong> (non-linear, preserve local neighbourhoods). Colour points by cluster, by time of day, or by the visual tag, and make it clickable so you can listen to a few windows from each cluster. Listening to clusters is the single most useful debugging step in Module 2.</p>
+      <p>Treat t-SNE and UMAP pictures with care: distances between far-apart groups, and the sizes of groups, mean little. Use them to look, not to measure.</p>
+
+      <h2 id="lab">Where this shows up in the lab</h2>
+      <ul>
+        <li><strong>Module 2</strong>, <code>/pipeline/bootstrap</code>: "computes audio embedding clusters via unsupervised representation learning". That is this page: an encoder (pretrained or contrastive), normalised embeddings, and clustering.</li>
+        <li><strong>Module 2</strong>, <code>/training</code>: the student encoder is retrained each generation; its embeddings, and so the clusters, should get sharper over generations. Track silhouette or purity per generation as a convergence curve.</li>
+        <li><strong>Module 1</strong>: embeddings from a large pretrained model are a good target for knowledge distillation into the tiny model.</li>
+      </ul>
+
+      <h2 id="check">Check your understanding</h2>
+      <details class="q"><summary><span class="qn">Q1.</span>Why L2-normalise embeddings before k-means?</summary>
+        <div class="answer"><p>So that distance depends only on direction. Unnormalised, loud and quiet versions of the same sound can land far apart just because their embeddings have different lengths. On unit vectors, Euclidean distance and cosine similarity carry the same information.</p></div></details>
+      <details class="q"><summary><span class="qn">Q2.</span>In InfoNCE with a batch of 256, how many negatives does each anchor have, and what are the logits' shape?</summary>
+        <div class="answer"><p>255 negatives (all other clips' second views). Logits are <span class="shape">(256, 256)</span> with positives on the diagonal.</p></div></details>
+      <details class="q"><summary><span class="qn">Q3.</span>You run k-means with \(k = 5\) on a day of kitchen audio and all five clusters sound like the fridge. What happened and what do you change?</summary>
+        <div class="answer"><p>Background windows vastly outnumber events, so k-means spends all its centroids splitting the background. Drop low-energy windows, raise \(k\) well above the number of expected events, or use a density-based method like HDBSCAN that can mark the background as noise.</p></div></details>
+      <details class="q"><summary><span class="qn">Q4.</span>Why do augmentation choices matter so much in contrastive learning?</summary>
+        <div class="answer"><p>The encoder learns to make the two views agree, so it learns to <em>ignore</em> whatever the augmentations change. Augment with noise and gain and it becomes noise- and gain-invariant; augment with pitch shift and it may stop distinguishing sounds that differ mainly in pitch.</p></div></details>
+
+      <h2 id="mistakes">Common mistakes</h2>
+      <ul class="mistakes">
+        <li><strong>Clustering raw log-mels</strong> instead of embeddings. Distances between raw spectrograms mostly measure loudness and timing.</li>
+        <li><strong>Not removing silence</strong>, so clusters describe the background.</li>
+        <li><strong>Choosing \(k\) by eye from a t-SNE plot.</strong></li>
+        <li><strong>No labelled check set</strong>, so you cannot tell whether generation 3 is better than generation 1.</li>
+        <li><strong>Mixing embedding spaces</strong>: comparing embeddings from different encoder generations or front ends as if they were in the same space. Re-embed everything after each update.</li>
+      </ul>
+
+      <nav class="pager" id="pager"></nav>
+      <footer class="site-footer" id="site-footer">
+        <noscript><p>DataWorks Audio Perception Lab, UCSD DataWorks. Lab lead: Rami Abukhater.</p></noscript>
+      </footer>
+    </article>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

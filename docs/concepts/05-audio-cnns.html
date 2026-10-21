@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training CNNs on spectrograms · DataWorks Audio Perception Lab</title>
+<meta name="description" content="Treating a log-mel spectrogram as an image, depthwise-separable convolutions, clip-level training, and UrbanSound8K&#x27;s folds.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-page="c5" data-root="../">
+<a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
+<header class="site-header" id="site-header">
+  <a class="brand" href="../index.html">
+    <svg class="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="11.5" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+      <g stroke-linecap="round" stroke-width="2">
+        <line x1="6" y1="11" x2="6" y2="15" style="stroke:var(--d-blue)"/>
+        <line x1="9.5" y1="7.5" x2="9.5" y2="18.5" style="stroke:var(--d-blue)"/>
+        <line x1="13" y1="5" x2="13" y2="21" style="stroke:var(--accent)"/>
+        <line x1="16.5" y1="9" x2="16.5" y2="17" style="stroke:var(--d-amber)"/>
+        <line x1="20" y1="11.5" x2="20" y2="14.5" style="stroke:var(--d-red)"/>
+      </g>
+    </svg>
+    <span class="brand-text">DataWorks <span class="dim">Audio Perception Lab</span></span>
+  </a>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Course pages">
+    <noscript><a href="../index.html">Home</a> · <a href="../setup.html">Setup</a> · <a href="../concepts/01-digital-audio.html">Concepts</a> · <a href="../project-ideas.html">Project ideas</a> · <a href="../resources.html">Resources</a></noscript>
+  </nav>
+  <main class="main" id="content">
+    <article class="content">
+      <div class="eyebrow">Concept 5 of 12 · Core · Everyone</div>
+      <h1>Training CNNs on spectrograms</h1>
+      <p class="lede">Once audio is a log-mel image, we can borrow the most reliable tool in computer vision: the convolutional neural network. This page explains why that works, what is different about spectrograms compared with photos, how to build a network small enough for a microcontroller, and how to train it on UrbanSound8K without fooling yourself.</p>
+
+      <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
+        <li><a href="#idea">The big idea</a></li><li><a href="#conv">Convolutions on spectrograms</a></li><li><a href="#ds">Depthwise-separable convolutions</a></li>
+        <li><a href="#model">A tiny audio CNN</a></li><li><a href="#us8k">UrbanSound8K and its folds</a></li><li><a href="#train">The training loop</a></li>
+        <li><a href="#pretrained">Pretrained audio models</a></li><li><a href="#lab">Where this shows up</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
+
+      <h2 id="idea">The big idea</h2>
+      <p>A convolutional layer slides small learned filters (say 3×3) across an image and responds wherever the local pattern matches. Stacking layers builds up from edges to textures to whole objects. On a log-mel spectrogram the "edges" are onsets, harmonics, and noise bursts; the "objects" are a dog bark's short harmonic stack, a jackhammer's periodic broadband pulses, or a siren's slow frequency sweep.</p>
+      <p>Two properties make CNNs a good fit:</p>
+      <ul>
+        <li><strong>Translation in time</strong> should not change the label: a bark at 0.5 s is the same class as a bark at 3 s. Convolution plus global pooling gives you that for free.</li>
+        <li><strong>Local structure</strong>: nearby time frames and nearby mel bands are strongly related, exactly what small filters exploit.</li>
+      </ul>
+      <p>One property does <em>not</em> carry over from photos: shifting a pattern <em>up</em> in frequency changes what it is. A 200 Hz hum and a 2 kHz whine are different sounds. CNNs still work, because deeper layers and the final classifier learn where in frequency things are, but this is why we never use vertical flips or large vertical shifts as augmentation.</p>
+
+      <h2 id="conv">Convolutions on spectrograms</h2>
+      <p>Input shape for a batch is <span class="shape">(batch, channels=1, n_mels, frames)</span>. A <code>Conv2d(1, 16, kernel_size=3, padding=1)</code> layer outputs <span class="shape">(batch, 16, n_mels, frames)</span>: 16 feature maps, each the response to one learned 3×3 pattern. Strides of 2 halve both spatial axes, so after four stride-2 stages a 64×201 input is about 4×13. An <code>AdaptiveAvgPool2d(1)</code> then averages each feature map to one number, giving a fixed-length vector no matter how long the clip was, and a linear layer maps it to class logits.</p>
+      <p>The cost of a standard convolution with a \(k \times k\) kernel, \(C_{\text{in}}\) inputs and \(C_{\text{out}}\) outputs on an \(H \times W\) map is</p>
+      \[ \text{params} = k^2 C_{\text{in}} C_{\text{out}}, \qquad \text{MACs} = k^2 C_{\text{in}} C_{\text{out}} H W. \]
+      <p>MACs (multiply-accumulates) are the unit of compute that determines latency on small devices.</p>
+
+      <h2 id="ds">Depthwise-separable convolutions</h2>
+      <p>MobileNets replace each standard convolution with two cheaper ones:</p>
+      <ol>
+        <li>A <strong>depthwise</strong> 3×3 convolution that filters each channel separately (<code>groups=C_in</code>): \(k^2 C_{\text{in}}\) parameters.</li>
+        <li>A <strong>pointwise</strong> 1×1 convolution that mixes channels: \(C_{\text{in}} C_{\text{out}}\) parameters.</li>
+      </ol>
+      <p>The ratio of cost to a standard convolution is \(\frac{1}{C_{\text{out}}} + \frac{1}{k^2}\). With \(k = 3\) and 64 output channels that is about 0.13, roughly <strong>8× fewer</strong> parameters and MACs for a small drop in accuracy. This is the main trick behind every edge audio model you will read about.</p>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 720 200" role="img" aria-labelledby="d5t d5d">
+          <title id="d5t">Standard versus depthwise-separable convolution</title>
+          <desc id="d5d">Standard convolution: one 3 by 3 by C_in filter per output channel. Depthwise separable: one 3 by 3 filter per input channel, followed by a 1 by 1 convolution mixing channels.</desc>
+          <text x="170" y="22" text-anchor="middle" class="t-md">Standard 3×3 conv</text>
+          <rect x="40" y="50" width="70" height="90" class="box2"/><text x="75" y="160" text-anchor="middle" class="t-sm">C_in maps</text>
+          <rect x="140" y="70" width="40" height="50" class="box" style="stroke:var(--d-blue)"/><text x="160" y="135" text-anchor="middle" class="t-sm">3×3×C_in</text><text x="160" y="150" text-anchor="middle" class="t-sm">× C_out filters</text>
+          <rect x="220" y="50" width="70" height="90" class="box2"/><text x="255" y="160" text-anchor="middle" class="t-sm">C_out maps</text>
+          <line x1="112" y1="95" x2="138" y2="95" class="ln"/><line x1="182" y1="95" x2="218" y2="95" class="ln"/>
+          <text x="170" y="188" text-anchor="middle" class="t-sm mono">9 · C_in · C_out params</text>
+          <line x1="360" y1="30" x2="360" y2="190" class="ln" stroke-dasharray="2 4" opacity=".5"/>
+          <text x="545" y="22" text-anchor="middle" class="t-md">Depthwise-separable</text>
+          <rect x="385" y="50" width="60" height="90" class="box2"/>
+          <rect x="465" y="75" width="30" height="40" class="box" style="stroke:var(--d-green)"/><text x="480" y="135" text-anchor="middle" class="t-sm">3×3 per</text><text x="480" y="150" text-anchor="middle" class="t-sm">channel</text>
+          <rect x="515" y="50" width="60" height="90" class="box2"/>
+          <rect x="595" y="85" width="20" height="20" class="box" style="stroke:var(--d-amber)"/><text x="605" y="135" text-anchor="middle" class="t-sm">1×1 mix</text>
+          <rect x="635" y="50" width="60" height="90" class="box2"/>
+          <g class="ln"><line x1="447" y1="95" x2="463" y2="95"/><line x1="497" y1="95" x2="513" y2="95"/><line x1="577" y1="95" x2="593" y2="95"/><line x1="617" y1="95" x2="633" y2="95"/></g>
+          <text x="545" y="188" text-anchor="middle" class="t-sm mono">9 · C_in + C_in · C_out params</text>
+        </svg>
+        <figcaption>A depthwise-separable block splits "look at a neighbourhood" from "combine channels". For 64 → 64 channels: 36,864 parameters become 4,672.</figcaption>
+      </figure>
+
+      <h2 id="model">A tiny audio CNN</h2>
+      <p>A reasonable Module 1 starting point: about 18,000 parameters, 72 KB in float32 and about 18 KB in int8. That fits comfortably in an ESP32's memory.</p>
+<pre><code class="language-python">import torch
+import torch.nn as nn
+
+class DSConv(nn.Module):
+    """Depthwise-separable conv: per-channel 3x3, then 1x1 to mix channels."""
+    def __init__(self, c_in, c_out, stride=1):
+        super().__init__()
+        self.dw = nn.Conv2d(c_in, c_in, 3, stride=stride, padding=1, groups=c_in, bias=False)
+        self.pw = nn.Conv2d(c_in, c_out, 1, bias=False)
+        self.bn = nn.BatchNorm2d(c_out)
+        self.act = nn.ReLU()
+
+    def forward(self, x):
+        return self.act(self.bn(self.pw(self.dw(x))))
+
+class TinyAudioNet(nn.Module):
+    def __init__(self, n_classes=10):
+        super().__init__()
+        self.stem = nn.Sequential(nn.Conv2d(1, 16, 3, stride=2, padding=1, bias=False),
+                                  nn.BatchNorm2d(16), nn.ReLU())
+        self.blocks = nn.Sequential(DSConv(16, 32, stride=2), DSConv(32, 64, stride=2),
+                                    DSConv(64, 64), DSConv(64, 128, stride=2))
+        self.pool = nn.AdaptiveAvgPool2d(1)
+        self.head = nn.Linear(128, n_classes)
+
+    def forward(self, x):                 # x: (batch, 1, n_mels, frames)
+        x = self.blocks(self.stem(x))     # -> (batch, 128, 4, 13) for a 64 x 201 input
+        return self.head(self.pool(x).flatten(1))   # -> (batch, n_classes)
+
+model = TinyAudioNet()
+print(sum(p.numel() for p in model.parameters()))   # 18474
+</code></pre>
+      <div class="walk">
+        <ul>
+          <li><code>bias=False</code> before <code>BatchNorm2d</code>: batch norm has its own shift, so a conv bias is redundant. After training, batch norm can be <em>folded</em> into the conv weights for deployment, which quantization tools do automatically.</li>
+          <li>Stride-2 layers shrink the map early, which is where most of the compute savings come from.</li>
+          <li><code>ReLU</code> (or <code>ReLU6</code>) quantizes well. Fancier activations like GELU or Swish are slower and harder to quantize on microcontrollers.</li>
+        </ul>
+      </div>
+
+      <h2 id="us8k">UrbanSound8K and its folds</h2>
+      <p><a href="https://urbansounddataset.weebly.com/urbansound8k.html">UrbanSound8K</a> (Salamon, Jacoby, and Bello, 2014) has 8,732 labelled clips of up to 4 seconds in 10 classes: air conditioner, car horn, children playing, dog bark, drilling, engine idling, gun shot, jackhammer, siren, and street music. It is licensed CC BY-NC 3.0, so we download it ourselves and never commit it.</p>
+      <div class="callout danger">
+        <span class="callout-title">Use the predefined folds. Never shuffle and re-split.</span>
+        <p>The clips are cut from a smaller number of longer Freesound recordings, so many clips are near-duplicates from the same recording. The dataset ships pre-split into 10 folds that keep each source recording within one fold. If you pool all clips and make a random 80/20 split, slices of the same recording land in train and test, and accuracy jumps by 10 to 20 points for reasons that have nothing to do with your model. The authors' standard protocol is 10-fold cross-validation over the given folds. For quick iteration in the lab: train on folds 1–8, validate on 9, test on 10, and run the full 10-fold evaluation for any number you report.</p>
+      </div>
+      <p>Other practical details: clips vary in length (pad or crop to 4 s), in sample rate and bit depth (resample), and in channel count (convert to mono). The <code>salience</code> column marks whether the sound is in the foreground or background; reporting accuracy separately for each is an interesting robustness result in itself.</p>
+
+      <h2 id="train">The training loop</h2>
+<pre><code class="language-python">frontend = LogMel().to(device)                     # from Concept 3
+model = TinyAudioNet().to(device)
+opt = torch.optim.AdamW(model.parameters(), lr=3e-3, weight_decay=1e-2)
+sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=3e-3, total_steps=epochs * len(train_loader))
+loss_fn = nn.CrossEntropyLoss(label_smoothing=0.1)
+
+for epoch in range(epochs):
+    model.train()
+    for wav, y in train_loader:                    # wav already augmented in the Dataset (Concept 4)
+        x = normalise(frontend(wav.to(device)))    # (B, 1, 64, 201)
+        x = spec_aug(x)                            # training only
+        loss = loss_fn(model(x), y.to(device))
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+        sched.step()
+
+    model.eval()
+    with torch.no_grad():
+        val_acc = evaluate(model, val_loader)      # no augmentation, fixed preprocessing
+    save_if_best(model, val_acc)
+</code></pre>
+      <ul>
+        <li><strong><code>model.train()</code> versus <code>model.eval()</code></strong> switches batch norm between batch and running statistics. Forgetting <code>eval()</code> gives noisy, batch-size-dependent validation numbers.</li>
+        <li><strong>Select checkpoints on the validation fold</strong>, never on the test fold.</li>
+        <li><strong>Log everything</strong>: config, seed, git commit, and metrics, so any number in a slide can be reproduced. A plain CSV per run is fine; Weights &amp; Biases or TensorBoard are nicer.</li>
+        <li><strong>Start small</strong>: overfit a batch of 32 clips to near 100% training accuracy before training on everything. If you cannot, there is a bug.</li>
+      </ul>
+
+      <h2 id="pretrained">Pretrained audio models</h2>
+      <p>You do not always train from scratch. Large models pretrained on <a href="https://research.google.com/audioset/">AudioSet</a> (2 million YouTube clips, 527 classes) give strong embeddings and strong teachers:</p>
+      <ul>
+        <li><strong>PANNs</strong> (Kong et al., 2020): CNN14 and the much smaller MobileNetV1/V2 variants. Easy to use, great baselines.</li>
+        <li><strong>YAMNet</strong>: a MobileNetV1 trained on AudioSet, the standard "small but pretrained" reference.</li>
+        <li><strong>AST, BEATs, and similar transformers</strong>: higher accuracy, far too large for microcontrollers, useful as teachers for knowledge distillation into a tiny student.</li>
+      </ul>
+      <p>For Module 1 a strong recipe is: train the tiny CNN from scratch as a baseline, then distil from a pretrained teacher and see how much of the gap closes. For Module 2 a pretrained encoder gives better clusters to start from.</p>
+
+      <h2 id="lab">Where this shows up in the lab</h2>
+      <ul>
+        <li><strong>Module 1</strong>, <code>/models/edge_audio</code>: this is the model you compress in <a href="07-edge-compression.html">Concept 7</a>.</li>
+        <li><strong>Module 2</strong>, <code>/training</code>: the student audio encoder is a CNN like this one, retrained each generation on pseudo-labels.</li>
+        <li><strong>Module 3</strong>: an optional classifier tells you <em>what</em> the localised source is, needed for the "classification accuracy across visible versus occluded" benchmark.</li>
+      </ul>
+
+      <h2 id="check">Check your understanding</h2>
+      <details class="q"><summary><span class="qn">Q1.</span>How many parameters does a standard 3×3 conv from 32 to 64 channels have (no bias)? And a depthwise-separable one?</summary>
+        <div class="answer"><p>Standard: \(9 \times 32 \times 64 = 18{,}432\). Depthwise-separable: \(9 \times 32 + 32 \times 64 = 288 + 2048 = 2{,}336\). About 7.9× fewer.</p></div></details>
+      <details class="q"><summary><span class="qn">Q2.</span>Why does global average pooling make the model work for clips of different lengths?</summary>
+        <div class="answer"><p>It averages each feature map over all time and frequency positions, giving one number per channel whatever the map size. The linear head always sees a vector of length 128.</p></div></details>
+      <details class="q"><summary><span class="qn">Q3.</span>A teammate reports 97% on UrbanSound8K with a 20k-parameter model. What is the first question to ask?</summary>
+        <div class="answer"><p>"Did you use the official folds?" Random splits leak near-duplicate slices between train and test. Published 10-fold results for small models are usually in the 70s to low 80s.</p></div></details>
+      <details class="q"><summary><span class="qn">Q4.</span>Why is vertical flipping a bad augmentation for spectrograms?</summary>
+        <div class="answer"><p>It turns low frequencies into high ones, creating sounds that do not exist and may belong to another class. Frequency position carries meaning, unlike the vertical position of a cat in a photo.</p></div></details>
+
+      <h2 id="mistakes">Common mistakes</h2>
+      <ul class="mistakes">
+        <li><strong>Random splits on UrbanSound8K</strong>, the most common way to report a meaningless number.</li>
+        <li><strong>Tuning on the test fold</strong>, even informally ("let me check test after this change").</li>
+        <li><strong>Forgetting <code>model.eval()</code></strong> and <code>torch.no_grad()</code> during evaluation.</li>
+        <li><strong>Augmenting validation data</strong>, so validation accuracy is noisy and checkpoint selection is random.</li>
+        <li><strong>Mismatched front ends</strong> between the training script and the export script.</li>
+        <li><strong>Reporting one run.</strong> Small models trained on small data vary by a point or two between seeds; report mean and spread over at least three.</li>
+      </ul>
+
+      <nav class="pager" id="pager"></nav>
+      <footer class="site-footer" id="site-footer">
+        <noscript><p>DataWorks Audio Perception Lab, UCSD DataWorks. Lab lead: Rami Abukhater.</p></noscript>
+      </footer>
+    </article>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

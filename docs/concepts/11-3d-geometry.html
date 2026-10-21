@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RGB-D, point clouds, and room geometry · DataWorks Audio Perception Lab</title>
+<meta name="description" content="Pinhole cameras, intrinsics and extrinsics, back-projecting depth into point clouds, RANSAC plane fitting with Open3D, and ray casting.">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-page="c11" data-root="../">
+<a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
+<header class="site-header" id="site-header">
+  <a class="brand" href="../index.html">
+    <svg class="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="11.5" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+      <g stroke-linecap="round" stroke-width="2">
+        <line x1="6" y1="11" x2="6" y2="15" style="stroke:var(--d-blue)"/>
+        <line x1="9.5" y1="7.5" x2="9.5" y2="18.5" style="stroke:var(--d-blue)"/>
+        <line x1="13" y1="5" x2="13" y2="21" style="stroke:var(--accent)"/>
+        <line x1="16.5" y1="9" x2="16.5" y2="17" style="stroke:var(--d-amber)"/>
+        <line x1="20" y1="11.5" x2="20" y2="14.5" style="stroke:var(--d-red)"/>
+      </g>
+    </svg>
+    <span class="brand-text">DataWorks <span class="dim">Audio Perception Lab</span></span>
+  </a>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Course pages">
+    <noscript><a href="../index.html">Home</a> · <a href="../setup.html">Setup</a> · <a href="../concepts/01-digital-audio.html">Concepts</a> · <a href="../project-ideas.html">Project ideas</a> · <a href="../resources.html">Resources</a></noscript>
+  </nav>
+  <main class="main" id="content">
+    <article class="content">
+      <div class="eyebrow">Concept 11 of 12 · Module 3 · Audio-visual localization</div>
+      <h1>RGB-D, point clouds, and room geometry</h1>
+      <p class="lede">Stream B of Module 3 gives the localizer a map: where the walls, floor, doorways, and furniture are. That map comes from a depth camera. This page covers the camera model that links pixels to 3-D points, the coordinate frames you must keep straight, how to turn depth images into point clouds and walls with Open3D, and how to ask the map geometric questions such as "what does this ray hit first?"</p>
+
+      <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
+        <li><a href="#idea">The big idea</a></li><li><a href="#pinhole">The pinhole camera</a></li><li><a href="#backproject">Depth to point cloud</a></li>
+        <li><a href="#frames">Coordinate frames and extrinsics</a></li><li><a href="#open3d">Point clouds in Open3D</a></li><li><a href="#planes">Finding walls with RANSAC</a></li>
+        <li><a href="#rays">Ray casting</a></li><li><a href="#data">Simulated data</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
+
+      <h2 id="idea">The big idea</h2>
+      <p>An ordinary camera tells you the <em>direction</em> of everything it sees but not the distance. An <strong>RGB-D camera</strong> (Intel RealSense, Azure Kinect, Orbbec, or an iPhone's LiDAR) adds a depth image: for each pixel, how far away the surface is. With the camera's intrinsics, each depth pixel becomes a 3-D point, and the whole image becomes a <strong>point cloud</strong>. Fit planes to the point cloud and you have walls and a floor; you have a geometric model of the room that an acoustic direction can be checked against.</p>
+
+      <h2 id="pinhole">The pinhole camera</h2>
+      <p>The standard camera model projects a 3-D point \((X, Y, Z)\), in the camera's own frame, to pixel \((u, v)\):</p>
+      \[ u = f_x \frac{X}{Z} + c_x, \qquad v = f_y \frac{Y}{Z} + c_y, \qquad K = \begin{pmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{pmatrix}. \]
+      <ul>
+        <li>\(f_x, f_y\): focal lengths in pixels. Larger means more zoomed in.</li>
+        <li>\(c_x, c_y\): the principal point, roughly the image centre.</li>
+        <li>\(K\) is the <strong>intrinsic matrix</strong>. It comes from the camera's SDK (RealSense reports it per stream) or from a checkerboard calibration with OpenCV.</li>
+      </ul>
+      <p>The camera frame convention used by OpenCV, RealSense, and Open3D: <strong>\(x\) right, \(y\) down, \(z\) forward</strong> out of the lens. Many robotics and graphics tools use other conventions (\(z\) up, or \(y\) up). Write down which you use.</p>
+
+      <figure class="diagram">
+        <svg viewBox="0 0 720 240" role="img" aria-labelledby="d11t d11d">
+          <title id="d11t">Pinhole projection and back-projection</title>
+          <desc id="d11d">A 3-D point in front of the camera projects through the camera centre onto the image plane at pixel u, v. Back-projection goes the other way: a pixel plus its depth Z gives the 3-D point.</desc>
+          <defs><marker id="a11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--d-line)"/></marker></defs>
+          <circle cx="90" cy="130" r="6" style="fill:var(--d-line)"/><text x="90" y="160" text-anchor="middle" class="t-sm">camera centre</text>
+          <line x1="90" y1="130" x2="680" y2="130" class="ln" stroke-dasharray="4 4" marker-end="url(#a11)"/><text x="680" y="150" text-anchor="end" class="t-sm muted">z (forward)</text>
+          <line x1="230" y1="40" x2="230" y2="220" class="ln s-blue" stroke-width="2.5"/><text x="230" y="234" text-anchor="middle" class="t-sm" style="fill:var(--d-blue)">image plane (z = f)</text>
+          <line x1="90" y1="130" x2="600" y2="40" class="ln s-amber" stroke-width="1.8"/>
+          <circle cx="600" cy="40" r="7" style="fill:var(--d-amber)"/><text x="612" y="36" class="t-sm">(X, Y, Z)</text>
+          <circle cx="230" cy="105.3" r="5" style="fill:var(--d-red)"/><text x="240" y="98" class="t-sm" style="fill:var(--d-red)">pixel (u, v)</text>
+          <line x1="600" y1="45" x2="600" y2="130" class="ln" stroke-dasharray="2 3"/><text x="608" y="95" class="t-sm muted">Y</text>
+          <text x="345" y="148" class="t-sm muted">Z = depth</text>
+          <text x="400" y="200" class="t-sm">project:  u = fₓ·X/Z + cₓ</text>
+          <text x="400" y="220" class="t-sm">back-project:  X = (u − cₓ)·Z / fₓ</text>
+        </svg>
+        <figcaption>Projection loses depth; a depth camera gives it back. With \(Z\) known for every pixel, inverting the projection gives a 3-D point per pixel.</figcaption>
+      </figure>
+
+      <h2 id="backproject">Depth to point cloud</h2>
+      <p>Invert the projection, using the measured depth \(Z\) at each pixel:</p>
+      \[ X = \frac{(u - c_x)\,Z}{f_x}, \qquad Y = \frac{(v - c_y)\,Z}{f_y}. \]
+<pre><code class="language-python">import numpy as np
+
+def depth_to_points(depth, fx, fy, cx, cy, depth_scale=1000.0):
+    """depth: (H, W) uint16 depth image. Returns (N, 3) points in metres, camera frame."""
+    h, w = depth.shape
+    u, v = np.meshgrid(np.arange(w), np.arange(h))   # pixel column and row indices
+    z = depth.astype(np.float32) / depth_scale       # RealSense: 1 unit = 1 mm by default
+    x = (u - cx) * z / fx
+    y = (v - cy) * z / fy
+    pts = np.stack([x, y, z], axis=-1).reshape(-1, 3)
+    return pts[pts[:, 2] > 0]                        # depth 0 means "no measurement"
+</code></pre>
+      <div class="walk">
+        <ul>
+          <li><strong>Depth units</strong>: raw depth is an integer. RealSense uses millimetres by default (<code>depth_scale = 0.001</code> m per unit, so divide by 1000); other sensors differ. Check the SDK.</li>
+          <li><strong>Zero depth</strong> marks pixels with no valid reading (shiny, black, or too-distant surfaces, and the edges of objects). Drop them; never treat them as points at the camera.</li>
+          <li><strong>Depth and colour are separate sensors</strong> with different intrinsics and positions. Use the SDK's alignment (RealSense <code>rs.align</code>) to map depth into the colour image before combining them, and use the intrinsics of whichever stream you aligned to.</li>
+        </ul>
+      </div>
+
+      <h2 id="frames">Coordinate frames and extrinsics</h2>
+      <p>Module 3 fuses data from at least three frames: the <strong>camera</strong> frame, the <strong>microphone array</strong> frame, and a <strong>room</strong> (world) frame. A rigid transform maps one frame to another, with a rotation \(R\) (3×3) and translation \(t\) (3-vector): \(p_{\text{cam}} = R\,p_{\text{array}} + t\). These are the <strong>extrinsics</strong>. Often they are written as one 4×4 homogeneous matrix \(T\).</p>
+      <ul>
+        <li><strong>Points</strong> transform with rotation and translation. <strong>Directions</strong> (such as a DOA unit vector) transform with rotation only: \(u_{\text{cam}} = R\,u_{\text{array}}\).</li>
+        <li><strong>Getting \(R, t\)</strong>: mount the array rigidly on the camera and measure the offset with a ruler; then refine by playing a sound from a few known positions (a phone the camera can also see) and solving for the rotation that best aligns the acoustic directions with the visual ones.</li>
+        <li><strong>Room frame</strong>: choose the floor plane as \(z = 0\) (or \(y = 0\)) and align axes with the walls. Expressing everything in the room frame makes walls simple planes like \(x = 0\) and \(x = L_x\), which the mirror-source method in <a href="12-room-acoustics-occlusion.html">Concept 12</a> needs.</li>
+      </ul>
+<pre><code class="language-python">def to_frame(points, R, t):
+    """Rigidly transform (N, 3) points: p' = R p + t."""
+    return points @ R.T + t
+
+u_cam = R_cam_from_array @ u_array            # a direction: rotate, never translate
+</code></pre>
+
+      <h2 id="open3d">Point clouds in Open3D</h2>
+      <p><a href="http://www.open3d.org/">Open3D</a> handles point clouds, meshes, RGB-D images, and visualisation. A typical pipeline:</p>
+<pre><code class="language-python">import open3d as o3d
+
+color = o3d.io.read_image("color.png")
+depth = o3d.io.read_image("depth.png")                      # aligned to color, uint16 millimetres
+rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
+    color, depth, depth_scale=1000.0, depth_trunc=6.0, convert_rgb_to_intensity=False)
+intr = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
+pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, intr)
+
+pcd = pcd.voxel_down_sample(voxel_size=0.02)                # one point per 2 cm cube
+pcd, _ = pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
+pcd.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
+o3d.visualization.draw_geometries([pcd])
+</code></pre>
+      <ul>
+        <li><code>depth_trunc</code> drops points beyond 6 m, where consumer depth is unreliable.</li>
+        <li><strong>Voxel downsampling</strong> makes the cloud uniform and much smaller. A 640×480 depth image is 300k points; a 2 cm voxel grid of a room is a few tens of thousands.</li>
+        <li><strong>Normals</strong> (the direction perpendicular to the local surface) tell walls (horizontal normals) from floor and ceiling (vertical normals).</li>
+        <li>A single view sees only part of the room. For a fuller map, capture several views and register them (Open3D's ICP, or its RGB-D integration with TSDF volumes), or use a static camera and accept that the map covers only the visible part, which is itself an interesting "out-of-sight" condition.</li>
+      </ul>
+
+      <h2 id="planes">Finding walls with RANSAC</h2>
+      <p>Rooms are mostly planes. <strong>RANSAC</strong> (random sample consensus) finds the dominant plane: repeatedly pick 3 random points, fit the plane through them, count how many other points lie within a small distance (the inliers), and keep the plane with the most inliers. Remove those inliers and repeat to get the next plane.</p>
+<pre><code class="language-python">planes, rest = [], pcd
+for _ in range(6):                                          # floor, ceiling, up to four walls
+    if len(rest.points) &lt; 500:
+        break
+    model, inliers = rest.segment_plane(distance_threshold=0.03, ransac_n=3, num_iterations=2000)
+    if len(inliers) &lt; 2000:                                 # too small to be a wall
+        break
+    planes.append(np.array(model))                          # [a, b, c, d] with ax + by + cz + d = 0
+    rest = rest.select_by_index(inliers, invert=True)
+</code></pre>
+      <p>Each plane is \(n \cdot p + d = 0\) with unit normal \(n = (a, b, c)\). Classify planes by their normal: nearly parallel to gravity means floor or ceiling, nearly perpendicular means a wall. Large furniture (a bookshelf, a partition) also shows up as planes, and those matter: they are the occluders in Module 3.</p>
+      <p>Doorways and openings appear as <strong>gaps</strong> in a wall plane: regions inside the wall's extent with no inlier points. Project the wall's inliers onto the plane and look for empty rectangles in a 2-D occupancy grid.</p>
+
+      <h2 id="rays">Ray casting</h2>
+      <p>The key geometric query for Module 3 is: <em>starting at the microphone array, travelling along the DOA direction, what do I hit first, and how far away is it?</em> For a plane this has a closed form. Points on the ray are \(o + s\,u\) for \(s > 0\); substitute into the plane equation:</p>
+      \[ s^* = -\frac{n \cdot o + d}{n \cdot u}. \]
+<pre><code class="language-python">def ray_hits_plane(origin, direction, plane, max_dist):
+    """Distance along the ray to the plane, or None if it misses within max_dist."""
+    n, d0 = plane[:3], plane[3]
+    denom = n @ direction
+    if abs(denom) &lt; 1e-6:                    # ray parallel to the plane
+        return None
+    s = -(n @ origin + d0) / denom
+    return s if 0 &lt; s &lt; max_dist else None
+</code></pre>
+      <p>Infinite planes are a simplification; a real wall has edges and a doorway has a hole. For finite geometry, build a triangle mesh (from the planes' extents, or by surface reconstruction of the point cloud) and use Open3D's <code>o3d.t.geometry.RaycastingScene</code>, which casts thousands of rays against a mesh at once and returns the hit distance and the triangle hit for each.</p>
+
+      <h2 id="data">Simulated data</h2>
+      <p>The spec allows "simulated depth datasets", and starting in simulation is wise: you get exact ground truth for source positions, walls, and occlusion.</p>
+      <ul>
+        <li><strong><a href="https://soundspaces.org/">SoundSpaces</a></strong> (Chen et al., 2020; SoundSpaces 2.0, 2022) renders realistic audio for 3-D scanned rooms (Replica and Matterport3D) together with RGB-D views. It is the closest existing tool to Module 3: real geometry, acoustics that include occlusion and reflections, and matching camera images.</li>
+        <li><strong><a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a></strong>: shoebox and polygonal rooms with the image-source method, multichannel microphone arrays, and DOA algorithms. Easy to start with, no visuals.</li>
+        <li><strong>Real RGB-D datasets</strong> for testing the geometry stream alone: ScanNet, SUN RGB-D, Replica, and NYU Depth v2.</li>
+      </ul>
+
+      <h2 id="check">Check your understanding</h2>
+      <details class="q"><summary><span class="qn">Q1.</span>\(f_x = 600\), \(c_x = 320\). A pixel at \(u = 470\) has depth 2.0 m. What is its \(X\)?</summary>
+        <div class="answer"><p>\(X = (470 - 320) \times 2.0 / 600 = 0.5\) m, half a metre to the right of the optical axis.</p></div></details>
+      <details class="q"><summary><span class="qn">Q2.</span>Why does a DOA direction transform with \(R\) only, while a point transforms with \(R\) and \(t\)?</summary>
+        <div class="answer"><p>A direction is a difference between two points; translating both by \(t\) cancels out. Moving the array 10 cm sideways does not change which way "north-east" is.</p></div></details>
+      <details class="q"><summary><span class="qn">Q3.</span>RANSAC returns a plane with normal (0, −0.99, 0.1) in the camera frame. Floor, ceiling, or wall?</summary>
+        <div class="answer"><p>In the camera frame \(y\) points down, so a normal along \(\pm y\) means a horizontal surface: floor or ceiling. Which one depends on which side of the plane the camera is on (compare the sign of \(d\), or check the plane's height relative to the camera). The small \(z\) component means the camera is tilted slightly.</p></div></details>
+      <details class="q"><summary><span class="qn">Q4.</span>A ray from the array along the DOA hits a wall plane at 1.2 m, but the visual detector shows the sound's likely source 3 m away in that direction. What does that suggest?</summary>
+        <div class="answer"><p>The visual candidate is behind the wall, so it cannot be the direct-path source along that ray. Either the DOA is a reflection, or the true source is occluded or elsewhere. This is exactly the reasoning Concept 12 formalises.</p></div></details>
+
+      <h2 id="mistakes">Common mistakes</h2>
+      <ul class="mistakes">
+        <li><strong>Wrong depth units</strong> (millimetres as metres), giving a room a kilometre wide.</li>
+        <li><strong>Unaligned depth and colour</strong>, so detections in the colour image get depths from the wrong pixels.</li>
+        <li><strong>Mixing frame conventions</strong> (\(y\) down versus \(z\) up) between libraries.</li>
+        <li><strong>Translating direction vectors.</strong></li>
+        <li><strong>Treating zero depth as real</strong>, creating a cloud of points at the camera.</li>
+        <li><strong>Trusting one view</strong> as a complete room map; mark which parts of the room are unobserved.</li>
+      </ul>
+
+      <nav class="pager" id="pager"></nav>
+      <footer class="site-footer" id="site-footer">
+        <noscript><p>DataWorks Audio Perception Lab, UCSD DataWorks. Lab lead: Rami Abukhater.</p></noscript>
+      </footer>
+    </article>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="../assets/js/site.js"></script>
+</body>
+</html>

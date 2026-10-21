@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project ideas · DataWorks Audio Perception Lab</title>
+<meta name="description" content="The lab&#x27;s three research modules: edge audio classification, vision-grounded self-supervised audio learning, and audio-visual sound source localization.">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="ideas" data-root="">
+<a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
+<header class="site-header" id="site-header">
+  <a class="brand" href="index.html">
+    <svg class="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+      <circle cx="13" cy="13" r="11.5" fill="none" stroke="currentColor" stroke-opacity=".3"/>
+      <g stroke-linecap="round" stroke-width="2">
+        <line x1="6" y1="11" x2="6" y2="15" style="stroke:var(--d-blue)"/>
+        <line x1="9.5" y1="7.5" x2="9.5" y2="18.5" style="stroke:var(--d-blue)"/>
+        <line x1="13" y1="5" x2="13" y2="21" style="stroke:var(--accent)"/>
+        <line x1="16.5" y1="9" x2="16.5" y2="17" style="stroke:var(--d-amber)"/>
+        <line x1="20" y1="11.5" x2="20" y2="14.5" style="stroke:var(--d-red)"/>
+      </g>
+    </svg>
+    <span class="brand-text">DataWorks <span class="dim">Audio Perception Lab</span></span>
+  </a>
+</header>
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Course pages">
+    <noscript><a href="index.html">Home</a> · <a href="setup.html">Setup</a> · <a href="concepts/01-digital-audio.html">Concepts</a> · <a href="project-ideas.html">Project ideas</a> · <a href="resources.html">Resources</a></noscript>
+  </nav>
+  <main class="main" id="content">
+    <article class="content">
+      <div class="eyebrow">Projects · Blueprint and repository specification</div>
+      <h1>Project ideas</h1>
+      <p class="lede">The Multi-Modal Audio Perception Lab runs three research modules. Together they target audio processing for perception under real constraints: <strong>edge deployment</strong>, <strong>self-supervised cross-modal bootstrapping</strong>, and <strong>physically grounded audio-visual sound source localization (AV-SSL)</strong>. Each module below gives the objective, the technical outline mapped to the repository's folders, the concept pages to read first, and a suggested path from first week to final result.</p>
+
+      <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
+        <li><a href="#overview">Repository overview</a></li>
+        <li><a href="#module-1">Module 1: Edge audio classification</a></li>
+        <li><a href="#module-2">Module 2: Self-supervised learning via vision</a></li>
+        <li><a href="#module-3">Module 3: AV-SSL with spatial physics</a></li>
+        <li><a href="#compare">Comparing the modules</a></li>
+        <li><a href="#how">How to pick and propose</a></li></ol></nav>
+
+      <h2 id="overview">Repository overview</h2>
+      <p>This repository houses experimental research frameworks targeting audio processing for perception, focusing on edge deployment constraints, self-supervised cross-modal bootstrapping, and physically grounded audio-visual sound source localization. Code for each module lives in the folders named in its outline; the site you are reading lives in <code>docs/</code>.</p>
+<pre class="code"><code>data/                   Module 1: dataset processing and augmentation
+models/edge_audio/      Module 1: compact log-mel feature extractors and classifiers
+optim/                  Module 1: int8 post-training quantization and pruning
+eval/                   Module 1: latency, memory, and accuracy-vs-SNR benchmarks
+core/sync/              Module 2: time-aligned audio and RGB capture
+models/vision/          Module 2: frozen object detector wrapper
+pipeline/bootstrap/     Module 2: embedding clusters, gating, pseudo-labels
+training/               Module 2: iterative student fine-tuning
+dsp/doa/                Module 3: GCC-PHAT direction of arrival
+spatial/mapping/        Module 3: RGB-D point clouds and room layout
+core/physics_fusion/    Module 3: line of sight, occlusion, reflections
+eval/ssl/               Module 3: localization benchmarks
+docs/                   this website</code></pre>
+
+      <div class="ideas">
+
+        <!-- ================= Module 1 ================= -->
+        <article class="idea" id="module-1" data-theme="edge">
+          <header>
+            <h3><span class="idea-num">1</span> Lightweight edge audio classification and robustness testing</h3>
+            <div class="badges"><span class="badge theme-edge">Edge deployment</span><span class="badge">UrbanSound8K</span><span class="badge">PyTorch · ONNX Runtime</span><span class="badge">ESP32 / Pico targets</span></div>
+          </header>
+          <p><strong>Objective.</strong> Build, compress, and benchmark compact audio neural networks (for example MobileNet-based or custom tiny CNNs) under simulated hardware constraints and extreme environmental noise.</p>
+
+          <div class="field"><strong>Technical outline.</strong>
+            <ul>
+              <li><strong>Data pipeline</strong> (<code>/data</code>): scripts to process datasets (for example UrbanSound8K) with synthetic data augmentations including pink and white noise injection, room impulse response (RIR) reverberation, and dynamic gain drops.</li>
+              <li><strong>Model architecture</strong> (<code>/models/edge_audio</code>): compact audio feature extractors operating on log-mel spectrogram frames.</li>
+              <li><strong>Quantization and optimization</strong> (<code>/optim</code>): 8-bit integer post-training quantization (PTQ) and weight pruning, using tools like PyTorch or ONNX Runtime, targeting microcontrollers (ESP32 and Raspberry Pi Pico specs).</li>
+              <li><strong>Evaluation suite</strong> (<code>/eval</code>): benchmarking scripts tracking inference latency, memory footprint (RAM and flash), and accuracy degradation curves under varying signal-to-noise ratios (SNR).</li>
+            </ul></div>
+
+          <div class="field"><strong>Read first.</strong>
+            <ul class="prereqs">
+              <li><a href="concepts/01-digital-audio.html">1 · Digital audio</a></li><li><a href="concepts/03-mel-spectrograms.html">3 · Log-mel</a></li>
+              <li><a href="concepts/04-noise-reverb-augmentation.html">4 · Noise and reverb</a></li><li><a href="concepts/05-audio-cnns.html">5 · CNNs</a></li>
+              <li><a href="concepts/06-evaluation.html">6 · Evaluation</a></li><li><a href="concepts/07-edge-compression.html">7 · Edge compression</a></li>
+            </ul></div>
+
+          <div class="field"><strong>Suggested path.</strong>
+            <ol>
+              <li><strong>Pipeline and baseline.</strong> Load UrbanSound8K with its official folds, resample to 16 kHz mono, fixed 4 s clips, the shared log-mel front end. Train a float32 TinyAudioNet and an MFCC + SVM baseline.</li>
+              <li><strong>Stressed test sets.</strong> Generate and save fixed test sets at −10, −5, 0, 5, 10, 20 dB with held-out white, pink, and real noise; reverberant versions at several RT60s; gain-drop versions. Draw the first degradation curves.</li>
+              <li><strong>Robust training.</strong> Retrain with on-the-fly augmentation. Does it flatten the curve? At what cost to clean accuracy?</li>
+              <li><strong>Compression.</strong> PTQ to int8 (PyTorch and ONNX Runtime), then structured and unstructured pruning, then QAT if PTQ loses too much. Evaluate every variant on every stressed test set.</li>
+              <li><strong>Benchmark.</strong> Single-thread, batch-1 latency (p50, p95) including the front end; flash and peak RAM; check each variant against ESP32 and Pico budgets. Deploy the best one on real hardware if available.</li>
+            </ol></div>
+
+          <div class="field"><strong>Key result.</strong> One figure: accuracy versus SNR, one line per model variant (float, int8, pruned, each with and without noise training), plus a table of size, RAM, and latency. The research question: <em>does compression cost more accuracy in noise than in clean conditions?</em></div>
+
+          <div class="field"><strong>Extensions.</strong>
+            <ul>
+              <li>Knowledge distillation from a large pretrained teacher (PANNs, AST) into the tiny student; how much of the noise-robustness gap closes?</li>
+              <li>Mixed precision: keep the first and last layers in higher precision and measure what that buys.</li>
+              <li>Streaming inference with a rolling buffer and the always-on power budget it implies.</li>
+              <li>Per-class robustness: which classes collapse first in noise, and why?</li>
+            </ul></div>
+          <p class="builds">Needs: a laptop and free Colab/Kaggle GPU time. Optional: an ESP32-S3 or Raspberry Pi Pico 2 board and a Raspberry Pi for real latency numbers.</p>
+        </article>
+
+        <!-- ================= Module 2 ================= -->
+        <article class="idea" id="module-2" data-theme="selfsup">
+          <header>
+            <h3><span class="idea-num">2</span> Self-supervised audio learning via vision grounding</h3>
+            <div class="badges"><span class="badge theme-selfsup">Self-supervised</span><span class="badge">Cross-modal</span><span class="badge">YOLOv8 (frozen)</span><span class="badge">Indoor recordings</span></div>
+          </header>
+          <p><strong>Objective.</strong> Bootstrap an indoor audio classifier iteratively, using visual co-occurrence cues (for example YOLO object detection), without relying on manually labelled sound datasets from scratch.</p>
+
+          <div class="field"><strong>Technical outline.</strong>
+            <ul>
+              <li><strong>Multimodal synchronization engine</strong> (<code>/core/sync</code>): captures time-aligned windows of ambient audio and RGB frames from a static indoor camera setup.</li>
+              <li><strong>Visual object detection wrapper</strong> (<code>/models/vision</code>): integrates a frozen object detector (for example YOLOv8) to extract bounding boxes and semantic class labels (<code>microwave</code>, <code>keyboard</code>, <code>doorbell</code>) from the visual stream.</li>
+              <li><strong>Cross-modal gating and pseudo-labeling</strong> (<code>/pipeline/bootstrap</code>):
+                <ul>
+                  <li>computes audio embedding clusters via unsupervised representation learning;</li>
+                  <li>implements a confidence-scoring policy: if audio clusters align temporally with high-confidence visual object tags, assign a pseudo-label.</li>
+                </ul></li>
+              <li><strong>Iterative fine-tuning loop</strong> (<code>/training</code>): periodically updates the student audio encoder weights using auto-curated pseudo-labels, to measure classification convergence over generation cycles.</li>
+            </ul></div>
+
+          <div class="field"><strong>Read first.</strong>
+            <ul class="prereqs">
+              <li><a href="concepts/01-digital-audio.html">1 · Digital audio</a></li><li><a href="concepts/03-mel-spectrograms.html">3 · Log-mel</a></li>
+              <li><a href="concepts/04-noise-reverb-augmentation.html">4 · Augmentation</a></li><li><a href="concepts/05-audio-cnns.html">5 · CNNs</a></li>
+              <li><a href="concepts/06-evaluation.html">6 · Evaluation</a></li><li><a href="concepts/08-embeddings-ssl.html">8 · Embeddings and SSL</a></li>
+              <li><a href="concepts/09-cross-modal-pseudo-labels.html">9 · Pseudo-labels</a></li>
+            </ul></div>
+
+          <div class="field"><strong>Suggested path.</strong>
+            <ol>
+              <li><strong>Capture rig and consent.</strong> One static camera and one microphone on the same machine, both stamped with one monotonic clock. Clap test to measure offset. Get consent from everyone who uses the space; agree on what is stored and for how long.</li>
+              <li><strong>Class list and check set.</strong> Pick 6–10 indoor sound classes. Confirm the detector's vocabulary covers them (COCO has microwave and keyboard but no doorbell; plan an open-vocabulary detector or another visual cue). Hand-label 200+ windows from held-out days as the test set.</li>
+              <li><strong>Generation 0.</strong> Embed windows with a pretrained encoder, drop silence, over-cluster, compute cluster–tag lift, apply the gate, inspect and listen to every cluster that received a label.</li>
+              <li><strong>Iterate.</strong> Train the student with strong augmentation, relabel, re-embed, re-cluster. Track test macro-F1, pseudo-label precision and coverage, and cluster quality per generation.</li>
+              <li><strong>Out-of-view test.</strong> Does the final audio model recognise events when the object is off camera? Compare with a supervised model trained on the hand labels alone.</li>
+            </ol></div>
+
+          <div class="field"><strong>Key result.</strong> Convergence curves over generations (macro-F1, pseudo-label precision, number of labelled windows), compared against a small fully supervised baseline. The research question: <em>how close can vision-grounded pseudo-labels get to human labels, and where does confirmation bias set in?</em></div>
+
+          <div class="field"><strong>Extensions.</strong>
+            <ul>
+              <li>Learned gating: replace fixed thresholds with a small model that predicts whether a pseudo-label is correct.</li>
+              <li>Activity cues instead of object presence (hand–object proximity, door state changes).</li>
+              <li>Contrastive audio pretraining on the unlabelled recordings before generation 0.</li>
+              <li>Transfer: train in one room, test in another.</li>
+            </ul></div>
+          <p class="builds">Needs: a webcam and a USB microphone (or a laptop's built-in ones), a GPU for training, and a shared indoor space where everyone has agreed to be recorded.</p>
+        </article>
+
+        <!-- ================= Module 3 ================= -->
+        <article class="idea" id="module-3" data-theme="avssl">
+          <header>
+            <h3><span class="idea-num">3</span> Audio-visual sound source localization (AV-SSL) with spatial physics</h3>
+            <div class="badges"><span class="badge theme-avssl">Spatial audio</span><span class="badge">GCC-PHAT</span><span class="badge">RGB-D · Open3D</span><span class="badge">Physics reasoning</span></div>
+          </header>
+          <p><strong>Objective.</strong> Build an advanced localization pipeline that integrates spatial audio direction with 3-D room geometry, to resolve occlusions, off-screen sound sources, and echoes.</p>
+
+          <div class="field"><strong>Technical outline.</strong>
+            <ul>
+              <li><strong>Stream A, acoustic direction of arrival</strong> (<code>/dsp/doa</code>): implements generalized cross-correlation with phase transform (GCC-PHAT) on microphone array feeds to calculate incoming sound azimuth and elevation angles.</li>
+              <li><strong>Stream B, visual room mapping</strong> (<code>/spatial/mapping</code>): interfaces with an RGB-D camera (or simulated depth datasets) to extract 3-D point clouds, wall locations, and layout boundaries using open-source tools (for example Open3D).</li>
+              <li><strong>Stream C, physics and occlusion reasoning layer</strong> (<code>/core/physics_fusion</code>):
+                <ul>
+                  <li><em>Line-of-sight check</em>: cross-references the acoustic DOA vector against the 3-D room layout map.</li>
+                  <li><em>Occlusion and out-of-sight handling</em>: filters out false-positive visual heatmaps when a sound vector points toward a blocked wall or open doorway, classifying the source as occluded.</li>
+                  <li><em>Multi-path reflection mapping</em>: uses basic acoustic mirror-source concepts to track early wall reflections, rather than letting the model hallucinate false visual origins.</li>
+                </ul></li>
+              <li><strong>Evaluation benchmarks</strong> (<code>/eval/ssl</code>): measures angular localization error (degrees) and classification accuracy across visible versus occluded source scenarios.</li>
+            </ul></div>
+
+          <div class="field"><strong>Read first.</strong>
+            <ul class="prereqs">
+              <li><a href="concepts/01-digital-audio.html">1 · Digital audio</a></li><li><a href="concepts/02-fourier-stft.html">2 · Fourier and STFT</a></li>
+              <li><a href="concepts/04-noise-reverb-augmentation.html">4 · Reverb</a></li><li><a href="concepts/06-evaluation.html">6 · Evaluation</a></li>
+              <li><a href="concepts/10-mic-arrays-gcc-phat.html">10 · GCC-PHAT</a></li><li><a href="concepts/11-3d-geometry.html">11 · 3-D geometry</a></li>
+              <li><a href="concepts/12-room-acoustics-occlusion.html">12 · Room acoustics</a></li>
+            </ul></div>
+
+          <div class="field"><strong>Suggested path.</strong>
+            <ol>
+              <li><strong>Simulation first.</strong> Build test rooms in pyroomacoustics (shoebox, then with partitions) with a simulated array. Implement GCC-PHAT and SRP-PHAT; reproduce the anechoic-versus-reverberant gap; tabulate angular error against RT60.</li>
+              <li><strong>Geometry stream.</strong> From RGB-D frames (a simulated dataset or a RealSense), produce a point cloud, RANSAC planes for floor and walls, doorway gaps, and a ray-casting query.</li>
+              <li><strong>Calibration.</strong> Put array, camera, and room in one frame. Validate with a phone playing noise from known positions.</li>
+              <li><strong>Physics layer.</strong> Line-of-sight check, occlusion and off-screen classification, first-order reflection mapping. Ablate each.</li>
+              <li><strong>Benchmark.</strong> Visible, occluded, and off-screen scenarios in simulation, then in a real room. Report wrapped angular error (median, within 10° and 20°), scenario classification accuracy, and hallucinated-source rate against DOA-only and naive-fusion baselines.</li>
+            </ol></div>
+
+          <div class="field"><strong>Key result.</strong> A table of angular error and scenario accuracy split by visible, occluded, and off-screen, with and without each physics step. The research question: <em>how much does explicit room geometry reduce localization errors and false visual matches caused by occlusion and reflections?</em></div>
+
+          <div class="field"><strong>Extensions.</strong>
+            <ul>
+              <li>SoundSpaces scenes for realistic geometry with rendered audio and RGB-D.</li>
+              <li>Probabilistic fusion: a likelihood for each explanation instead of thresholds; tracking over time.</li>
+              <li>Second-order reflections and diffraction around doorway edges.</li>
+              <li>A learned AV-SSL heatmap model as Stream D, with the physics layer used to veto its impossible answers.</li>
+            </ul></div>
+          <p class="builds">Needs: Python and pyroomacoustics for the simulation phase. For the real-room phase: a synchronised multichannel array (for example a ReSpeaker 4- or 6-mic array) and an RGB-D camera (for example an Intel RealSense).</p>
+        </article>
+      </div>
+
+      <h2 id="compare">Comparing the modules</h2>
+      <div class="table-scroll"><table class="plain">
+        <tr><th></th><th>Module 1</th><th>Module 2</th><th>Module 3</th></tr>
+        <tr><td>Core skill</td><td>Model efficiency and robustness</td><td>Learning without labels</td><td>Signal processing and geometry</td></tr>
+        <tr><td>Data</td><td>Public (UrbanSound8K)</td><td>You record it</td><td>Simulated first, then recorded</td></tr>
+        <tr><td>Hardware</td><td>Optional microcontroller</td><td>Webcam and mic</td><td>Mic array and RGB-D camera (later phase)</td></tr>
+        <tr><td>Math load</td><td>Medium</td><td>Medium</td><td>Highest</td></tr>
+        <tr><td>Fastest first result</td><td>Week 1 baseline</td><td>After the capture rig works</td><td>Week 1 in simulation</td></tr>
+        <tr><td>Biggest risk</td><td>Leaky splits inflating results</td><td>Confirmation bias, privacy</td><td>Calibration between frames</td></tr>
+      </table></div>
+
+      <h2 id="how">How to pick and propose</h2>
+      <ol class="checklist">
+        <li>Finish <a href="setup.html">setup</a> and the six core concept pages, so you can judge each module from the inside.</li>
+        <li>Read the module pages for the one or two modules you are drawn to.</li>
+        <li>Write a half-page proposal: which module, which question within it (one of the extensions, or your own), the single figure or table you expect to produce, the baseline you will beat, and the data and hardware you need.</li>
+        <li>Bring it to the lab leads. Teams can split a module by stream or stage (for example one person on Module 3's Stream A and another on Stream B), as long as the interfaces between pieces are agreed in writing first.</li>
+      </ol>
+
+      <nav class="pager" id="pager"></nav>
+      <footer class="site-footer" id="site-footer">
+        <noscript><p>DataWorks Audio Perception Lab, UCSD DataWorks. Lab lead: Rami Abukhater.</p></noscript>
+      </footer>
+    </article>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="assets/js/site.js"></script>
+</body>
+</html>
