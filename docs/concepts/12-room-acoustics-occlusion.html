@@ -39,6 +39,21 @@
       <h1>Room acoustics, mirror sources, and occlusion</h1>
       <p class="lede">In a real room, the microphone array hears the source <em>and</em> its reflections off every wall, and sometimes only the reflections. Audio-visual localizers that ignore this point at walls and glowing visual "sources" that cannot be making the sound. Stream C of Module 3 is a physics layer that knows where the walls are. This page gives you the acoustics it needs: how sound behaves in rooms, the mirror-source model of reflections, and how to combine an acoustic direction with a 3-D room map to decide what is visible, what is occluded, and what is an echo.</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://doi.org/10.1121/1.382599">Allen &amp; Berkley (1979). <em>Image Method for Efficiently Simulating Small-Room Acoustics</em></a>. The image-source (mirror-source) method.</li>
+          <li><a href="https://arxiv.org/abs/1710.04196">Scheibler, Bezzam &amp; Dokmanić (2018). <em>Pyroomacoustics</em></a>. Room simulation and DOA algorithms used on this page.</li>
+          <li><a href="https://arxiv.org/abs/1912.11474">Chen et al. (2020). <em>SoundSpaces: Audio-Visual Navigation in 3D Environments</em></a>. Acoustic rendering in scanned 3-D rooms, with occlusion and reflections.</li>
+          <li><a href="https://arxiv.org/abs/2206.08312">Chen et al. (2022). <em>SoundSpaces 2.0: A Simulation Platform for Visual-Acoustic Learning</em></a>. Continuous, configurable rendering with RGB-D; the best simulator for Module 3.</li>
+          <li><a href="https://arxiv.org/abs/1803.03849">Senocak et al. (2018). <em>Learning to Localize Sound Source in Visual Scenes</em></a>. Learned audio-visual heatmaps, the kind of output the physics layer checks.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#propagation">How sound travels in a room</a></li><li><a href="#ism">The image-source method</a></li>
         <li><a href="#try">Try it: reflections and occlusion</a></li><li><a href="#sim">Simulating rooms with pyroomacoustics</a></li><li><a href="#fusion">The physics fusion layer</a></li>

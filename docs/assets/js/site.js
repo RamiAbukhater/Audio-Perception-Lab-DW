@@ -136,7 +136,8 @@
     footer.innerHTML =
       "<p><strong>DataWorks Audio Perception Lab</strong>, UCSD DataWorks. Lab lead: " + LEADS + ".</p>" +
       "<p>Explanations, diagrams, and demos on this site are our own. Datasets, libraries, and papers are linked and credited where they are used; see the Resources page.</p>" +
-      "<p>Site text CC BY 4.0, site code MIT. See the repository README for details.</p>";
+      "<p>Site text CC BY 4.0, site code MIT. See the repository README for details.</p>" +
+      '<p class="ai-line">Pages on this site were written with Claude, an AI model, and may contain mistakes. Please point anything that looks wrong out to Rami so it can be fixed.</p>';
   }
 
   /* ---------- copy buttons on code blocks ---------- */

@@ -39,6 +39,20 @@
       <h1>Training CNNs on spectrograms</h1>
       <p class="lede">Once audio is a log-mel image, we can borrow the most reliable tool in computer vision: the convolutional neural network. This page explains why that works, what is different about spectrograms compared with photos, how to build a network small enough for a microcontroller, and how to train it on UrbanSound8K without fooling yourself.</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://doi.org/10.1109/MLSP.2015.7324337">Piczak (2015). <em>Environmental Sound Classification with Convolutional Neural Networks</em></a>. One of the first CNNs on log-mel spectrograms for environmental sound, on ESC-50 and UrbanSound8K.</li>
+          <li><a href="https://arxiv.org/abs/1608.04363">Salamon &amp; Bello (2017). <em>Deep Convolutional Neural Networks and Data Augmentation for Environmental Sound Classification</em></a>. A small CNN baseline on UrbanSound8K with the official 10-fold protocol.</li>
+          <li><a href="https://arxiv.org/abs/1704.04861">Howard et al. (2017). <em>MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications</em></a>. Depthwise-separable convolutions and the width multiplier.</li>
+          <li><a href="https://arxiv.org/abs/1912.10211">Kong et al. (2020). <em>PANNs: Large-Scale Pretrained Audio Neural Networks for Audio Pattern Recognition</em></a>. AudioSet-pretrained CNNs, including MobileNet variants, used as baselines and teachers.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#conv">Convolutions on spectrograms</a></li><li><a href="#ds">Depthwise-separable convolutions</a></li>
         <li><a href="#model">A tiny audio CNN</a></li><li><a href="#us8k">UrbanSound8K and its folds</a></li><li><a href="#train">The training loop</a></li>

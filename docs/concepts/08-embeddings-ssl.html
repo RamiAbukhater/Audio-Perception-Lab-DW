@@ -39,6 +39,20 @@
       <h1>Embeddings, clustering, and self-supervised learning</h1>
       <p class="lede">Module 2 starts with no sound labels at all. To find structure in hours of unlabelled kitchen and office audio, we first turn each short window into an <strong>embedding</strong>, a vector where similar sounds land close together, and then look for groups. This page covers what makes a good embedding, how to learn one without labels, and how to cluster it without fooling yourself.</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://arxiv.org/abs/1807.03748">van den Oord, Li &amp; Vinyals (2018). <em>Representation Learning with Contrastive Predictive Coding</em></a>. Introduces the InfoNCE loss.</li>
+          <li><a href="https://arxiv.org/abs/2002.05709">Chen et al. (2020). <em>A Simple Framework for Contrastive Learning of Visual Representations (SimCLR)</em></a>. Two augmented views, a projection head, and why augmentation choice decides what is learned.</li>
+          <li><a href="https://arxiv.org/abs/2010.10915">Saeed, Grangier &amp; Zeghidour (2021). <em>Contrastive Learning of General-Purpose Audio Representations (COLA)</em></a>. Contrastive learning for audio with clips from the same recording as positives.</li>
+          <li><a href="https://arxiv.org/abs/2103.06695">Niizumi et al. (2021). <em>BYOL for Audio</em></a>. Self-supervised audio embeddings without negatives, a strong alternative to contrastive learning.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#embed">What an embedding is</a></li><li><a href="#cos">Distances and cosine similarity</a></li>
         <li><a href="#ssl">Self-supervised learning</a></li><li><a href="#contrastive">Contrastive learning and InfoNCE</a></li><li><a href="#cluster">Clustering embeddings</a></li>

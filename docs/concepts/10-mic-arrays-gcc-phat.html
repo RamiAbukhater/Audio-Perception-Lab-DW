@@ -39,6 +39,20 @@
       <h1>Microphone arrays, TDOA, and GCC-PHAT</h1>
       <p class="lede">You can tell where a sound comes from with your eyes closed because it reaches one ear slightly before the other. A microphone array does the same thing with several "ears" a few centimetres apart. This page covers how to measure those tiny delays robustly with GCC-PHAT, and how to turn them into azimuth and elevation angles, which is Stream A of Module 3.</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://doi.org/10.1109/TASSP.1976.1162830">Knapp &amp; Carter (1976). <em>The Generalized Correlation Method for Estimation of Time Delay</em></a>. The origin of GCC and the PHAT weighting.</li>
+          <li><a href="https://doi.org/10.1109/TAP.1986.1143830">Schmidt (1986). <em>Multiple Emitter Location and Signal Parameter Estimation</em></a>. The MUSIC algorithm.</li>
+          <li><a href="https://arxiv.org/abs/1807.00129">Adavanne et al. (2019). <em>Sound Event Localization and Detection of Overlapping Sources Using Convolutional Recurrent Neural Networks</em></a>. SELDnet, the standard learned DOA baseline.</li>
+          <li><a href="https://arxiv.org/abs/2109.03465">Grumiaux et al. (2022). <em>A Survey of Sound Source Localization with Deep Learning Methods</em></a>. A map of classical and learned localization methods.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#geometry">Far-field geometry</a></li><li><a href="#xcorr">Cross-correlation</a></li>
         <li><a href="#phat">The phase transform (PHAT)</a></li><li><a href="#code">GCC-PHAT in code</a></li><li><a href="#multi">From delays to azimuth and elevation</a></li>

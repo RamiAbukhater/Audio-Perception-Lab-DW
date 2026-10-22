@@ -39,6 +39,19 @@
       <h1>The Fourier transform and the STFT</h1>
       <p class="lede">A waveform tells you how loud the sound is from moment to moment, but almost nothing about <em>what</em> it is. A dog bark and a car horn at the same volume look alike as waveforms and completely different as spectra. This page is about how we move from time to frequency, and why we always do it in short windows.</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://doi.org/10.1090/S0025-5718-1965-0178586-1">Cooley &amp; Tukey (1965). <em>An Algorithm for the Machine Calculation of Complex Fourier Series</em></a>. The FFT: computing the DFT in \(O(N\log N)\), and why power-of-two sizes are fastest.</li>
+          <li><a href="https://doi.org/10.1109/PROC.1978.10837">Harris (1978). <em>On the Use of Windows for Harmonic Analysis with the Discrete Fourier Transform</em></a>. The classic reference on spectral leakage and how window shapes like Hann trade it off.</li>
+          <li><a href="https://doi.org/10.1109/TASSP.1977.1162950">Allen (1977). <em>Short Term Spectral Analysis, Synthesis, and Modification by Discrete Fourier Transform</em></a>. Formalises the STFT with overlapping windows and hops.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#dft">The DFT and FFT</a></li><li><a href="#windows">Windows and leakage</a></li>
         <li><a href="#stft">The short-time Fourier transform</a></li><li><a href="#tradeoff">The time-frequency trade-off</a></li><li><a href="#phase">Magnitude, power, and phase</a></li>

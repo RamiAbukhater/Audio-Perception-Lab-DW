@@ -39,6 +39,19 @@
       <h1>Mel spectrograms and log-mel features</h1>
       <p class="lede">The input to nearly every model in this lab is a <strong>log-mel spectrogram</strong>: a small image of how energy is spread over time and over perceptually spaced frequency bands. This page builds it from the STFT, one step at a time, and fixes the exact front end the lab uses so that everyone's numbers are comparable.</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://doi.org/10.1121/1.1915893">Stevens, Volkmann &amp; Newman (1937). <em>A Scale for the Measurement of the Psychological Magnitude Pitch</em></a>. The listening experiments that defined the mel scale.</li>
+          <li><a href="https://doi.org/10.1109/TASSP.1980.1163420">Davis &amp; Mermelstein (1980). <em>Comparison of Parametric Representations for Monosyllabic Word Recognition in Continuously Spoken Sentences</em></a>. Introduced MFCCs, built on mel filterbanks and a log.</li>
+          <li><a href="https://arxiv.org/abs/1709.01922">Choi et al. (2017). <em>A Comparison of Audio Signal Preprocessing Methods for Deep Neural Networks on Music Tagging</em></a>. Shows that log compression of mel features matters far more for CNNs than most other preprocessing choices.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#mel">The mel scale</a></li><li><a href="#fbank">Mel filterbanks</a></li>
         <li><a href="#log">Why take the log</a></li><li><a href="#norm">Normalisation</a></li><li><a href="#mfcc">MFCCs, briefly</a></li>

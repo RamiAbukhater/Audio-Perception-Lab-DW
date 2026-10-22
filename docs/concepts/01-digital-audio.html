@@ -39,6 +39,20 @@
       <h1>Digital audio: sampling, bit depth, decibels</h1>
       <p class="lede">Every project in this lab starts with a file full of numbers. Before you can build a classifier, a pseudo-labeller, or a localizer, you need to know exactly what those numbers mean: how often they were taken, how precise each one is, how loud they are, and what can silently go wrong when you load them.</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://doi.org/10.1109/T-AIEE.1928.5055024">Nyquist (1928). <em>Certain Topics in Telegraph Transmission Theory</em></a>. The origin of the "two samples per cycle" limit behind the Nyquist frequency.</li>
+          <li><a href="https://doi.org/10.1109/JRPROC.1949.232969">Shannon (1949). <em>Communication in the Presence of Noise</em></a>. States the sampling theorem and shows how a band-limited signal is rebuilt from its samples.</li>
+          <li><a href="https://doi.org/10.25080/Majora-7b98e3ed-003">McFee et al. (2015). <em>librosa: Audio and Music Signal Analysis in Python</em></a>. The library behind most audio tutorials, and the conventions (22.05 kHz, float32) you will meet in them.</li>
+          <li><a href="https://arxiv.org/abs/2110.15018">Yang et al. (2021). <em>TorchAudio: Building Blocks for Audio and Speech Processing</em></a>. The design of torchaudio, which the lab uses for loading, resampling, and features.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#sampling">Sampling and Nyquist</a></li><li><a href="#bits">Bit depth</a></li>
         <li><a href="#db">Decibels</a></li><li><a href="#channels">Channels and file formats</a></li><li><a href="#code">The code</a></li>

@@ -39,6 +39,21 @@
       <h1>Quantization, pruning, and edge benchmarking</h1>
       <p class="lede">A trained PyTorch model stores every weight as a 32-bit float and assumes a laptop-class CPU. An ESP32 has about half a megabyte of RAM and no floating-point vector unit; a Raspberry Pi Pico has 264 KB of RAM and no floating-point hardware at all. This page explains how we shrink a model to fit (8-bit quantization and pruning) and how to measure, honestly, what we gained and what we lost.</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://arxiv.org/abs/1712.05877">Jacob et al. (2018). <em>Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference</em></a>. The affine int8 scheme (scale and zero point) used by PyTorch, TFLite, and ONNX Runtime.</li>
+          <li><a href="https://arxiv.org/abs/2106.08295">Nagel et al. (2021). <em>A White Paper on Neural Network Quantization</em></a>. A practical guide to PTQ, QAT, per-channel scales, and debugging accuracy loss.</li>
+          <li><a href="https://arxiv.org/abs/1510.00149">Han, Mao &amp; Dally (2016). <em>Deep Compression</em></a>. Pruning, quantization, and coding combined.</li>
+          <li><a href="https://arxiv.org/abs/1711.07128">Zhang et al. (2017). <em>Hello Edge: Keyword Spotting on Microcontrollers</em></a>. Audio CNNs designed under real microcontroller memory and compute budgets.</li>
+          <li><a href="https://arxiv.org/abs/2106.07597">Banbury et al. (2021). <em>MLPerf Tiny Benchmark</em></a>. How to measure latency, memory, and energy on tiny devices fairly.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#budget">The hardware budget</a></li><li><a href="#affine">Affine int8 quantization</a></li>
         <li><a href="#ptq">Post-training quantization</a></li><li><a href="#onnx">PTQ with ONNX Runtime</a></li><li><a href="#prune">Pruning</a></li>

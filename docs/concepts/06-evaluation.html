@@ -39,6 +39,20 @@
       <h1>Evaluation and experimental rigor</h1>
       <p class="lede">Every module ends in an evaluation suite: accuracy versus SNR in Module 1, convergence over pseudo-label generations in Module 2, angular error on visible versus occluded sources in Module 3. A research result is only as good as the measurement behind it. This page covers the metrics we use, the traps that inflate them, and how to report numbers other people can trust.</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://doi.org/10.1145/2647868.2655045">Salamon, Jacoby &amp; Bello (2014). <em>A Dataset and Taxonomy for Urban Sound Research</em></a>. The UrbanSound8K paper, which defines the fold-based evaluation protocol.</li>
+          <li><a href="https://arxiv.org/abs/2207.07048">Kapoor &amp; Narayanan (2023). <em>Leakage and the Reproducibility Crisis in ML-based Science</em></a>. A taxonomy of data leakage and how often it inflates published results.</li>
+          <li><a href="https://doi.org/10.1109/TMM.2014.2330697">Sturm (2014). <em>A Simple Method to Determine if a Music Information Retrieval System is a "Horse"</em></a>. Audio classifiers that score well for the wrong reasons, and how to test for it.</li>
+          <li><a href="https://arxiv.org/abs/2103.03098">Bouthillier et al. (2021). <em>Accounting for Variance in Machine Learning Benchmarks</em></a>. Why one run is not enough, and how to compare models under seed and data variance.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#splits">Splits and leakage</a></li><li><a href="#metrics">Classification metrics</a></li>
         <li><a href="#curves">Degradation curves</a></li><li><a href="#angle">Angular error</a></li><li><a href="#variance">Seeds, variance, and baselines</a></li>

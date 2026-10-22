@@ -39,6 +39,20 @@
       <h1>RGB-D, point clouds, and room geometry</h1>
       <p class="lede">Stream B of Module 3 gives the localizer a map: where the walls, floor, doorways, and furniture are. That map comes from a depth camera. This page covers the camera model that links pixels to 3-D points, the coordinate frames you must keep straight, how to turn depth images into point clouds and walls with Open3D, and how to ask the map geometric questions such as "what does this ray hit first?"</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://doi.org/10.1109/34.888718">Zhang (2000). <em>A Flexible New Technique for Camera Calibration</em></a>. Checkerboard calibration of camera intrinsics, as implemented in OpenCV.</li>
+          <li><a href="https://doi.org/10.1145/358669.358692">Fischler &amp; Bolles (1981). <em>Random Sample Consensus</em></a>. The RANSAC algorithm used for plane fitting.</li>
+          <li><a href="https://arxiv.org/abs/1801.09847">Zhou, Park &amp; Koltun (2018). <em>Open3D: A Modern Library for 3D Data Processing</em></a>. The library used for Stream B.</li>
+          <li><a href="https://doi.org/10.1109/ISMAR.2011.6092378">Newcombe et al. (2011). <em>KinectFusion: Real-Time Dense Surface Mapping and Tracking</em></a>. Fusing many depth frames into one room model.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#pinhole">The pinhole camera</a></li><li><a href="#backproject">Depth to point cloud</a></li>
         <li><a href="#frames">Coordinate frames and extrinsics</a></li><li><a href="#open3d">Point clouds in Open3D</a></li><li><a href="#planes">Finding walls with RANSAC</a></li>

@@ -39,6 +39,20 @@
       <h1>Noise, SNR, reverberation, and augmentation</h1>
       <p class="lede">A model trained on clean, close-mic recordings falls apart in a kitchen with a fan running. This page covers the three ways the real world corrupts sound (additive noise, reverberation, and level changes), how to simulate each one precisely, and how to use those simulations both to train robust models and to measure robustness honestly.</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://arxiv.org/abs/1904.08779">Park et al. (2019). <em>SpecAugment: A Simple Data Augmentation Method for Automatic Speech Recognition</em></a>. Frequency and time masking on spectrograms.</li>
+          <li><a href="https://doi.org/10.1109/ICASSP.2017.7953152">Ko et al. (2017). <em>A Study on Data Augmentation of Reverberant Speech for Robust Speech Recognition</em></a>. Real versus simulated RIRs plus point-source noise for augmentation; the source of the OpenSLR 28 RIR set.</li>
+          <li><a href="https://arxiv.org/abs/1510.08484">Snyder, Chen &amp; Povey (2015). <em>MUSAN: A Music, Speech, and Noise Corpus</em></a>. The noise corpus most often used for additive-noise augmentation.</li>
+          <li><a href="https://arxiv.org/abs/1608.04363">Salamon &amp; Bello (2017). <em>Deep Convolutional Neural Networks and Data Augmentation for Environmental Sound Classification</em></a>. Measures which augmentations help on UrbanSound8K, class by class.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#snr">SNR and mixing at a target SNR</a></li><li><a href="#colours">White, pink, and real noise</a></li>
         <li><a href="#rir">Reverberation and room impulse responses</a></li><li><a href="#gain">Gain drops</a></li><li><a href="#specaug">SpecAugment</a></li>

@@ -39,6 +39,22 @@
       <h1>Object detection, sync, and cross-modal pseudo-labels</h1>
       <p class="lede">Module 2's central trick is to let a camera do the labelling. When the audio cluster for "beep-beep-beep" keeps showing up while a frozen object detector reports a microwave in view, we can guess that cluster means "microwave" and train an audio classifier on that guess. This page covers the detector, getting audio and video onto the same clock, deciding when a guess is trustworthy, and the iterative loop that improves the student model generation by generation.</p>
 
+      <div class="ai-notice" role="note">
+        <span class="ai-notice-title">AI-generated content</span>
+        <p>This page was written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong or confusing, please point it out to Rami so it can be fixed.</p>
+      </div>
+      <aside class="papers" aria-label="Key papers">
+        <span class="papers-title">Key papers for this page</span>
+        <ul>
+          <li><a href="https://arxiv.org/abs/1610.09001">Aytar, Vondrick &amp; Torralba (2016). <em>SoundNet: Learning Sound Representations from Unlabeled Video</em></a>. Trains an audio network from a vision model's predictions on unlabelled video, the closest ancestor of Module 2.</li>
+          <li><a href="https://arxiv.org/abs/1705.08168">Arandjelović &amp; Zisserman (2017). <em>Look, Listen and Learn</em></a>. Audio-visual correspondence as a self-supervised task.</li>
+          <li><a href="https://arxiv.org/abs/1804.03641">Owens &amp; Efros (2018). <em>Audio-Visual Scene Analysis with Self-Supervised Multisensory Features</em></a>. Learning from whether audio and video are temporally aligned.</li>
+          <li><a href="https://arxiv.org/abs/1506.02640">Redmon et al. (2016). <em>You Only Look Once: Unified, Real-Time Object Detection</em></a>. The original YOLO detector.</li>
+          <li><a href="https://arxiv.org/abs/1911.04252">Xie et al. (2020). <em>Self-training with Noisy Student Improves ImageNet Classification</em></a>. The teacher-student loop with strong augmentation.</li>
+          <li><a href="https://arxiv.org/abs/1908.02983">Arazo et al. (2020). <em>Pseudo-Labeling and Confirmation Bias in Deep Semi-Supervised Learning</em></a>. Why pseudo-labels reinforce their own mistakes, and how to limit it.</li>
+        </ul>
+      </aside>
+
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#yolo">What an object detector outputs</a></li><li><a href="#sync">Getting audio and video on one clock</a></li>
         <li><a href="#cooccur">Co-occurrence: linking clusters to objects</a></li><li><a href="#gate">Confidence gating</a></li><li><a href="#loop">The teacher-student loop</a></li>

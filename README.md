@@ -4,6 +4,8 @@ A UCSD DataWorks research lab on audio processing for perception: edge deploymen
 
 **Lab lead:** Rami Abukhater.
 
+> **AI-generated content.** The course site's pages, the module READMEs, and the smoke test were written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong, please point it out to Rami so it can be fixed.
+
 This repository holds the research code for the lab's three modules and a static website that teaches the concepts every member needs:
 
 - **Setup**: Python 3.11, the lab's libraries, GPU notebooks, data, and a smoke test (`scripts/smoke_test.py`) that must pass before anything else.
@@ -12,7 +14,7 @@ This repository holds the research code for the lab's three modules and a static
 - **Project ideas**: the full blueprint for the three modules, mapped to this repository's folders, with prerequisites, a suggested path, the key result, and extensions for each.
 - **Resources and glossary**: datasets, libraries, papers, courses, and terms.
 
-Each concept page has the intuition, the math, diagrams, copyable code with tensor shapes, click-to-reveal questions, and common mistakes. Seven pages include interactive demos (aliasing, the STFT window trade-off, mel filterbanks, SNR mixing with audio playback, int8 quantization, two-mic delay geometry, and a draggable mirror-source room with occlusion).
+Each concept page opens with a short list of key papers, then has the intuition, the math, diagrams, copyable code with tensor shapes, click-to-reveal questions, and common mistakes. Seven pages include interactive demos (aliasing, the STFT window trade-off, mel filterbanks, SNR mixing with audio playback, int8 quantization, two-mic delay geometry, and a draggable mirror-source room with occlusion).
 
 ## The three modules
 
