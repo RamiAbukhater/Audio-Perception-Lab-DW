@@ -29,7 +29,7 @@ def main():
     import torchaudio.transforms as T
     print(f"  ok       numpy {np.__version__}, torch {torch.__version__}, torchaudio {torchaudio.__version__}")
     print("Optional packages:")
-    check_optional(["soundfile", "librosa", "sklearn", "onnx", "onnxruntime", "pyroomacoustics", "open3d", "ultralytics"])
+    check_optional(["soundfile", "librosa", "sklearn", "pyroomacoustics", "open3d", "ultralytics"])
 
     # 1. synthesise 2 s at 16 kHz: a chirp plus coloured noise at 10 dB SNR
     sr = 16_000

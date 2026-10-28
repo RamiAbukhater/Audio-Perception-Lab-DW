@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261027">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
 </head>
-<body data-page="c12" data-root="../">
+<body data-page="c11" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
 <header class="site-header" id="site-header">
   <a class="brand" href="../index.html">
@@ -35,9 +35,9 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Concept 12 of 12 · Module 3 · Audio-visual localization</div>
+      <div class="eyebrow">Concept 11 of 11 · Module 2 · Audio-visual localization</div>
       <h1>Room acoustics, mirror sources, and occlusion</h1>
-      <p class="lede">In a real room, the microphone array hears the source <em>and</em> its reflections off every wall, and sometimes only the reflections. Audio-visual localizers that ignore this point at walls and glowing visual "sources" that cannot be making the sound. Stream C of Module 3 is a physics layer that knows where the walls are. This page gives you the acoustics it needs: how sound behaves in rooms, the mirror-source model of reflections, and how to combine an acoustic direction with a 3-D room map to decide what is visible, what is occluded, and what is an echo.</p>
+      <p class="lede">In a real room, the microphone array hears the source <em>and</em> its reflections off every wall, and sometimes only the reflections. Audio-visual localizers that ignore this point at walls and glowing visual "sources" that cannot be making the sound. Stream C of Module 2 is a physics layer that knows where the walls are. This page gives you the acoustics it needs: how sound behaves in rooms, the mirror-source model of reflections, and how to combine an acoustic direction with a 3-D room map to decide what is visible, what is occluded, and what is an echo.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -49,7 +49,7 @@
           <li><a href="https://doi.org/10.1121/1.382599">Allen &amp; Berkley (1979). <em>Image Method for Efficiently Simulating Small-Room Acoustics</em></a>. The image-source (mirror-source) method.</li>
           <li><a href="https://arxiv.org/abs/1710.04196">Scheibler, Bezzam &amp; Dokmanić (2018). <em>Pyroomacoustics</em></a>. Room simulation and DOA algorithms used on this page.</li>
           <li><a href="https://arxiv.org/abs/1912.11474">Chen et al. (2020). <em>SoundSpaces: Audio-Visual Navigation in 3D Environments</em></a>. Acoustic rendering in scanned 3-D rooms, with occlusion and reflections.</li>
-          <li><a href="https://arxiv.org/abs/2206.08312">Chen et al. (2022). <em>SoundSpaces 2.0: A Simulation Platform for Visual-Acoustic Learning</em></a>. Continuous, configurable rendering with RGB-D; the best simulator for Module 3.</li>
+          <li><a href="https://arxiv.org/abs/2206.08312">Chen et al. (2022). <em>SoundSpaces 2.0: A Simulation Platform for Visual-Acoustic Learning</em></a>. Continuous, configurable rendering with RGB-D; the best simulator for Module 2.</li>
           <li><a href="https://arxiv.org/abs/1803.03849">Senocak et al. (2018). <em>Learning to Localize Sound Source in Visual Scenes</em></a>. Learned audio-visual heatmaps, the kind of output the physics layer checks.</li>
         </ul>
       </aside>
@@ -60,12 +60,12 @@
         <li><a href="#eval">Evaluating it</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
 
       <h2 id="idea">The big idea</h2>
-      <p>Light and sound behave differently around obstacles, and that difference is the opportunity in Module 3:</p>
+      <p>Light and sound behave differently around obstacles, and that difference is the opportunity in Module 2:</p>
       <ul>
         <li>A camera cannot see a kettle behind a wall or through a doorway. A microphone can hear it, because sound <strong>diffracts</strong> around edges (especially low frequencies, whose wavelengths are metres long) and <strong>reflects</strong> off walls into the array.</li>
         <li>So an acoustic direction estimate may point at a doorway (the sound came <em>through</em> it), or at a blank wall (the strongest arrival was a <em>reflection</em>). A purely visual or purely learned audio-visual model would then highlight whatever object happens to be in that direction, which is wrong.</li>
       </ul>
-      <p>If we know the room's geometry (<a href="11-3d-geometry.html">Concept 11</a>), we can predict where reflections of a source <em>should</em> appear, check whether a visual candidate is actually reachable along the acoustic ray, and say "the source is occluded" instead of guessing.</p>
+      <p>If we know the room's geometry (<a href="10-3d-geometry.html">Concept 10</a>), we can predict where reflections of a source <em>should</em> appear, check whether a visual candidate is actually reachable along the acoustic ray, and say "the source is occluded" instead of guessing.</p>
 
       <h2 id="propagation">How sound travels in a room</h2>
       <ul>
@@ -118,7 +118,7 @@ def mirror_point(p, plane):
       <p>With the partition on and S behind it, the direct path is blocked (red dashed), and the earliest unblocked arrival comes from a wall reflection. A DOA estimator will report that reflection's direction. Note what the readout ignores: diffraction through the doorway and over the partition, which in reality also reaches the mic, from the direction of the doorway edge.</p>
 
       <h2 id="sim">Simulating rooms with pyroomacoustics</h2>
-      <p><a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a> (Scheibler, Bezzam, and Dokmanić, 2018) simulates shoebox or polygonal rooms with the image-source method (plus optional ray tracing for the late tail), places microphone arrays, and includes DOA algorithms. It is the fastest way to build a labelled Module 3 test set with exact source positions.</p>
+      <p><a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a> (Scheibler, Bezzam, and Dokmanić, 2018) simulates shoebox or polygonal rooms with the image-source method (plus optional ray tracing for the late tail), places microphone arrays, and includes DOA algorithms. It is the fastest way to build a labelled Module 2 test set with exact source positions.</p>
 <pre><code class="language-python">import numpy as np
 import pyroomacoustics as pra
 
@@ -143,7 +143,7 @@ print(np.degrees(doa.azimuth_recon))
         <tr><td>Anechoic (<code>max_order=0</code>)</td><td>157°</td><td>157°</td></tr>
         <tr><td>RT60 = 0.5 s</td><td>175° (18° off)</td><td>255° (wrong)</td></tr>
       </table></div>
-      <p>Same source, same array, same algorithms: reverberation alone moves SRP-PHAT by 18° and breaks MUSIC entirely. That gap is the problem Module 3 exists to attack, and a table like this, over many rooms and positions, is a natural first baseline.</p>
+      <p>Same source, same array, same algorithms: reverberation alone moves SRP-PHAT by 18° and breaks MUSIC entirely. That gap is the problem Module 2 exists to attack, and a table like this, over many rooms and positions, is a natural first baseline.</p>
 
       <h2 id="fusion">The physics fusion layer</h2>
       <p>Inputs for one time window: a few acoustic direction candidates from Stream A (peaks of the GCC-PHAT or SRP map, with strengths and arrival order), the room planes and occupancy from Stream B, and visual candidate sources (detections with 3-D positions from depth). All are expressed in one frame. The layer then reasons in three steps, matching the spec's three bullets.</p>
@@ -174,7 +174,7 @@ print(np.degrees(doa.azimuth_recon))
       </figure>
 
       <h3>1. Line-of-sight check</h3>
-      <p>Cast a ray from the array centre along the DOA. Find the distance \(s_{\text{wall}}\) to the first surface it hits (<a href="11-3d-geometry.html#rays">ray casting</a>). For each visual candidate at position \(q\), compute its angle to the ray and its distance along it. A candidate is <strong>line-of-sight consistent</strong> if its angular offset is within the DOA's uncertainty (say 10–15°) and it lies <em>before</em> the wall (\(\lVert q - o\rVert < s_{\text{wall}}\)). Also check the reverse: is the straight segment from the array to the candidate free of walls? A candidate behind a partition fails even if the angle matches.</p>
+      <p>Cast a ray from the array centre along the DOA. Find the distance \(s_{\text{wall}}\) to the first surface it hits (<a href="10-3d-geometry.html#rays">ray casting</a>). For each visual candidate at position \(q\), compute its angle to the ray and its distance along it. A candidate is <strong>line-of-sight consistent</strong> if its angular offset is within the DOA's uncertainty (say 10–15°) and it lies <em>before</em> the wall (\(\lVert q - o\rVert < s_{\text{wall}}\)). Also check the reverse: is the straight segment from the array to the candidate free of walls? A candidate behind a partition fails even if the angle matches.</p>
 
       <h3>2. Occlusion and out-of-sight handling</h3>
       <p>If the ray hits a wall, a doorway, or leaves the camera's field of view, and no candidate passes the check, do not force a visual match. Suppress the visual heatmap in that direction (this is the spec's "filter out false-positive visual heatmaps") and output <strong>occluded</strong> (ray enters a wall or a doorway) or <strong>off-screen</strong> (direction outside the camera's view), along with the direction itself. A doorway hit is especially informative: the source is probably in the next room, and the sound came through the opening.</p>
@@ -203,7 +203,7 @@ def explain_doa(doa_dir, array_pos, candidates, planes, room_hit_dist, tol_deg=1
                 return "reflection", name
     return "occluded", None                                       # 2. nothing explains it
 </code></pre>
-      <p><code>segment_is_clear</code> is the line-of-sight test: cast the segment from the array to the candidate against the room mesh or planes (<a href="11-3d-geometry.html#rays">Concept 11</a>) and return <code>False</code> if any surface is hit before the candidate. This is deliberately simple. Good projects will replace hard thresholds with probabilities (each explanation gets a likelihood from angular error, arrival order, and level), handle several simultaneous sources, and reason over time (a source that was visible a second ago and now produces a doorway DOA probably walked out).</p>
+      <p><code>segment_is_clear</code> is the line-of-sight test: cast the segment from the array to the candidate against the room mesh or planes (<a href="10-3d-geometry.html#rays">Concept 10</a>) and return <code>False</code> if any surface is hit before the candidate. This is deliberately simple. Good projects will replace hard thresholds with probabilities (each explanation gets a likelihood from angular error, arrival order, and level), handle several simultaneous sources, and reason over time (a source that was visible a second ago and now produces a doorway DOA probably walked out).</p>
 
       <h2 id="eval">Evaluating it</h2>
       <p>The spec's benchmark (<code>/eval/ssl</code>) splits results by scenario. Build the test set so every clip has a known source position and a known category:</p>
@@ -246,7 +246,7 @@ def explain_doa(doa_dir, array_pos, candidates, planes, room_hit_dist, tol_deg=1
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261027"></script>
-<script src="../assets/js/demos.js?v=20261027"></script>
+<script src="../assets/js/site.js?v=20261028"></script>
+<script src="../assets/js/demos.js?v=20261028"></script>
 </body>
 </html>

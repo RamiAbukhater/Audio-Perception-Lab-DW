@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="assets/css/style.css?v=20261027">
+<link rel="stylesheet" href="assets/css/style.css?v=20261028">
 </head>
 <body data-page="faculty" data-root="">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -50,83 +50,24 @@
       </div>
 
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
-        <li><a href="#edge">Module 1: edge audio and efficient ML</a></li>
-        <li><a href="#selfsup">Module 2: self-supervised and audio-visual learning</a></li>
-        <li><a href="#avssl">Module 3: localization, acoustics, and mapping</a></li>
+        <li><a href="#selfsup">Module 1: self-supervised and audio-visual learning</a></li>
+        <li><a href="#avssl">Module 2: localization, acoustics, and mapping</a></li>
         <li><a href="#audio">Audio machine learning (all modules)</a></li>
         <li><a href="#how">How to reach out</a></li></ol></nav>
 
-      <h2 id="edge">Module 1: edge audio and efficient ML</h2>
-      <div class="ideas">
-        <article class="idea person" id="tajana-rosing" data-theme="edge">
-          <header>
-            <h3>Tajana Rosing</h3>
-            <div class="badges"><span class="badge theme-edge">Module 1</span><span class="badge">Edge and IoT systems</span><span class="badge">Energy efficiency</span></div>
-          </header>
-          <table class="contact">
-            <tr><th scope="row">Position</th><td>Professor, Computer Science and Engineering; Fratamico Endowed Chair</td></tr>
-            <tr><th scope="row">Lab</th><td><a href="https://seelab.ucsd.edu/">System Energy Efficiency Lab (SEELab)</a></td></tr>
-            <tr><th scope="row">Email</th><td><a href="mailto:tajana@ucsd.edu">tajana@ucsd.edu</a></td></tr>
-          </table>
-          <p><strong>Why reach out.</strong> Energy-efficient computing from sensor nodes to data centres, including lightweight learning (hyperdimensional computing) for IoT devices and speech. Relevant to Module 1's microcontroller targets.</p>
-          <div class="field"><strong>Papers to read first.</strong>
-            <ol>
-              <li><a href="https://doi.org/10.1109/ICRC.2017.8123650">Imani, Kong, Rahimi &amp; Rosing (2017). <em>VoiceHD: Hyperdimensional Computing for Efficient Speech Recognition</em></a>. IEEE ICRC; an audio classifier built for low-power hardware.</li>
-              <li><a href="https://doi.org/10.1145/3277593.3277617">Kim, Imani &amp; Rosing (2018). <em>Efficient Human Activity Recognition Using Hyperdimensional Computing</em></a>. IoT 2018; on-device sensor classification.</li>
-              <li><a href="https://arxiv.org/abs/2010.07426">Thomas, Dasgupta &amp; Rosing (2021). <em>A Theoretical Perspective on Hyperdimensional Computing</em></a>. JAIR; when and why the method works.</li>
-            </ol></div>
-        </article>
-        <article class="idea person" id="farinaz-koushanfar" data-theme="edge">
-          <header>
-            <h3>Farinaz Koushanfar</h3>
-            <div class="badges"><span class="badge theme-edge">Module 1</span><span class="badge">Efficient DNN hardware</span><span class="badge">Quantization</span></div>
-          </header>
-          <table class="contact">
-            <tr><th scope="row">Position</th><td>Professor, Electrical and Computer Engineering</td></tr>
-            <tr><th scope="row">Lab</th><td><a href="http://aceslab.org/">ACES Lab</a></td></tr>
-            <tr><th scope="row">Email</th><td><a href="mailto:fkoushanfar@ucsd.edu">fkoushanfar@ucsd.edu</a></td></tr>
-          </table>
-          <p><strong>Why reach out.</strong> Efficient and secure machine learning systems: hardware-aware model design, bit-width customisation, and FPGA acceleration. Relevant to Module 1's compression and deployment.</p>
-          <div class="field"><strong>Papers to read first.</strong>
-            <ol>
-              <li><a href="https://arxiv.org/abs/1901.05582">Samragh, Javaheripi &amp; Koushanfar (2019). <em>CodeX: Bit-Flexible Encoding for Streaming-Based FPGA Acceleration of DNNs</em></a>. Per-layer bit-width selection for on-chip inference.</li>
-              <li><a href="https://arxiv.org/abs/2203.02094">Javaheripi et al. (2022). <em>LiteTransformerSearch: Training-Free Neural Architecture Search for Efficient Language Models</em></a>. NeurIPS; hardware-aware architecture search for target devices.</li>
-              <li><a href="https://arxiv.org/abs/1705.08963">Rouhani, Riazi &amp; Koushanfar (2018). <em>DeepSecure: Scalable Provably-Secure Deep Learning</em></a>. DAC; private inference, relevant if Module 2's recordings must stay private.</li>
-            </ol></div>
-        </article>
-        <article class="idea person" id="hadi-esmaeilzadeh" data-theme="edge">
-          <header>
-            <h3>Hadi Esmaeilzadeh</h3>
-            <div class="badges"><span class="badge theme-edge">Module 1</span><span class="badge">ML accelerators</span><span class="badge">Quantization</span></div>
-          </header>
-          <table class="contact">
-            <tr><th scope="row">Position</th><td>Professor, Computer Science and Engineering</td></tr>
-            <tr><th scope="row">Lab</th><td><a href="https://cseweb.ucsd.edu/~hadi/">Alternative Computing Technologies (ACT) Lab</a></td></tr>
-            <tr><th scope="row">Email</th><td><a href="mailto:haesmaeilzadeh@ucsd.edu">haesmaeilzadeh@ucsd.edu</a></td></tr>
-          </table>
-          <p><strong>Why reach out.</strong> Hardware and compilers for machine learning, including mixed-precision quantization and bit-level accelerators. Relevant to Module 1's int8 and mixed-precision questions.</p>
-          <div class="field"><strong>Papers to read first.</strong>
-            <ol>
-              <li><a href="https://arxiv.org/abs/1811.01704">Elthakeb, Pilligundla, Mireshghallah, Yazdanbakhsh &amp; Esmaeilzadeh (2018). <em>ReLeQ: A Reinforcement Learning Approach for Deep Quantization of Neural Networks</em></a>. Choosing a bit width per layer automatically.</li>
-              <li><a href="https://arxiv.org/abs/1712.01507">Sharma et al. (2018). <em>Bit Fusion: Bit-Level Dynamically Composable Architecture for Accelerating Deep Neural Networks</em></a>. ISCA; hardware that runs each layer at its own precision.</li>
-              <li><a href="https://arxiv.org/abs/2001.08743">Ahn, Pilligundla, Yazdanbakhsh &amp; Esmaeilzadeh (2020). <em>Chameleon: Adaptive Code Optimization for Expedited Deep Neural Network Compilation</em></a>. ICLR; compiling models efficiently for a given device.</li>
-            </ol></div>
-        </article>
-      </div>
-
-      <h2 id="selfsup">Module 2: self-supervised and audio-visual learning</h2>
+      <h2 id="selfsup">Module 1: self-supervised and audio-visual learning</h2>
       <div class="ideas">
         <article class="idea person" id="nuno-vasconcelos" data-theme="selfsup">
           <header>
             <h3>Nuno Vasconcelos</h3>
-            <div class="badges"><span class="badge theme-selfsup">Module 2</span><span class="badge">Audio-visual learning</span><span class="badge">Self-supervision</span></div>
+            <div class="badges"><span class="badge theme-selfsup">Module 1</span><span class="badge">Audio-visual learning</span><span class="badge">Self-supervision</span></div>
           </header>
           <table class="contact">
             <tr><th scope="row">Position</th><td>Professor, Electrical and Computer Engineering</td></tr>
             <tr><th scope="row">Lab</th><td><a href="http://www.svcl.ucsd.edu/">Statistical Visual Computing Lab (SVCL)</a></td></tr>
             <tr><th scope="row">Email</th><td><a href="mailto:nvasconcelos@ucsd.edu">nvasconcelos@ucsd.edu</a></td></tr>
           </table>
-          <p><strong>Why reach out.</strong> Computer vision and machine learning, with a line of work on self-supervised audio-visual learning and spatial audio. Directly relevant to Module 2 and to Module 3's audio-visual fusion.</p>
+          <p><strong>Why reach out.</strong> Computer vision and machine learning, with a line of work on self-supervised audio-visual learning and spatial audio. Directly relevant to Module 1 and to Module 2's audio-visual fusion.</p>
           <div class="field"><strong>Papers to read first.</strong>
             <ol>
               <li><a href="https://arxiv.org/abs/2004.12943">Morgado, Vasconcelos &amp; Misra (2021). <em>Audio-Visual Instance Discrimination with Cross-Modal Agreement</em></a>. CVPR; contrastive audio-visual representations without labels.</li>
@@ -137,25 +78,25 @@
         <article class="idea person" id="virginia-de-sa" data-theme="selfsup">
           <header>
             <h3>Virginia de Sa</h3>
-            <div class="badges"><span class="badge theme-selfsup">Module 2</span><span class="badge">Multimodal self-supervision</span><span class="badge">Perception</span></div>
+            <div class="badges"><span class="badge theme-selfsup">Module 1</span><span class="badge">Multimodal self-supervision</span><span class="badge">Perception</span></div>
           </header>
           <table class="contact">
             <tr><th scope="row">Position</th><td>Professor, Cognitive Science; HDSI Endowed Chair</td></tr>
             <tr><th scope="row">Lab</th><td><a href="https://pages.ucsd.edu/~desa/">de Sa Lab</a></td></tr>
             <tr><th scope="row">Email</th><td><a href="mailto:desa@ucsd.edu">desa@ucsd.edu</a></td></tr>
           </table>
-          <p><strong>Why reach out.</strong> Machine learning and computational models of multisensory perception. Her early work on learning categories from agreement between senses is a direct intellectual ancestor of Module 2's vision-grounded labels.</p>
+          <p><strong>Why reach out.</strong> Machine learning and computational models of multisensory perception. Her early work on learning categories from agreement between senses is a direct intellectual ancestor of Module 1's vision-grounded labels.</p>
           <div class="field"><strong>Papers to read first.</strong>
             <ol>
               <li><a href="https://papers.neurips.cc/paper_files/paper/1993/hash/e0ec453e28e061cc58ac43f91dc2f3f0-Abstract.html">de Sa (1994). <em>Learning Classification with Unlabeled Data</em></a>. NeurIPS 6; minimising disagreement between two modalities replaces labels.</li>
               <li><a href="https://doi.org/10.1162/089976698300017368">de Sa &amp; Ballard (1998). <em>Category Learning Through Multimodality Sensing</em></a>. Neural Computation; the journal version of cross-modal self-supervision.</li>
-              <li><a href="https://doi.org/10.1007/s10994-009-5157-z">de Sa, Gallagher, Lewis &amp; Malave (2010). <em>Multi-View Kernel Construction</em></a>. Machine Learning; building one similarity measure from two views of the same data, like Module 2's audio clusters plus visual tags.</li>
+              <li><a href="https://doi.org/10.1007/s10994-009-5157-z">de Sa, Gallagher, Lewis &amp; Malave (2010). <em>Multi-View Kernel Construction</em></a>. Machine Learning; building one similarity measure from two views of the same data, like Module 1's audio clusters plus visual tags.</li>
             </ol></div>
         </article>
         <article class="idea person" id="xiaolong-wang" data-theme="selfsup">
           <header>
             <h3>Xiaolong Wang</h3>
-            <div class="badges"><span class="badge theme-selfsup">Module 2</span><span class="badge">Video self-supervision</span><span class="badge">3-D vision</span></div>
+            <div class="badges"><span class="badge theme-selfsup">Module 1</span><span class="badge">Video self-supervision</span><span class="badge">3-D vision</span></div>
           </header>
           <table class="contact">
             <tr><th scope="row">Position</th><td>Associate Professor, Electrical and Computer Engineering</td></tr>
@@ -172,19 +113,19 @@
         </article>
       </div>
 
-      <h2 id="avssl">Module 3: localization, acoustics, and mapping</h2>
+      <h2 id="avssl">Module 2: localization, acoustics, and mapping</h2>
       <div class="ideas">
         <article class="idea person" id="peter-gerstoft" data-theme="avssl">
           <header>
             <h3>Peter Gerstoft</h3>
-            <div class="badges"><span class="badge theme-avssl">Module 3</span><span class="badge">Acoustic DOA</span><span class="badge">ML for acoustics</span></div>
+            <div class="badges"><span class="badge theme-avssl">Module 2</span><span class="badge">Acoustic DOA</span><span class="badge">ML for acoustics</span></div>
           </header>
           <table class="contact">
             <tr><th scope="row">Position</th><td>Electrical and Computer Engineering</td></tr>
             <tr><th scope="row">Lab</th><td><a href="https://noiselab.ucsd.edu/">NoiseLab</a></td></tr>
             <tr><th scope="row">Email</th><td><a href="mailto:pgerstoft@ucsd.edu">pgerstoft@ucsd.edu</a></td></tr>
           </table>
-          <p><strong>Why reach out.</strong> Physics-informed machine learning and signal processing for acoustics, including direction-of-arrival estimation and source localization with arrays. The closest match on campus to Module 3's Stream A.</p>
+          <p><strong>Why reach out.</strong> Physics-informed machine learning and signal processing for acoustics, including direction-of-arrival estimation and source localization with arrays. The closest match on campus to Module 2's Stream A.</p>
           <div class="field"><strong>Papers to read first.</strong>
             <ol>
               <li><a href="https://arxiv.org/abs/1905.04418">Bianco, Gerstoft, et al. (2019). <em>Machine Learning in Acoustics: Theory and Applications</em></a>. Journal of the Acoustical Society of America review; a good first read for the whole lab.</li>
@@ -195,7 +136,7 @@
         <article class="idea person" id="bhaskar-rao" data-theme="avssl">
           <header>
             <h3>Bhaskar Rao</h3>
-            <div class="badges"><span class="badge theme-avssl">Module 3</span><span class="badge">Array signal processing</span><span class="badge">Sparse recovery</span></div>
+            <div class="badges"><span class="badge theme-avssl">Module 2</span><span class="badge">Array signal processing</span><span class="badge">Sparse recovery</span></div>
           </header>
           <table class="contact">
             <tr><th scope="row">Position</th><td>Distinguished Professor (Electrical and Computer Engineering emeritus)</td></tr>
@@ -213,14 +154,14 @@
         <article class="idea person" id="nikolay-atanasov" data-theme="avssl">
           <header>
             <h3>Nikolay Atanasov</h3>
-            <div class="badges"><span class="badge theme-avssl">Module 3</span><span class="badge">Semantic mapping</span><span class="badge">Robotics</span></div>
+            <div class="badges"><span class="badge theme-avssl">Module 2</span><span class="badge">Semantic mapping</span><span class="badge">Robotics</span></div>
           </header>
           <table class="contact">
             <tr><th scope="row">Position</th><td>Professor, Electrical and Computer Engineering</td></tr>
             <tr><th scope="row">Lab</th><td><a href="https://existentialrobotics.org/">Existential Robotics Laboratory</a></td></tr>
             <tr><th scope="row">Email</th><td><a href="mailto:natanasov@ucsd.edu">natanasov@ucsd.edu</a></td></tr>
           </table>
-          <p><strong>Why reach out.</strong> Robot perception and mapping: semantic SLAM, 3-D occupancy maps, and active exploration. Relevant to Module 3's Stream B (room mapping) and to reasoning about what a sensor can and cannot observe.</p>
+          <p><strong>Why reach out.</strong> Robot perception and mapping: semantic SLAM, 3-D occupancy maps, and active exploration. Relevant to Module 2's Stream B (room mapping) and to reasoning about what a sensor can and cannot observe.</p>
           <div class="field"><strong>Papers to read first.</strong>
             <ol>
               <li><a href="https://doi.org/10.1109/ICRA.2017.7989203">Bowman, Atanasov, Daniilidis &amp; Pappas (2017). <em>Probabilistic Data Association for Semantic SLAM</em></a>. ICRA; building maps of objects, not just geometry.</li>
@@ -242,7 +183,7 @@
             <tr><th scope="row">Lab</th><td><a href="https://cse.ucsd.edu/people/faculty-profiles/shlomo-dubnov">Center for Research in Entertainment and Learning (CREL), Qualcomm Institute</a></td></tr>
             <tr><th scope="row">Email</th><td><a href="mailto:sdubnov@ucsd.edu">sdubnov@ucsd.edu</a></td></tr>
           </table>
-          <p><strong>Why reach out.</strong> Computer audition, audio information theory, and generative music. Co-author of LAION-CLAP, the widely used audio-text embedding model, which is a strong pretrained encoder for Module 2.</p>
+          <p><strong>Why reach out.</strong> Computer audition, audio information theory, and generative music. Co-author of LAION-CLAP, the widely used audio-text embedding model, which is a strong pretrained encoder for Module 1.</p>
           <div class="field"><strong>Papers to read first.</strong>
             <ol>
               <li><a href="https://arxiv.org/abs/2211.06687">Wu, Chen, Zhang, Hui, Nezhurina, Berg-Kirkpatrick &amp; Dubnov (2023). <em>Large-Scale Contrastive Language-Audio Pretraining with Feature Fusion and Keyword-to-Caption Augmentation</em></a>. ICASSP; LAION-CLAP audio embeddings.</li>
@@ -260,7 +201,7 @@
             <tr><th scope="row">Lab</th><td><a href="https://icebergnlp.github.io/">Berg Lab (also part of UCSD MUSAIC)</a></td></tr>
             <tr><th scope="row">Email</th><td><a href="mailto:tberg@ucsd.edu">tberg@ucsd.edu</a></td></tr>
           </table>
-          <p><strong>Why reach out.</strong> Generative models for language, music, and audio, including faster inference for audio models. Relevant to pretrained audio encoders (Module 2) and to making large audio models cheaper (Module 1). See also <a href="https://musaic.ucsd.edu/">MUSAIC</a>, the campus music and audio AI group.</p>
+          <p><strong>Why reach out.</strong> Generative models for language, music, and audio, including faster inference for audio models. Relevant to pretrained audio encoders for Module 1. See also <a href="https://musaic.ucsd.edu/">MUSAIC</a>, the campus music and audio AI group.</p>
           <div class="field"><strong>Papers to read first.</strong>
             <ol>
               <li><a href="https://arxiv.org/abs/2211.06687">Wu et al. (2023). <em>Large-Scale Contrastive Language-Audio Pretraining with Feature Fusion and Keyword-to-Caption Augmentation</em></a>. ICASSP; LAION-CLAP.</li>
@@ -291,6 +232,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="assets/js/site.js?v=20261027"></script>
+<script src="assets/js/site.js?v=20261028"></script>
 </body>
 </html>

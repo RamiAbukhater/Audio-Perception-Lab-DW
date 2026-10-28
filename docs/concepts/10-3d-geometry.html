@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261027">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
 </head>
-<body data-page="c11" data-root="../">
+<body data-page="c10" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
 <header class="site-header" id="site-header">
   <a class="brand" href="../index.html">
@@ -35,9 +35,9 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Concept 11 of 12 · Module 3 · Audio-visual localization</div>
+      <div class="eyebrow">Concept 10 of 11 · Module 2 · Audio-visual localization</div>
       <h1>RGB-D, point clouds, and room geometry</h1>
-      <p class="lede">Stream B of Module 3 gives the localizer a map: where the walls, floor, doorways, and furniture are. That map comes from a depth camera. This page covers the camera model that links pixels to 3-D points, the coordinate frames you must keep straight, how to turn depth images into point clouds and walls with Open3D, and how to ask the map geometric questions such as "what does this ray hit first?"</p>
+      <p class="lede">Stream B of Module 2 gives the localizer a map: where the walls, floor, doorways, and furniture are. That map comes from a depth camera. This page covers the camera model that links pixels to 3-D points, the coordinate frames you must keep straight, how to turn depth images into point clouds and walls with Open3D, and how to ask the map geometric questions such as "what does this ray hit first?"</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -114,11 +114,11 @@ def depth_to_points(depth, fx, fy, cx, cy, depth_scale=1000.0):
       </div>
 
       <h2 id="frames">Coordinate frames and extrinsics</h2>
-      <p>Module 3 fuses data from at least three frames: the <strong>camera</strong> frame, the <strong>microphone array</strong> frame, and a <strong>room</strong> (world) frame. A rigid transform maps one frame to another, with a rotation \(R\) (3×3) and translation \(t\) (3-vector): \(p_{\text{cam}} = R\,p_{\text{array}} + t\). These are the <strong>extrinsics</strong>. Often they are written as one 4×4 homogeneous matrix \(T\).</p>
+      <p>Module 2 fuses data from at least three frames: the <strong>camera</strong> frame, the <strong>microphone array</strong> frame, and a <strong>room</strong> (world) frame. A rigid transform maps one frame to another, with a rotation \(R\) (3×3) and translation \(t\) (3-vector): \(p_{\text{cam}} = R\,p_{\text{array}} + t\). These are the <strong>extrinsics</strong>. Often they are written as one 4×4 homogeneous matrix \(T\).</p>
       <ul>
         <li><strong>Points</strong> transform with rotation and translation. <strong>Directions</strong> (such as a DOA unit vector) transform with rotation only: \(u_{\text{cam}} = R\,u_{\text{array}}\).</li>
         <li><strong>Getting \(R, t\)</strong>: mount the array rigidly on the camera and measure the offset with a ruler; then refine by playing a sound from a few known positions (a phone the camera can also see) and solving for the rotation that best aligns the acoustic directions with the visual ones.</li>
-        <li><strong>Room frame</strong>: choose the floor plane as \(z = 0\) (or \(y = 0\)) and align axes with the walls. Expressing everything in the room frame makes walls simple planes like \(x = 0\) and \(x = L_x\), which the mirror-source method in <a href="12-room-acoustics-occlusion.html">Concept 12</a> needs.</li>
+        <li><strong>Room frame</strong>: choose the floor plane as \(z = 0\) (or \(y = 0\)) and align axes with the walls. Expressing everything in the room frame makes walls simple planes like \(x = 0\) and \(x = L_x\), which the mirror-source method in <a href="11-room-acoustics-occlusion.html">Concept 11</a> needs.</li>
       </ul>
 <pre><code class="language-python">def to_frame(points, R, t):
     """Rigidly transform (N, 3) points: p' = R p + t."""
@@ -162,11 +162,11 @@ for _ in range(6):                                          # floor, ceiling, up
     planes.append(np.array(model))                          # [a, b, c, d] with ax + by + cz + d = 0
     rest = rest.select_by_index(inliers, invert=True)
 </code></pre>
-      <p>Each plane is \(n \cdot p + d = 0\) with unit normal \(n = (a, b, c)\). Classify planes by their normal: nearly parallel to gravity means floor or ceiling, nearly perpendicular means a wall. Large furniture (a bookshelf, a partition) also shows up as planes, and those matter: they are the occluders in Module 3.</p>
+      <p>Each plane is \(n \cdot p + d = 0\) with unit normal \(n = (a, b, c)\). Classify planes by their normal: nearly parallel to gravity means floor or ceiling, nearly perpendicular means a wall. Large furniture (a bookshelf, a partition) also shows up as planes, and those matter: they are the occluders in Module 2.</p>
       <p>Doorways and openings appear as <strong>gaps</strong> in a wall plane: regions inside the wall's extent with no inlier points. Project the wall's inliers onto the plane and look for empty rectangles in a 2-D occupancy grid.</p>
 
       <h2 id="rays">Ray casting</h2>
-      <p>The key geometric query for Module 3 is: <em>starting at the microphone array, travelling along the DOA direction, what do I hit first, and how far away is it?</em> For a plane this has a closed form. Points on the ray are \(o + s\,u\) for \(s > 0\); substitute into the plane equation:</p>
+      <p>The key geometric query for Module 2 is: <em>starting at the microphone array, travelling along the DOA direction, what do I hit first, and how far away is it?</em> For a plane this has a closed form. Points on the ray are \(o + s\,u\) for \(s > 0\); substitute into the plane equation:</p>
       \[ s^* = -\frac{n \cdot o + d}{n \cdot u}. \]
 <pre><code class="language-python">def ray_hits_plane(origin, direction, plane, max_dist):
     """Distance along the ray to the plane, or None if it misses within max_dist."""
@@ -182,7 +182,7 @@ for _ in range(6):                                          # floor, ceiling, up
       <h2 id="data">Simulated data</h2>
       <p>The spec allows "simulated depth datasets", and starting in simulation is wise: you get exact ground truth for source positions, walls, and occlusion.</p>
       <ul>
-        <li><strong><a href="https://soundspaces.org/">SoundSpaces</a></strong> (Chen et al., 2020; SoundSpaces 2.0, 2022) renders realistic audio for 3-D scanned rooms (Replica and Matterport3D) together with RGB-D views. It is the closest existing tool to Module 3: real geometry, acoustics that include occlusion and reflections, and matching camera images.</li>
+        <li><strong><a href="https://soundspaces.org/">SoundSpaces</a></strong> (Chen et al., 2020; SoundSpaces 2.0, 2022) renders realistic audio for 3-D scanned rooms (Replica and Matterport3D) together with RGB-D views. It is the closest existing tool to Module 2: real geometry, acoustics that include occlusion and reflections, and matching camera images.</li>
         <li><strong><a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a></strong>: shoebox and polygonal rooms with the image-source method, multichannel microphone arrays, and DOA algorithms. Easy to start with, no visuals.</li>
         <li><strong>Real RGB-D datasets</strong> for testing the geometry stream alone: ScanNet, SUN RGB-D, Replica, and NYU Depth v2.</li>
       </ul>
@@ -219,6 +219,6 @@ for _ in range(6):                                          # floor, ceiling, up
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261027"></script>
+<script src="../assets/js/site.js?v=20261028"></script>
 </body>
 </html>

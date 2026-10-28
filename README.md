@@ -1,29 +1,28 @@
 # DataWorks Audio Perception Lab
 
-A UCSD DataWorks research lab on audio processing for perception: edge deployment under tight hardware budgets, self-supervised audio learning bootstrapped from vision, and audio-visual sound source localization (AV-SSL) grounded in room physics.
+A UCSD DataWorks research lab on audio processing for perception: self-supervised audio learning bootstrapped from vision, and audio-visual sound source localization (AV-SSL) grounded in room physics.
 
 **Lab lead:** Rami Abukhater.
 
 > **AI-generated content.** The course site's pages, the module READMEs, and the smoke test were written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong, please point it out to Rami so it can be fixed.
 
-This repository holds the research code for the lab's three modules and a static website that teaches the concepts every member needs:
+This repository holds the research code for the lab's two modules and a static website that teaches the concepts every member needs:
 
 - **Setup**: Python 3.11, the lab's libraries, GPU notebooks, data, and a smoke test (`scripts/smoke_test.py`) that must pass before anything else.
 - **Six core concept pages for everyone**: digital audio; the Fourier transform and STFT; log-mel spectrograms; noise, SNR, reverberation, and augmentation; CNNs on spectrograms; evaluation and experimental rigor.
-- **Six module concept pages**: quantization, pruning, and edge benchmarking (Module 1); embeddings and self-supervised learning, and cross-modal pseudo-labelling (Module 2); microphone arrays and GCC-PHAT, RGB-D point clouds and room geometry, and room acoustics with mirror sources and occlusion (Module 3).
-- **Project ideas**: the full blueprint for the three modules, with prerequisites, a suggested path, the key result, and extensions for each.
-- **UCSD faculty to contact**: eleven professors whose work overlaps the modules, each with their lab, email, and three papers to read first.
+- **Five module concept pages**: embeddings and self-supervised learning, and cross-modal pseudo-labelling (Module 1); microphone arrays and GCC-PHAT, RGB-D point clouds and room geometry, and room acoustics with mirror sources and occlusion (Module 2).
+- **Project ideas**: the full blueprint for the two modules, opening each with the closest prior work and what is still open, then prerequisites, a suggested path, the key result, and extensions for each.
+- **UCSD faculty to contact**: eight professors whose work overlaps the modules, each with their lab, email, and three papers to read first.
 - **Resources and glossary**: datasets, libraries, papers, courses, and terms.
 
-Each concept page opens with a short list of key papers, then has the intuition, the math, diagrams, copyable code with tensor shapes, click-to-reveal questions, and common mistakes. Seven pages include interactive demos (aliasing, the STFT window trade-off, mel filterbanks, SNR mixing with audio playback, int8 quantization, two-mic delay geometry, and a draggable mirror-source room with occlusion).
+Each concept page opens with a short list of key papers, then has the intuition, the math, diagrams, copyable code with tensor shapes, click-to-reveal questions, and common mistakes. Six pages include interactive demos (aliasing, the STFT window trade-off, mel filterbanks, SNR mixing with audio playback, two-mic delay geometry, and a draggable mirror-source room with occlusion).
 
-## The three modules
+## The two modules
 
 | Module | Question | Folders |
 | --- | --- | --- |
-| 1. Lightweight edge audio classification and robustness testing | How much accuracy do int8 quantization and pruning cost, and does the cost grow in noise? | `data/`, `models/edge_audio/`, `optim/`, `eval/` |
-| 2. Self-supervised audio learning via vision grounding | Can a frozen object detector's view of a room supply good enough pseudo-labels to train an indoor audio classifier, generation after generation? | `core/sync/`, `models/vision/`, `pipeline/bootstrap/`, `training/` |
-| 3. AV-SSL with spatial physics | Does explicit room geometry fix localization errors and false visual matches caused by occlusion and reflections? | `dsp/doa/`, `spatial/mapping/`, `core/physics_fusion/`, `eval/ssl/` |
+| 1. Self-supervised audio learning via vision grounding | Can a frozen object detector's view of a room supply good enough pseudo-labels to train an indoor audio classifier, generation after generation? | `core/sync/`, `models/vision/`, `pipeline/bootstrap/`, `training/` |
+| 2. AV-SSL with spatial physics | Can a room map decide whether a seen object can be the source, separating visible, occluded, and off-screen sources and attributing echoes to the objects that made them? | `dsp/doa/`, `spatial/mapping/`, `core/physics_fusion/`, `eval/ssl/` |
 
 Details: [`docs/project-ideas.html`](docs/project-ideas.html). Each folder also has a short README.
 
@@ -67,24 +66,21 @@ scripts/
   smoke_test.py         environment check: SNR mixing, WAV I/O, log-mel, CNN, GCC-PHAT
 notebooks/              exploration notebooks (name-module-topic.ipynb)
 
-data/                   M1  dataset processing and augmentation
-models/edge_audio/      M1  log-mel front end and compact classifiers
-optim/                  M1  int8 PTQ and pruning
-eval/                   M1  latency, memory, accuracy-vs-SNR
-core/sync/              M2  time-aligned audio + RGB capture
-models/vision/          M2  frozen object detector wrapper
-pipeline/bootstrap/     M2  embedding clusters, gating, pseudo-labels
-training/               M2  iterative student fine-tuning
-dsp/doa/                M3  GCC-PHAT direction of arrival
-spatial/mapping/        M3  RGB-D point clouds and room layout
-core/physics_fusion/    M3  line of sight, occlusion, reflections
-eval/ssl/               M3  localization benchmarks
+models/audio/           M1  shared log-mel front end and student audio encoder
+core/sync/              M1  time-aligned audio + RGB capture
+models/vision/          M1  frozen object detector wrapper
+pipeline/bootstrap/     M1  embedding clusters, gating, pseudo-labels
+training/               M1  iterative student fine-tuning
+dsp/doa/                M2  GCC-PHAT direction of arrival
+spatial/mapping/        M2  RGB-D point clouds and room layout
+core/physics_fusion/    M2  line of sight, occlusion, reflections
+eval/ssl/               M2  localization benchmarks
 
 docs/                   the website (GitHub Pages serves this folder)
   index.html            home
   setup.html            environment setup
-  concepts/             01-digital-audio.html … 12-room-acoustics-occlusion.html
-  project-ideas.html    the three-module blueprint
+  concepts/             01-digital-audio.html … 11-room-acoustics-occlusion.html
+  project-ideas.html    the two-module blueprint
   faculty.html          UCSD professors to contact, with labs, emails, and papers
   resources.html        datasets, libraries, papers, glossary
   assets/css/style.css  all styles; light and dark themes follow the system setting
@@ -96,7 +92,7 @@ docs/                   the website (GitHub Pages serves this folder)
 ### Editing the site
 
 - Pages are plain HTML. Edit them directly.
-- The page order, sidebar, prev/next links, step numbers, and module tags (M1, M2, M3) all come from the `PAGES` list at the top of `docs/assets/js/site.js`. To add or reorder a page, edit that list and give the new page's `<body>` a matching `data-page` id and the right `data-root` (`""` at the top level, `"../"` inside `concepts/`). Copy an existing page as a template.
+- The page order, sidebar, prev/next links, step numbers, and module tags (M1, M2) all come from the `PAGES` list at the top of `docs/assets/js/site.js`. To add or reorder a page, edit that list and give the new page's `<body>` a matching `data-page` id and the right `data-root` (`""` at the top level, `"../"` inside `concepts/`). Copy an existing page as a template.
 - The lab lead's name in the footer is the `LEADS` constant in `site.js`, and also appears on the home page.
 - Math uses KaTeX with `\( … \)` for inline and `\[ … \]` for display math.
 - Diagrams are inline SVG that use the CSS colour tokens (`--d-blue`, `--d-red`, …), so they follow light and dark mode.
@@ -104,14 +100,14 @@ docs/                   the website (GitHub Pages serves this folder)
 
 ## What was checked
 
-- Every Python snippet on the concept pages was run before publishing (PyTorch 2.2, torchaudio 2.2, ONNX Runtime 1.23, scikit-learn 1.3, pyroomacoustics 0.10, NumPy 1.26), except those that need Open3D, Ultralytics, or real hardware, which follow those libraries' documented APIs. The quoted numbers (18,474 parameters, the 76 KB → 40 KB ONNX int8 file, GCC-PHAT's 3.375-sample estimate, the 3-D DOA recovery, and the SRP-PHAT / MUSIC anechoic-versus-reverberant table) come from those runs.
+- Every Python snippet on the concept pages was run before publishing (PyTorch 2.2, torchaudio 2.2, scikit-learn 1.3, pyroomacoustics 0.10, NumPy 1.26), except those that need Open3D, Ultralytics, or real hardware, which follow those libraries' documented APIs. The quoted numbers (18,474 parameters, GCC-PHAT's 3.375-sample estimate, the 3-D DOA recovery, and the SRP-PHAT / MUSIC anechoic-versus-reverberant table) come from those runs.
 - `scripts/smoke_test.py` passes.
 - All internal links and anchors resolve; all external links were fetched, and every cited paper's arXiv or DOI record was checked against its title.
 - All pages were viewed in a browser at desktop and phone widths, in dark mode, with no horizontal scrolling, and every demo renders and responds.
 
 ## Data, privacy, and licensing
 
-- **Never commit data, recordings, or weights.** `.gitignore` excludes common audio, video, point-cloud, and checkpoint formats. UrbanSound8K is CC BY-NC 3.0, and Module 2 and Module 3 recordings contain people. Get consent from everyone in a recorded space and check with the faculty advisor whether IRB review applies.
+- **Never commit data, recordings, or weights.** `.gitignore` excludes common audio, video, point-cloud, and checkpoint formats. UrbanSound8K is CC BY-NC 3.0, and the lab's own recordings contain people. Get consent from everyone in a recorded space and check with the faculty advisor whether IRB review applies.
 - **Our content.** Code in this repository is under the **MIT License**. Written content on the site (explanations, diagrams, questions) is under **Creative Commons Attribution 4.0 International (CC BY 4.0)**. See [`LICENSE`](LICENSE).
 - **Third-party software and weights** keep their own licenses. Note in particular that Ultralytics YOLOv8 is **AGPL-3.0**: fine for research use, but code that bundles it must follow that license.
 

@@ -9,13 +9,9 @@ torch>=2.2
 torchaudio>=2.2
 jupyterlab>=4.0
 
-# Module 1: export, quantization, benchmarking
-onnx>=1.15
-onnxruntime>=1.17
-
-# Module 2: object detection (AGPL-3.0; see README)
+# Module 1: object detection (AGPL-3.0; see README)
 ultralytics>=8.1
 
-# Module 3: room simulation, DOA, point clouds
+# Module 2: room simulation, DOA, point clouds
 pyroomacoustics>=0.7
 open3d>=0.18

@@ -6,9 +6,8 @@
      demo-stft    STFT window-length trade-off     (concept 2)
      demo-mel     mel filterbank                   (concept 3)
      demo-snr     mixing noise at a target SNR     (concept 4)
-     demo-quant   int8 affine quantization         (concept 7)
-     demo-doa     two-mic TDOA and angle           (concept 10)
-     demo-ism     mirror sources and occlusion     (concept 12) */
+     demo-doa     two-mic TDOA and angle           (concept 9)
+     demo-ism     mirror sources and occlusion     (concept 11) */
 
 (function () {
   "use strict";
@@ -367,60 +366,7 @@
     draw(); onResize(draw);
   })();
 
-  /* ---------- 7. int8 affine quantization ---------- */
-  (function () {
-    var root = document.getElementById("demo-quant");
-    if (!root) return;
-    var canvas = $(root, "canvas"), readout = $(root, ".readout");
-    var r = rng(3), base = [];
-    for (var i = 0; i < 400; i++) base.push(gauss(r) * 0.05);
-    var bits = bindRange(root, "bits", function (v) { return v + " bits"; }, draw);
-    var outlier = $(root, '[name="outlier"]'), scheme = $(root, '[name="scheme"]');
-    outlier.addEventListener("change", draw); scheme.addEventListener("change", draw);
-    bits.init();
-    function draw() {
-      var w = base.slice();
-      if (outlier.checked) w[17] = 1.2;
-      var B = bits.get(), qmin, qmax, scale, zp;
-      var lo = Math.min.apply(null, w), hi = Math.max.apply(null, w);
-      if (scheme.value === "sym") {
-        qmax = Math.pow(2, B - 1) - 1; qmin = -qmax;
-        scale = Math.max(Math.abs(lo), Math.abs(hi)) / qmax; zp = 0;
-      } else {
-        qmin = 0; qmax = Math.pow(2, B) - 1;
-        lo = Math.min(lo, 0); hi = Math.max(hi, 0);
-        scale = (hi - lo) / (qmax - qmin); zp = Math.round(qmin - lo / scale);
-      }
-      var deq = w.map(function (x) {
-        var q = Math.min(qmax, Math.max(qmin, Math.round(x / scale) + zp));
-        return (q - zp) * scale;
-      });
-      var mse = 0, used = {};
-      w.forEach(function (x, k) { mse += (x - deq[k]) * (x - deq[k]); used[deq[k].toFixed(9)] = 1; });
-      mse /= w.length;
-      var sig = 0; w.forEach(function (x) { sig += x * x; }); sig /= w.length;
-      // draw: histogram of original weights, with dequantized levels as ticks
-      var p = palette(), c = fit(canvas, 0.34), ctx = c.ctx, W = c.w, H = c.h;
-      ctx.clearRect(0, 0, W, H);
-      var vmin = -0.2, vmax = 0.2, bins = 80, hist = new Array(bins).fill(0);
-      w.forEach(function (x) { var b = Math.floor((x - vmin) / (vmax - vmin) * bins); if (b >= 0 && b < bins) hist[b]++; });
-      var hm = Math.max.apply(null, hist), X = function (v) { return 10 + (v - vmin) / (vmax - vmin) * (W - 20); };
-      ctx.fillStyle = p.blue; ctx.globalAlpha = 0.5;
-      hist.forEach(function (n, b) { var bh = n / hm * (H - 50); ctx.fillRect(X(vmin + b * (vmax - vmin) / bins), H - 26 - bh, (W - 20) / bins - 1, bh); });
-      ctx.globalAlpha = 1; ctx.strokeStyle = p.red; ctx.lineWidth = 1.5;
-      Object.keys(used).forEach(function (k) { var v = +k; if (v >= vmin && v <= vmax) { ctx.beginPath(); ctx.moveTo(X(v), H - 26); ctx.lineTo(X(v), H - 16); ctx.stroke(); } });
-      axisText(ctx, p, "-0.2", 10, H - 3, "left"); axisText(ctx, p, "0", X(0), H - 3, "center"); axisText(ctx, p, "+0.2", W - 10, H - 3, "right");
-      axisText(ctx, p, "red ticks = values the quantized weights can take in this window", W - 10, 14, "right");
-      readout.textContent =
-        "range [" + Math.min.apply(null, w).toFixed(3) + ", " + Math.max.apply(null, w).toFixed(3) + "]   q in [" + qmin + ", " + qmax + "]\n" +
-        "scale = " + scale.toExponential(3) + "   zero_point = " + zp + "\n" +
-        "distinct levels actually used: " + Object.keys(used).length + " of " + (qmax - qmin + 1) + "\n" +
-        "quantization SNR = 10*log10(mean(w^2) / MSE) = " + (10 * Math.log10(sig / mse)).toFixed(1) + " dB";
-    }
-    draw(); onResize(draw);
-  })();
-
-  /* ---------- 10. two-mic TDOA ---------- */
+  /* ---------- 9. two-mic TDOA ---------- */
   (function () {
     var root = document.getElementById("demo-doa");
     if (!root) return;
@@ -477,7 +423,7 @@
     draw(); onResize(draw);
   })();
 
-  /* ---------- 12. mirror sources and occlusion ---------- */
+  /* ---------- 11. mirror sources and occlusion ---------- */
   (function () {
     var root = document.getElementById("demo-ism");
     if (!root) return;

@@ -733,9 +733,8 @@ table.keydates td:first-child { white-space: nowrap; font-family: var(--font-ui)
 .prereqs a:hover { border-color: var(--accent); }
 .track-tag { font-family: var(--font-ui); font-size: 0.78rem; font-weight: 650; letter-spacing: 0.02em; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid currentColor; margin-left: 0.4rem; vertical-align: middle; }
 .track-tag.core { color: var(--good); }
-.track-tag.m1 { color: var(--d-blue); }
-.track-tag.m2 { color: var(--d-green); }
-.track-tag.m3 { color: var(--d-amber); }
+.track-tag.m1 { color: var(--d-green); }
+.track-tag.m2 { color: var(--d-amber); }
 
 /* interactive demos */
 .demo { border: 1px solid var(--rule); border-radius: var(--radius); background: var(--bg-raised); padding: 0.9rem 1rem 1rem; margin: 1.25rem 0 1.5rem; font-family: var(--font-ui); }
@@ -782,3 +781,10 @@ table.contact { border-collapse: collapse; margin: 0 0 0.8rem; font-family: var(
 table.contact th, table.contact td { padding: 0.12rem 0; vertical-align: top; text-align: left; border: 0; }
 table.contact th { font-weight: 650; color: var(--ink-faint); padding-right: 0.9rem; white-space: nowrap; }
 .idea .field ol li { margin-bottom: 0.4rem; }
+
+/* ---------- closest prior work (project ideas) ---------- */
+.prior { border: 1px solid var(--rule); border-left: 3px solid var(--ink-faint); border-radius: 0 var(--radius) var(--radius) 0; background: var(--bg-sunken); padding: 0.7rem 1rem 0.5rem; margin: 0 0 1rem; font-family: var(--font-ui); font-size: 0.9rem; }
+.prior-title { display: block; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); margin-bottom: 0.35rem; }
+.prior ul { margin: 0 0 0.5rem; padding-left: 1.1rem; }
+.prior li { margin-bottom: 0.45rem; line-height: 1.45; color: var(--ink-soft); }
+.prior .prior-gap { margin: 0 0 0.3rem; color: var(--ink); }

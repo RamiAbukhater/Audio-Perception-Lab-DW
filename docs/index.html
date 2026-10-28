@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DataWorks Audio Perception Lab</title>
-<meta name="description" content="Home of the DataWorks Audio Perception Lab: audio for perception on the edge, self-supervised cross-modal learning, and audio-visual sound source localization.">
+<meta name="description" content="Home of the DataWorks Audio Perception Lab: self-supervised cross-modal audio learning and audio-visual sound source localization.">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="assets/css/style.css?v=20261027">
+<link rel="stylesheet" href="assets/css/style.css?v=20261028">
 </head>
 <body data-page="home" data-root="">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -39,7 +39,7 @@
         <div class="eyebrow">UCSD DataWorks · Research lab</div>
         <h1>DataWorks Audio Perception Lab</h1>
         <p class="people">Lab lead: <strong>Rami Abukhater</strong></p>
-        <p class="lede">We build systems that understand the world through sound: tiny classifiers that survive noise on a microcontroller, audio models that teach themselves by watching a camera, and localizers that know where the walls are. This site teaches the concepts every member needs and lays out the three research modules.</p>
+        <p class="lede">We build systems that understand the world through sound: audio models that teach themselves by watching a camera, and localizers that know where the walls are. This site teaches the concepts every member needs and lays out the two research modules.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -49,9 +49,8 @@
 
       <h2>What this lab is about</h2>
       <p>Most audio machine learning assumes clean clips, plenty of labels, and a big GPU. Perception in the real world gets none of those. A smoke-alarm detector has to run on a coin-sized board next to a running dishwasher. A home assistant cannot ask anyone to label ten thousand kitchen sounds. A robot that hears a crash has to work out whether it came from the doorway, the wall it echoed off, or the next room.</p>
-      <p>Our three modules each take on one of those gaps:</p>
+      <p>Our two modules each take on one of those gaps:</p>
       <ol>
-        <li><strong>Edge audio classification and robustness.</strong> Compress audio CNNs to 8-bit integers, prune them, and measure exactly how much accuracy they lose as noise and reverberation get worse.</li>
         <li><strong>Self-supervised audio learning via vision grounding.</strong> Let a frozen object detector watching a room supply pseudo-labels for the sounds it hears, and train an audio classifier from those, generation after generation.</li>
         <li><strong>Audio-visual sound source localization with spatial physics.</strong> Combine microphone-array directions with a 3-D map of the room to tell visible sources from occluded ones and true sources from echoes.</li>
       </ol>
@@ -72,16 +71,15 @@
       <h2>Then read your module's pages</h2>
       <div class="table-scroll"><table class="plain">
         <tr><th>Module</th><th>Concept pages</th></tr>
-        <tr><td><span class="track-tag m1" style="margin:0">M1</span> Edge audio classification</td><td><a href="concepts/07-edge-compression.html">7 · Quantization, pruning, and edge benchmarking</a></td></tr>
-        <tr><td><span class="track-tag m2" style="margin:0">M2</span> Vision-grounded self-supervision</td><td><a href="concepts/08-embeddings-ssl.html">8 · Embeddings, clustering, and SSL</a><br><a href="concepts/09-cross-modal-pseudo-labels.html">9 · Object detection, sync, and pseudo-labels</a></td></tr>
-        <tr><td><span class="track-tag m3" style="margin:0">M3</span> Audio-visual localization</td><td><a href="concepts/10-mic-arrays-gcc-phat.html">10 · Mic arrays, TDOA, and GCC-PHAT</a><br><a href="concepts/11-3d-geometry.html">11 · RGB-D, point clouds, and room geometry</a><br><a href="concepts/12-room-acoustics-occlusion.html">12 · Room acoustics, mirror sources, and occlusion</a></td></tr>
+        <tr><td><span class="track-tag m1" style="margin:0">M1</span> Vision-grounded self-supervision</td><td><a href="concepts/07-embeddings-ssl.html">7 · Embeddings, clustering, and SSL</a><br><a href="concepts/08-cross-modal-pseudo-labels.html">8 · Object detection, sync, and pseudo-labels</a></td></tr>
+        <tr><td><span class="track-tag m2" style="margin:0">M2</span> Audio-visual localization</td><td><a href="concepts/09-mic-arrays-gcc-phat.html">9 · Mic arrays, TDOA, and GCC-PHAT</a><br><a href="concepts/10-3d-geometry.html">10 · RGB-D, point clouds, and room geometry</a><br><a href="concepts/11-room-acoustics-occlusion.html">11 · Room acoustics, mirror sources, and occlusion</a></td></tr>
       </table></div>
-      <p>Reading the other modules' pages is encouraged: Module 2 reuses Module 1's front end and augmentations, and Module 3's occlusion question is the spatial version of Module 2's "can the model hear what the camera cannot see?"</p>
+      <p>Reading the other module's pages is encouraged: Module 2's occlusion question is the spatial version of Module 1's "can the model hear what the camera cannot see?"</p>
 
       <h2>How each concept page works</h2>
       <ul>
         <li><strong>The big idea</strong> in plain language first, then the math, with every symbol explained.</li>
-        <li><strong>Diagrams</strong> and, on many pages, an <strong>interactive demo</strong> you can play with in the browser: aliasing, the STFT trade-off, mel filters, SNR mixing (with audio), int8 quantization, two-mic delays, and a draggable mirror-source room.</li>
+        <li><strong>Diagrams</strong> and, on many pages, an <strong>interactive demo</strong> you can play with in the browser: aliasing, the STFT trade-off, mel filters, SNR mixing (with audio), two-mic delays, and a draggable mirror-source room.</li>
         <li><strong>Code</strong> you can copy, with tensor shapes and a line-by-line walkthrough. Every snippet on this site was run before it was published.</li>
         <li><strong>Where it shows up in the lab</strong>, linking the concept to repository folders.</li>
         <li><strong>Check your understanding</strong> questions with click-to-reveal answers, and a list of <strong>common mistakes</strong>.</li>
@@ -119,6 +117,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="assets/js/site.js?v=20261027"></script>
+<script src="assets/js/site.js?v=20261028"></script>
 </body>
 </html>

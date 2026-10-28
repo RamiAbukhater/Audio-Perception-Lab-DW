@@ -20,18 +20,17 @@
     { id: "c4", href: "concepts/04-noise-reverb-augmentation.html", title: "Noise, SNR, reverberation, and augmentation", short: "Noise, SNR, and reverb", group: "Core concepts (everyone)", step: true },
     { id: "c5", href: "concepts/05-audio-cnns.html", title: "Training CNNs on spectrograms", short: "CNNs for audio", group: "Core concepts (everyone)", step: true },
     { id: "c6", href: "concepts/06-evaluation.html", title: "Evaluation and experimental rigor", short: "Evaluation and rigor", group: "Core concepts (everyone)", step: true },
-    { id: "c7", href: "concepts/07-edge-compression.html", title: "Quantization, pruning, and edge benchmarking", short: "Edge compression", group: "Module concepts", step: true, track: "m1" },
-    { id: "c8", href: "concepts/08-embeddings-ssl.html", title: "Embeddings, clustering, and self-supervised learning", short: "Embeddings and SSL", group: "Module concepts", step: true, track: "m2" },
-    { id: "c9", href: "concepts/09-cross-modal-pseudo-labels.html", title: "Object detection, sync, and cross-modal pseudo-labels", short: "Cross-modal pseudo-labels", group: "Module concepts", step: true, track: "m2" },
-    { id: "c10", href: "concepts/10-mic-arrays-gcc-phat.html", title: "Microphone arrays, TDOA, and GCC-PHAT", short: "Mic arrays and GCC-PHAT", group: "Module concepts", step: true, track: "m3" },
-    { id: "c11", href: "concepts/11-3d-geometry.html", title: "RGB-D, point clouds, and room geometry", short: "3D geometry and point clouds", group: "Module concepts", step: true, track: "m3" },
-    { id: "c12", href: "concepts/12-room-acoustics-occlusion.html", title: "Room acoustics, mirror sources, and occlusion", short: "Room acoustics and occlusion", group: "Module concepts", step: true, track: "m3" },
+    { id: "c7", href: "concepts/07-embeddings-ssl.html", title: "Embeddings, clustering, and self-supervised learning", short: "Embeddings and SSL", group: "Module concepts", step: true, track: "m1" },
+    { id: "c8", href: "concepts/08-cross-modal-pseudo-labels.html", title: "Object detection, sync, and cross-modal pseudo-labels", short: "Cross-modal pseudo-labels", group: "Module concepts", step: true, track: "m1" },
+    { id: "c9", href: "concepts/09-mic-arrays-gcc-phat.html", title: "Microphone arrays, TDOA, and GCC-PHAT", short: "Mic arrays and GCC-PHAT", group: "Module concepts", step: true, track: "m2" },
+    { id: "c10", href: "concepts/10-3d-geometry.html", title: "RGB-D, point clouds, and room geometry", short: "3D geometry and point clouds", group: "Module concepts", step: true, track: "m2" },
+    { id: "c11", href: "concepts/11-room-acoustics-occlusion.html", title: "Room acoustics, mirror sources, and occlusion", short: "Room acoustics and occlusion", group: "Module concepts", step: true, track: "m2" },
     { id: "ideas", href: "project-ideas.html", title: "Project ideas", group: "Projects", icon: "&#9670;" },
     { id: "faculty", href: "faculty.html", title: "UCSD faculty to contact", short: "Faculty to contact", group: "People", icon: "&#9993;" },
     { id: "resources", href: "resources.html", title: "Resources and glossary", short: "Resources and glossary", group: "Reference", icon: "&#9733;" }
   ];
 
-  var TRACKS = { m1: "M1", m2: "M2", m3: "M3" };
+  var TRACKS = { m1: "M1", m2: "M2" };
   var LEADS = "Rami Abukhater";
 
   var body = document.body;
@@ -80,7 +79,7 @@
   if (sidebar) {
     var html = "";
     var group = null;
-    var n = -1; // Setup is step 0, so concept pages keep their own numbers 1 to 12
+    var n = -1; // Setup is step 0, so concept pages keep their own numbers 1 to 11
     PAGES.forEach(function (p, i) {
       if (p.group !== group) {
         if (group !== null) html += "</ol>";
@@ -98,7 +97,7 @@
         "</span></a></li>";
     });
     html += "</ol>";
-    html += '<p class="meta">Everyone works through setup (0) and the core concepts (1 to 6). Then read the module pages for your project: M1 edge classification, M2 vision-grounded self-supervision, M3 audio-visual localization.</p>';
+    html += '<p class="meta">Everyone works through setup (0) and the core concepts (1 to 6). Then read the module pages for your project: M1 vision-grounded self-supervision, M2 audio-visual localization.</p>';
     sidebar.innerHTML = html;
 
     // close the drawer on phone after choosing a page, or on Escape

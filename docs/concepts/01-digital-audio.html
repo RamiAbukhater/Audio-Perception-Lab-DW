@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261027">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
 </head>
 <body data-page="c1" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -35,7 +35,7 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Concept 1 of 12 · Core · Everyone</div>
+      <div class="eyebrow">Concept 1 of 11 · Core · Everyone</div>
       <h1>Digital audio: sampling, bit depth, decibels</h1>
       <p class="lede">Every project in this lab starts with a file full of numbers. Before you can build a classifier, a pseudo-labeller, or a localizer, you need to know exactly what those numbers mean: how often they were taken, how precise each one is, how loud they are, and what can silently go wrong when you load them.</p>
 
@@ -114,16 +114,16 @@
       <div class="table-scroll"><table class="plain">
         <tr><th>Rate</th><th>Nyquist</th><th>Typical use</th></tr>
         <tr><td>8 kHz</td><td>4 kHz</td><td>Telephone speech. Too low for most environmental sounds.</td></tr>
-        <tr><td>16 kHz</td><td>8 kHz</td><td>Speech models, most edge audio models, and the default for <strong>Module 1</strong> and <strong>Module 2</strong>. Keeps compute small.</td></tr>
+        <tr><td>16 kHz</td><td>8 kHz</td><td>Speech models, most compact audio models, and the default for <strong>Module 1</strong>. Keeps compute small.</td></tr>
         <tr><td>22.05 kHz</td><td>11.025 kHz</td><td>librosa's default; many UrbanSound8K tutorials.</td></tr>
-        <tr><td>44.1 / 48 kHz</td><td>22 / 24 kHz</td><td>Music, consumer mics, and most microphone arrays. Higher rates also give finer time resolution, which matters for <strong>Module 3</strong> (see <a href="10-mic-arrays-gcc-phat.html">GCC-PHAT</a>).</td></tr>
+        <tr><td>44.1 / 48 kHz</td><td>22 / 24 kHz</td><td>Music, consumer mics, and most microphone arrays. Higher rates also give finer time resolution, which matters for <strong>Module 2</strong> (see <a href="09-mic-arrays-gcc-phat.html">GCC-PHAT</a>).</td></tr>
       </table></div>
       <p>UrbanSound8K files come at many different sample rates and bit depths. Your data pipeline must <strong>resample everything to one rate</strong> before computing features, or the same sound will produce different spectrograms depending on which recorder it came from.</p>
 
       <h2 id="bits">Bit depth and quantization</h2>
       <p>Each sample is rounded to the nearest of \(2^B\) levels, where \(B\) is the bit depth. The rounding error behaves like a tiny bit of added noise, called <strong>quantization noise</strong>. Each extra bit halves the step size, which lowers that noise by about 6 dB:</p>
       \[ \text{SNR}_{\text{quant}} \approx 6.02\,B + 1.76 \ \text{dB}. \]
-      <p>16-bit audio therefore has about 98 dB of dynamic range, far more than any classifier needs. You will meet this same idea again in <a href="07-edge-compression.html">Concept 7</a>, where we quantize a network's <em>weights</em> to 8 bits instead of audio samples.</p>
+      <p>16-bit audio therefore has about 98 dB of dynamic range, far more than any classifier needs.</p>
       <p>In code, audio usually arrives in one of two forms:</p>
       <ul>
         <li><strong>Integers</strong> (<code>int16</code>, values −32768 to 32767), which is how WAV files usually store it.</li>
@@ -146,14 +146,14 @@
       <p>Two quantities you will compute constantly:</p>
       <ul>
         <li><strong>RMS level</strong>: \(\sqrt{\tfrac{1}{N}\sum x[n]^2}\), the "average loudness" of a clip. Its square is the clip's average power.</li>
-        <li><strong>SNR</strong>, signal-to-noise ratio: \(10\log_{10}(P_{\text{signal}}/P_{\text{noise}})\). Module 1 is built around it. <a href="04-noise-reverb-augmentation.html">Concept 4</a> shows how to mix noise at an exact SNR.</li>
+        <li><strong>SNR</strong>, signal-to-noise ratio: \(10\log_{10}(P_{\text{signal}}/P_{\text{noise}})\). Every robustness experiment in the lab is reported in it. <a href="04-noise-reverb-augmentation.html">Concept 4</a> shows how to mix noise at an exact SNR.</li>
       </ul>
 
       <h2 id="channels">Channels and file formats</h2>
       <p>A <strong>mono</strong> recording has one channel; a <strong>stereo</strong> one has two; a microphone array has one channel per microphone (4, 6, 8 or more). Libraries disagree about array layout: torchaudio returns <span class="shape">(channels, samples)</span>, while soundfile returns <span class="shape">(samples, channels)</span>. Always print the shape.</p>
       <ul>
-        <li>For <strong>classification</strong> (Modules 1 and 2) we usually average channels down to mono.</li>
-        <li>For <strong>localization</strong> (Module 3), the differences <em>between</em> channels are the whole signal. Never average them, never resample channels separately, and never apply per-channel gain normalisation before you compute delays.</li>
+        <li>For <strong>classification</strong> (Module 1) we usually average channels down to mono.</li>
+        <li>For <strong>localization</strong> (Module 2), the differences <em>between</em> channels are the whole signal. Never average them, never resample channels separately, and never apply per-channel gain normalisation before you compute delays.</li>
       </ul>
       <p><strong>Formats.</strong> WAV and FLAC are lossless; use them for everything in the lab. MP3, AAC, and Opus are lossy: they throw away detail the encoder thinks you won't hear, which can include exactly the high-frequency cues a model uses. If a dataset ships in MP3, decode it once to WAV and keep that.</p>
 
@@ -191,10 +191,9 @@ print(f"{rms_dbfs(wav.numpy()):.1f} dBFS")     # a 0.5-amplitude sine gives abou
 
       <h2 id="lab">Where this shows up in the lab</h2>
       <ul>
-        <li><strong>Module 1</strong>, <code>/data</code>: every UrbanSound8K clip is resampled, converted to mono, and padded or cropped to a fixed length. Gain drops are specified in dB.</li>
-        <li><strong>Module 1</strong>, <code>/eval</code>: robustness is reported as accuracy versus SNR in dB.</li>
-        <li><strong>Module 2</strong>, <code>/core/sync</code>: sample indices are converted to timestamps (\(t = n / f_s\)) to line audio up with video frames.</li>
-        <li><strong>Module 3</strong>, <code>/dsp/doa</code>: delays between microphones are measured in samples, so the sample rate directly sets the angular resolution.</li>
+        <li><strong>Everyone</strong>: every clip (UrbanSound8K in the core pages, your own recordings later) is resampled, converted to mono, and padded or cropped to a fixed length before any feature is computed.</li>
+        <li><strong>Module 1</strong>, <code>/core/sync</code>: sample indices are converted to timestamps (\(t = n / f_s\)) to line audio up with video frames.</li>
+        <li><strong>Module 2</strong>, <code>/dsp/doa</code>: delays between microphones are measured in samples, so the sample rate directly sets the angular resolution.</li>
       </ul>
 
       <h2 id="check">Check your understanding</h2>
@@ -204,7 +203,7 @@ print(f"{rms_dbfs(wav.numpy()):.1f} dBFS")     # a 0.5-amplitude sine gives abou
         <div class="answer"><p>\(20\log_{10}(0.5) \approx -6\) dB. Its power drops to a quarter, and \(10\log_{10}(0.25)\) is also about −6 dB.</p></div></details>
       <details class="q"><summary><span class="qn">Q3.</span>A 4-second stereo clip at 48 kHz is loaded with torchaudio. What is the tensor's shape, and what is it after the code above?</summary>
         <div class="answer"><p>Loaded: <span class="shape">(2, 192000)</span>. After averaging to mono and resampling to 16 kHz: <span class="shape">(1, 64000)</span>.</p></div></details>
-      <details class="q"><summary><span class="qn">Q4.</span>Why must Module 3 never convert its microphone array recording to mono?</summary>
+      <details class="q"><summary><span class="qn">Q4.</span>Why must Module 2 never convert its microphone array recording to mono?</summary>
         <div class="answer"><p>Direction is estimated from the tiny time differences between channels. Averaging the channels destroys exactly that information.</p></div></details>
 
       <h2 id="mistakes">Common mistakes</h2>
@@ -229,7 +228,7 @@ print(f"{rms_dbfs(wav.numpy()):.1f} dBFS")     # a 0.5-amplitude sine gives abou
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261027"></script>
-<script src="../assets/js/demos.js?v=20261027"></script>
+<script src="../assets/js/site.js?v=20261028"></script>
+<script src="../assets/js/demos.js?v=20261028"></script>
 </body>
 </html>

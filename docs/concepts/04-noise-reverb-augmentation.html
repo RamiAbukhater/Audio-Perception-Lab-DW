@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261027">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
 </head>
 <body data-page="c4" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -35,7 +35,7 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Concept 4 of 12 · Core · Everyone</div>
+      <div class="eyebrow">Concept 4 of 11 · Core · Everyone</div>
       <h1>Noise, SNR, reverberation, and augmentation</h1>
       <p class="lede">A model trained on clean, close-mic recordings falls apart in a kitchen with a fan running. This page covers the three ways the real world corrupts sound (additive noise, reverberation, and level changes), how to simulate each one precisely, and how to use those simulations both to train robust models and to measure robustness honestly.</p>
 
@@ -163,7 +163,7 @@ def mix_at_snr(clean, noise, snr_db, eps=1e-10):
           <text x="430" y="135" text-anchor="middle" class="t-sm">late reverberation (exponential decay)</text>
           <text x="560" y="155" class="t-sm" style="fill:var(--d-red)">−60 dB at RT60</text>
         </svg>
-        <figcaption>A room impulse response. Module 1 convolves clean clips with RIRs to simulate rooms; Module 3 tries to explain the early reflections geometrically, with mirror sources (<a href="12-room-acoustics-occlusion.html">Concept 12</a>).</figcaption>
+        <figcaption>A room impulse response. Augmentation convolves clean clips with RIRs to simulate rooms; Module 2 tries to explain the early reflections geometrically, with mirror sources (<a href="11-room-acoustics-occlusion.html">Concept 11</a>).</figcaption>
       </figure>
 
 <pre><code class="language-python">from scipy.signal import fftconvolve
@@ -181,7 +181,7 @@ def add_reverb(clean, rir):
           <li><code>fftconvolve</code> is much faster than <code>np.convolve</code> for RIRs, which are thousands of samples long.</li>
           <li>Cropping from the direct-path index keeps the event aligned with its label in time. Without it, every reverberant clip is shifted by the source-to-mic travel time.</li>
           <li>Matching RMS stops reverb from also acting as a hidden gain change, so the two effects stay separate in your experiments.</li>
-          <li>Where to get RIRs: measured sets such as the <a href="https://www.openslr.org/28/">OpenSLR 28 RIR and noise database</a>, or simulate them with <a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a> (<a href="12-room-acoustics-occlusion.html">Concept 12</a>). Resample RIRs to the same rate as your audio.</li>
+          <li>Where to get RIRs: measured sets such as the <a href="https://www.openslr.org/28/">OpenSLR 28 RIR and noise database</a>, or simulate them with <a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a> (<a href="11-room-acoustics-occlusion.html">Concept 11</a>). Resample RIRs to the same rate as your audio.</li>
         </ul>
       </div>
 
@@ -213,9 +213,8 @@ x_train = spec_aug(logmel)                   # training only, never at evaluatio
 
       <h2 id="lab">Where this shows up in the lab</h2>
       <ul>
-        <li><strong>Module 1</strong>, <code>/data</code>: pink and white noise injection, RIR reverberation, and gain drops, exactly as above. <code>/eval</code> sweeps SNR to draw accuracy-degradation curves.</li>
-        <li><strong>Module 2</strong>: the same augmentations create the two "views" of a clip used in contrastive learning (<a href="08-embeddings-ssl.html">Concept 8</a>), and help the student model generalise beyond its pseudo-labels.</li>
-        <li><strong>Module 3</strong>: reverberation is the enemy of localization. Strong reflections create false correlation peaks, which is why GCC-PHAT and the physics layer exist.</li>
+        <li><strong>Module 1</strong>: the same augmentations create the two "views" of a clip used in contrastive learning (<a href="07-embeddings-ssl.html">Concept 7</a>), and help the student model generalise beyond its pseudo-labels.</li>
+        <li><strong>Module 2</strong>: reverberation is the enemy of localization. Strong reflections create false correlation peaks, which is why GCC-PHAT and the physics layer exist.</li>
       </ul>
 
       <h2 id="check">Check your understanding</h2>
@@ -250,7 +249,7 @@ x_train = spec_aug(logmel)                   # training only, never at evaluatio
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261027"></script>
-<script src="../assets/js/demos.js?v=20261027"></script>
+<script src="../assets/js/site.js?v=20261028"></script>
+<script src="../assets/js/demos.js?v=20261028"></script>
 </body>
 </html>

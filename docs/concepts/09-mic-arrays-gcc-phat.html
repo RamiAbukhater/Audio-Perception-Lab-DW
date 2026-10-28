@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261027">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
 </head>
-<body data-page="c10" data-root="../">
+<body data-page="c9" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
 <header class="site-header" id="site-header">
   <a class="brand" href="../index.html">
@@ -35,9 +35,9 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Concept 10 of 12 · Module 3 · Audio-visual localization</div>
+      <div class="eyebrow">Concept 9 of 11 · Module 2 · Audio-visual localization</div>
       <h1>Microphone arrays, TDOA, and GCC-PHAT</h1>
-      <p class="lede">You can tell where a sound comes from with your eyes closed because it reaches one ear slightly before the other. A microphone array does the same thing with several "ears" a few centimetres apart. This page covers how to measure those tiny delays robustly with GCC-PHAT, and how to turn them into azimuth and elevation angles, which is Stream A of Module 3.</p>
+      <p class="lede">You can tell where a sound comes from with your eyes closed because it reaches one ear slightly before the other. A microphone array does the same thing with several "ears" a few centimetres apart. This page covers how to measure those tiny delays robustly with GCC-PHAT, and how to turn them into azimuth and elevation angles, which is Stream A of Module 2.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -108,7 +108,7 @@
           <text x="533" y="192" text-anchor="middle" class="t-sm" style="fill:var(--d-red)">true τ</text>
           <text x="610" y="132" class="t-sm muted">reflection</text>
         </svg>
-        <figcaption>Schematic. Whitening the cross-spectrum turns a broad, reflection-confused bump into a sharp peak. Reflections still leave smaller peaks, which is what Module 3's physics layer has to reason about.</figcaption>
+        <figcaption>Schematic. Whitening the cross-spectrum turns a broad, reflection-confused bump into a sharp peak. Reflections still leave smaller peaks, which is what Module 2's physics layer has to reason about.</figcaption>
       </figure>
 
       <h2 id="code">GCC-PHAT in code</h2>
@@ -171,14 +171,14 @@ def doa_from_tdoas(mic_pos, fs, frames, c=343.0):
         <li><strong>3+ mics in a plane</strong> (a circular array): full 360° azimuth, but elevation is ambiguous above versus below the plane.</li>
         <li><strong>4+ mics not in one plane</strong>: azimuth and elevation.</li>
       </ul>
-      <p>To use the direction with the camera, you need the array's pose in the camera's coordinate frame: a rotation and translation measured once with a ruler or calibrated by playing sounds from known positions (<a href="11-3d-geometry.html">Concept 11</a>).</p>
+      <p>To use the direction with the camera, you need the array's pose in the camera's coordinate frame: a rotation and translation measured once with a ruler or calibrated by playing sounds from known positions (<a href="10-3d-geometry.html">Concept 10</a>).</p>
 
       <h2 id="limits">Resolution, aliasing, and ambiguity</h2>
       <ul>
         <li><strong>Resolution</strong>: wider spacing gives larger delays and finer angles. Higher sample rates give finer delay steps. Both help.</li>
         <li><strong>Spatial aliasing</strong>: if the spacing exceeds half a wavelength (\(d > \lambda/2\), that is, frequencies above \(f = c/2d\)), the phase difference wraps past \(\pi\) and several directions explain it equally well. For \(d = 10\) cm that limit is 1,715 Hz. GCC-PHAT on broadband sounds survives this because different frequencies alias differently and only the true delay is consistent across all of them, but narrowband sounds (a pure beep) above the limit will give ghost directions.</li>
         <li><strong>Near field</strong>: if the source is within about \(2D^2/\lambda\) of an array of aperture \(D\), wavefronts are curved and the far-field formula is biased. For small arrays this is rarely a problem beyond 0.5 m.</li>
-        <li><strong>Reverberation</strong>: strong reflections create correlation peaks pointing at walls. That is the problem Module 3's physics layer (<a href="12-room-acoustics-occlusion.html">Concept 12</a>) is built to handle.</li>
+        <li><strong>Reverberation</strong>: strong reflections create correlation peaks pointing at walls. That is the problem Module 2's physics layer (<a href="11-room-acoustics-occlusion.html">Concept 11</a>) is built to handle.</li>
         <li><strong>Synchronisation</strong>: all channels must be sampled by the same clock. Two USB microphones each have their own clock that drifts; delays measured between them are meaningless after a few seconds. Use a single multichannel array.</li>
       </ul>
 
@@ -186,7 +186,7 @@ def doa_from_tdoas(mic_pos, fs, frames, c=343.0):
       <p>Affordable synchronised arrays: the ReSpeaker 4-mic and 6-mic arrays, the miniDSP UMA-8, and the microphone arrays on some development boards. Record raw multichannel audio (no beamforming or noise suppression on the device, which destroys inter-channel timing), at 16 or 48 kHz.</p>
       <p>Beyond pairwise GCC-PHAT, know the names of these; <a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a> implements most of them in <code>pyroomacoustics.doa</code>:</p>
       <ul>
-        <li><strong>SRP-PHAT</strong> (steered response power): sum GCC-PHAT over all pairs for each candidate direction on a grid and pick the maximum. More robust than solving pairs separately; a strong baseline for Module 3.</li>
+        <li><strong>SRP-PHAT</strong> (steered response power): sum GCC-PHAT over all pairs for each candidate direction on a grid and pick the maximum. More robust than solving pairs separately; a strong baseline for Module 2.</li>
         <li><strong>MUSIC</strong>: a subspace method with sharp peaks and the ability to find several sources at once; sensitive to reverberation.</li>
         <li><strong>Learned DOA</strong>: networks (for example SELDnet, from the DCASE sound event localization and detection challenge) that predict direction from multichannel spectrograms and phase features.</li>
       </ul>
@@ -223,7 +223,7 @@ def doa_from_tdoas(mic_pos, fs, frames, c=343.0):
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261027"></script>
-<script src="../assets/js/demos.js?v=20261027"></script>
+<script src="../assets/js/site.js?v=20261028"></script>
+<script src="../assets/js/demos.js?v=20261028"></script>
 </body>
 </html>

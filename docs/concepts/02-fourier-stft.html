@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261027">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
 </head>
 <body data-page="c2" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -35,7 +35,7 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Concept 2 of 12 · Core · Everyone</div>
+      <div class="eyebrow">Concept 2 of 11 · Core · Everyone</div>
       <h1>The Fourier transform and the STFT</h1>
       <p class="lede">A waveform tells you how loud the sound is from moment to moment, but almost nothing about <em>what</em> it is. A dog bark and a car horn at the same volume look alike as waveforms and completely different as spectra. This page is about how we move from time to frequency, and why we always do it in short windows.</p>
 
@@ -141,8 +141,8 @@
       <h2 id="phase">Magnitude, power, and phase</h2>
       <p>Each STFT value is a complex number \(X = |X|e^{i\phi}\). Its <strong>magnitude</strong> \(|X|\) says how much of that frequency is present; its <strong>phase</strong> \(\phi\) says where in its cycle the wave is. The <strong>power spectrogram</strong> is \(|X|^2\).</p>
       <ul>
-        <li>Classification models (Modules 1 and 2) throw the phase away and use magnitude or power, usually on a log scale.</li>
-        <li>Localization (Module 3) needs exactly the opposite: the <em>phase difference</em> between two microphones encodes the time delay. GCC-PHAT keeps only phase and discards magnitude. Same transform, opposite halves.</li>
+        <li>Classification models (Module 1) throw the phase away and use magnitude or power, usually on a log scale.</li>
+        <li>Localization (Module 2) needs exactly the opposite: the <em>phase difference</em> between two microphones encodes the time delay. GCC-PHAT keeps only phase and discards magnitude. Same transform, opposite halves.</li>
       </ul>
 
       <h2 id="code">The code</h2>
@@ -175,9 +175,9 @@ times = torch.arange(S.shape[1]) * hop / 16_000   # seconds for each column
 
       <h2 id="lab">Where this shows up in the lab</h2>
       <ul>
-        <li><strong>Module 1</strong>: the STFT is the first stage of the log-mel front end (<a href="03-mel-spectrograms.html">next page</a>). Its <code>n_fft</code> and hop also set how much compute the device spends per second of audio.</li>
-        <li><strong>Module 2</strong>: the same front end feeds the audio encoder whose embeddings get clustered.</li>
-        <li><strong>Module 3</strong>: GCC-PHAT is computed from the FFTs of two channels, and frequency-domain beamformers work on STFT frames.</li>
+        <li><strong>Everyone</strong>: the STFT is the first stage of the log-mel front end (<a href="03-mel-spectrograms.html">next page</a>) that every audio model in the lab uses.</li>
+        <li><strong>Module 1</strong>: the same front end feeds the audio encoder whose embeddings get clustered.</li>
+        <li><strong>Module 2</strong>: GCC-PHAT is computed from the FFTs of two channels, and frequency-domain beamformers work on STFT frames.</li>
       </ul>
 
       <h2 id="check">Check your understanding</h2>
@@ -211,7 +211,7 @@ times = torch.arange(S.shape[1]) * hop / 16_000   # seconds for each column
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261027"></script>
-<script src="../assets/js/demos.js?v=20261027"></script>
+<script src="../assets/js/site.js?v=20261028"></script>
+<script src="../assets/js/demos.js?v=20261028"></script>
 </body>
 </html>

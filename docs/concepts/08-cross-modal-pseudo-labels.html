@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261027">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
 </head>
-<body data-page="c9" data-root="../">
+<body data-page="c8" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
 <header class="site-header" id="site-header">
   <a class="brand" href="../index.html">
@@ -35,9 +35,9 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Concept 9 of 12 · Module 2 · Self-supervised learning</div>
+      <div class="eyebrow">Concept 8 of 11 · Module 1 · Self-supervised learning</div>
       <h1>Object detection, sync, and cross-modal pseudo-labels</h1>
-      <p class="lede">Module 2's central trick is to let a camera do the labelling. When the audio cluster for "beep-beep-beep" keeps showing up while a frozen object detector reports a microwave in view, we can guess that cluster means "microwave" and train an audio classifier on that guess. This page covers the detector, getting audio and video onto the same clock, deciding when a guess is trustworthy, and the iterative loop that improves the student model generation by generation.</p>
+      <p class="lede">Module 1's central trick is to let a camera do the labelling. When the audio cluster for "beep-beep-beep" keeps showing up while a frozen object detector reports a microwave in view, we can guess that cluster means "microwave" and train an audio classifier on that guess. This page covers the detector, getting audio and video onto the same clock, deciding when a guess is trustworthy, and the iterative loop that improves the student model generation by generation.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -46,7 +46,7 @@
       <aside class="papers" aria-label="Key papers">
         <span class="papers-title">Key papers for this page</span>
         <ul>
-          <li><a href="https://arxiv.org/abs/1610.09001">Aytar, Vondrick &amp; Torralba (2016). <em>SoundNet: Learning Sound Representations from Unlabeled Video</em></a>. Trains an audio network from a vision model's predictions on unlabelled video, the closest ancestor of Module 2.</li>
+          <li><a href="https://arxiv.org/abs/1610.09001">Aytar, Vondrick &amp; Torralba (2016). <em>SoundNet: Learning Sound Representations from Unlabeled Video</em></a>. Trains an audio network from a vision model's predictions on unlabelled video, the closest ancestor of Module 1.</li>
           <li><a href="https://arxiv.org/abs/1705.08168">Arandjelović &amp; Zisserman (2017). <em>Look, Listen and Learn</em></a>. Audio-visual correspondence as a self-supervised task.</li>
           <li><a href="https://arxiv.org/abs/1804.03641">Owens &amp; Efros (2018). <em>Audio-Visual Scene Analysis with Self-Supervised Multisensory Features</em></a>. Learning from whether audio and video are temporally aligned.</li>
           <li><a href="https://arxiv.org/abs/1506.02640">Redmon et al. (2016). <em>You Only Look Once: Unified, Real-Time Object Detection</em></a>. The original YOLO detector.</li>
@@ -61,11 +61,11 @@
         <li><a href="#pitfalls">Confirmation bias and other traps</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
 
       <h2 id="idea">The big idea</h2>
-      <p>Labelling sounds by hand is slow. Labelling images is a solved problem for many everyday objects: detectors trained on COCO find microwaves, keyboards, laptops, and sinks reliably. Sound and sight are correlated in time: a microwave beeps when someone is standing at it, typing happens when a person sits at a keyboard. Module 2 turns that correlation into labels:</p>
+      <p>Labelling sounds by hand is slow. Labelling images is a solved problem for many everyday objects: detectors trained on COCO find microwaves, keyboards, laptops, and sinks reliably. Sound and sight are correlated in time: a microwave beeps when someone is standing at it, typing happens when a person sits at a keyboard. Module 1 turns that correlation into labels:</p>
       <ol>
         <li>Record synchronised audio and video in an indoor space.</li>
         <li>Run a frozen detector on video frames → "what is visible, and where" over time.</li>
-        <li>Embed and cluster the audio → "which windows sound alike" (<a href="08-embeddings-ssl.html">Concept 8</a>).</li>
+        <li>Embed and cluster the audio → "which windows sound alike" (<a href="07-embeddings-ssl.html">Concept 7</a>).</li>
         <li>Find clusters that reliably co-occur with a visual class → assign a <strong>pseudo-label</strong>, but only when confidence is high.</li>
         <li>Train a student audio classifier on the pseudo-labels, re-embed, re-cluster, repeat.</li>
       </ol>
@@ -95,7 +95,7 @@
           </g>
           <text x="450" y="292" text-anchor="middle" class="t-sm">fine-tune the student, then re-embed and repeat (generation g → g+1)</text>
         </svg>
-        <figcaption>The Module 2 loop. The vision side never changes; the audio side gets better every generation, and the gate decides how much of the student's own output it is allowed to learn from.</figcaption>
+        <figcaption>The Module 1 loop. The vision side never changes; the audio side gets better every generation, and the gate decides how much of the student's own output it is allowed to learn from.</figcaption>
       </figure>
 
       <h2 id="yolo">What an object detector outputs</h2>
@@ -160,7 +160,7 @@ def visual_tags_per_window(win_starts, win_len, frame_times, frame_dets, classes
 </code></pre>
 
       <h2 id="gate">Confidence gating</h2>
-      <p>The spec's "confidence-scoring policy" is the heart of Module 2: a pseudo-label is assigned only when several independent signals agree. A sensible first policy, applied per audio window:</p>
+      <p>The spec's "confidence-scoring policy" is the heart of Module 1: a pseudo-label is assigned only when several independent signals agree. A sensible first policy, applied per audio window:</p>
       <ol>
         <li><strong>Visual confidence</strong>: the matching class is detected in this window with confidence ≥ \(\tau_v\) (for example 0.6), and persists across frames.</li>
         <li><strong>Cluster–class association</strong>: the window's cluster has lift ≥ \(\tau_\ell\) with that class, based on enough support.</li>
@@ -177,7 +177,7 @@ def visual_tags_per_window(win_starts, win_len, frame_times, frame_dets, classes
         <li><strong>Relabel</strong>: run the student over all unlabelled windows. Its confident predictions, still gated by visual evidence, become the next generation's labels. Re-embed and re-cluster with the new encoder.</li>
         <li><strong>Repeat</strong> and track, per generation: accuracy and macro-F1 on the hand-labelled test set, pseudo-label precision and coverage, and cluster quality. Those curves are the "classification convergence over generation cycles" the spec asks for.</li>
       </ol>
-      <p>A useful extra result: once trained, does the audio classifier recognise sounds when the object is <em>out of view</em>? That is the whole point of learning from sound, and it connects directly to Module 3's occlusion question.</p>
+      <p>A useful extra result: once trained, does the audio classifier recognise sounds when the object is <em>out of view</em>? That is the whole point of learning from sound, and it connects directly to Module 2's occlusion question.</p>
 
       <h2 id="pitfalls">Confirmation bias and other traps</h2>
       <ul>
@@ -220,6 +220,6 @@ def visual_tags_per_window(win_starts, win_len, frame_times, frame_dets, classes
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261027"></script>
+<script src="../assets/js/site.js?v=20261028"></script>
 </body>
 </html>

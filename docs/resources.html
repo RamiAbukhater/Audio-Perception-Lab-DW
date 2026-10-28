@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="assets/css/style.css?v=20261027">
+<link rel="stylesheet" href="assets/css/style.css?v=20261028">
 </head>
 <body data-page="resources" data-root="">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -51,23 +51,21 @@
       <h2 id="datasets">Datasets</h2>
       <div class="table-scroll"><table class="plain">
         <tr><th>Dataset</th><th>What</th><th>Used in</th><th>License</th></tr>
-        <tr><td><a href="https://urbansounddataset.weebly.com/urbansound8k.html">UrbanSound8K</a></td><td>8,732 urban sound clips, 10 classes, 10 predefined folds</td><td>M1</td><td>CC BY-NC 3.0</td></tr>
-        <tr><td><a href="https://github.com/karolpiczak/ESC-50">ESC-50</a></td><td>2,000 environmental clips, 50 classes, 5 folds</td><td>M1, M2 (extra test set)</td><td>CC BY-NC 3.0</td></tr>
+        <tr><td><a href="https://urbansounddataset.weebly.com/urbansound8k.html">UrbanSound8K</a></td><td>8,732 urban sound clips, 10 classes, 10 predefined folds</td><td>Core concept pages (warm-up)</td><td>CC BY-NC 3.0</td></tr>
+        <tr><td><a href="https://github.com/karolpiczak/ESC-50">ESC-50</a></td><td>2,000 environmental clips, 50 classes, 5 folds</td><td>M1 (extra test set)</td><td>CC BY-NC 3.0</td></tr>
         <tr><td><a href="https://research.google.com/audioset/">AudioSet</a></td><td>2M YouTube clips, 527 weakly labelled classes</td><td>Pretrained models</td><td>CC BY 4.0 (labels)</td></tr>
-        <tr><td><a href="https://www.openslr.org/17/">MUSAN</a></td><td>Music, speech, and noise recordings</td><td>M1 augmentation</td><td>Mixed; see page</td></tr>
-        <tr><td><a href="https://zenodo.org/records/1227121">DEMAND</a></td><td>Multichannel environmental noise in 18 real places</td><td>M1, M3</td><td>CC BY-SA 3.0</td></tr>
-        <tr><td><a href="https://www.openslr.org/28/">OpenSLR 28</a></td><td>Real and simulated room impulse responses and noises</td><td>M1, M3</td><td>Apache 2.0</td></tr>
-        <tr><td><a href="https://soundspaces.org/">SoundSpaces</a></td><td>Rendered audio for 3-D scanned rooms with RGB-D</td><td>M3</td><td>See project</td></tr>
-        <tr><td><a href="https://dcase.community/">DCASE challenges</a></td><td>Yearly tasks incl. sound event localization and detection (SELD)</td><td>M3, M1</td><td>Varies by task</td></tr>
-        <tr><td><a href="http://www.scan-net.org/">ScanNet</a>, <a href="https://rgbd.cs.princeton.edu/">SUN RGB-D</a></td><td>Real indoor RGB-D scans</td><td>M3 Stream B</td><td>Terms of use</td></tr>
+        <tr><td><a href="https://www.openslr.org/17/">MUSAN</a></td><td>Music, speech, and noise recordings</td><td>Augmentation</td><td>Mixed; see page</td></tr>
+        <tr><td><a href="https://zenodo.org/records/1227121">DEMAND</a></td><td>Multichannel environmental noise in 18 real places</td><td>Augmentation, M2</td><td>CC BY-SA 3.0</td></tr>
+        <tr><td><a href="https://www.openslr.org/28/">OpenSLR 28</a></td><td>Real and simulated room impulse responses and noises</td><td>Augmentation, M2</td><td>Apache 2.0</td></tr>
+        <tr><td><a href="https://soundspaces.org/">SoundSpaces</a></td><td>Rendered audio for 3-D scanned rooms with RGB-D</td><td>M2</td><td>See project</td></tr>
+        <tr><td><a href="https://dcase.community/">DCASE challenges</a></td><td>Yearly tasks incl. sound event localization and detection (SELD)</td><td>M2</td><td>Varies by task</td></tr>
+        <tr><td><a href="http://www.scan-net.org/">ScanNet</a>, <a href="https://rgbd.cs.princeton.edu/">SUN RGB-D</a></td><td>Real indoor RGB-D scans</td><td>M2 Stream B</td><td>Terms of use</td></tr>
       </table></div>
 
       <h2 id="libraries">Libraries and tools</h2>
       <ul>
         <li><strong><a href="https://pytorch.org/audio/">torchaudio</a></strong>: loading, resampling, STFT, mel spectrograms, augmentation transforms.</li>
         <li><strong><a href="https://librosa.org/">librosa</a></strong>: classic audio analysis; excellent docs and display utilities.</li>
-        <li><strong><a href="https://onnxruntime.ai/">ONNX Runtime</a></strong>: portable inference and static int8 quantization. <a href="https://pytorch.org/docs/stable/quantization.html">PyTorch quantization docs</a> cover the FX workflow.</li>
-        <li><strong><a href="https://www.tensorflow.org/lite/microcontrollers">TensorFlow Lite for Microcontrollers</a></strong> and <strong><a href="https://github.com/espressif/esp-dl">ESP-DL</a></strong>: running int8 models on microcontrollers; <a href="https://github.com/espressif/esp-nn">ESP-NN</a> provides optimised ESP32 kernels.</li>
         <li><strong><a href="https://docs.ultralytics.com/">Ultralytics YOLO</a></strong>: object detection (AGPL-3.0). Open-vocabulary alternatives: YOLO-World, OWL-ViT.</li>
         <li><strong><a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a></strong>: room simulation (image-source method), microphone arrays, DOA (SRP-PHAT, MUSIC, and others), beamforming.</li>
         <li><strong><a href="http://www.open3d.org/">Open3D</a></strong>: point clouds, RGB-D, plane segmentation, ray casting, visualisation.</li>
@@ -75,20 +73,17 @@
       </ul>
 
       <h2 id="papers">Key papers</h2>
-      <h3>Audio classification and edge models</h3>
+      <h3>Audio classification</h3>
       <ul>
         <li>Salamon, Jacoby, and Bello (2014). <a href="https://doi.org/10.1145/2647868.2655045">A Dataset and Taxonomy for Urban Sound Research</a>. The UrbanSound8K paper.</li>
         <li>Howard et al. (2017). <a href="https://arxiv.org/abs/1704.04861">MobileNets</a>: depthwise-separable convolutions for efficient vision.</li>
         <li>Kong et al. (2020). <a href="https://arxiv.org/abs/1912.10211">PANNs: Large-Scale Pretrained Audio Neural Networks</a>.</li>
         <li>Park et al. (2019). <a href="https://arxiv.org/abs/1904.08779">SpecAugment</a>.</li>
-        <li>Jacob et al. (2018). <a href="https://arxiv.org/abs/1712.05877">Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference</a>. The affine int8 scheme used everywhere.</li>
-        <li>Han, Mao, and Dally (2016). <a href="https://arxiv.org/abs/1510.00149">Deep Compression</a>: pruning, quantization, and coding.</li>
-        <li>Banbury et al. (2021). <a href="https://arxiv.org/abs/2106.07597">MLPerf Tiny Benchmark</a>: how to benchmark microcontroller ML fairly.</li>
       </ul>
       <h3>Self-supervised and cross-modal learning</h3>
       <ul>
         <li>Arandjelović and Zisserman (2017). <a href="https://arxiv.org/abs/1705.08168">Look, Listen and Learn</a>: audio-visual correspondence as self-supervision.</li>
-        <li>Aytar, Vondrick, and Torralba (2016). <a href="https://arxiv.org/abs/1610.09001">SoundNet</a>: transferring visual knowledge into audio with unlabelled video. The closest ancestor of Module 2.</li>
+        <li>Aytar, Vondrick, and Torralba (2016). <a href="https://arxiv.org/abs/1610.09001">SoundNet</a>: transferring visual knowledge into audio with unlabelled video. The closest ancestor of Module 1.</li>
         <li>Chen et al. (2020). <a href="https://arxiv.org/abs/2002.05709">SimCLR</a>, and Saeed, Grangier, and Zeghidour (2021). <a href="https://arxiv.org/abs/2010.10915">COLA</a>: contrastive learning for images and for audio.</li>
         <li>Xie et al. (2020). <a href="https://arxiv.org/abs/1911.04252">Self-training with Noisy Student</a>: the teacher-student loop with strong augmentation.</li>
         <li>Arazo et al. (2020). <a href="https://arxiv.org/abs/1908.02983">Pseudo-Labeling and Confirmation Bias in Deep Semi-Supervised Learning</a>.</li>
@@ -100,7 +95,7 @@
         <li>Scheibler, Bezzam, and Dokmanić (2018). <a href="https://arxiv.org/abs/1710.04196">Pyroomacoustics</a>.</li>
         <li>Adavanne et al. (2019). <a href="https://arxiv.org/abs/1807.00129">Sound Event Localization and Detection of Overlapping Sources Using Convolutional Recurrent Neural Networks</a> (SELDnet).</li>
         <li>Chen et al. (2020). <a href="https://arxiv.org/abs/1912.11474">SoundSpaces: Audio-Visual Navigation in 3D Environments</a>.</li>
-        <li>Senocak et al. (2018). <a href="https://arxiv.org/abs/1803.03849">Learning to Localize Sound Source in Visual Scenes</a>: the learned visual heatmaps that Module 3's physics layer checks.</li>
+        <li>Senocak et al. (2018). <a href="https://arxiv.org/abs/1803.03849">Learning to Localize Sound Source in Visual Scenes</a>: the learned visual heatmaps that Module 2's physics layer checks.</li>
       </ul>
 
       <h2 id="learn">Courses and tutorials</h2>
@@ -109,15 +104,13 @@
         <li><a href="https://www.youtube.com/watch?v=spUNpyF58BY">3Blue1Brown, "But what is the Fourier Transform?"</a>: the visual intuition for Concept 2.</li>
         <li><a href="https://pytorch.org/audio/stable/tutorials/audio_feature_extractions_tutorial.html">torchaudio feature extraction tutorial</a>.</li>
         <li><a href="https://www.open3d.org/docs/release/tutorial/geometry/pointcloud.html">Open3D point cloud tutorial</a>.</li>
-        <li><a href="https://harvard-edge.github.io/cs249r_book/">Machine Learning Systems</a> (Harvard CS249r): an open textbook on tinyML and efficient deployment.</li>
       </ul>
 
       <h2 id="glossary">Glossary</h2>
       <dl class="glossary">
         <dt>Aliasing</dt><dd>Frequencies above the Nyquist limit folding back as false lower frequencies after sampling. <span class="see">See <a href="concepts/01-digital-audio.html#sampling">Concept 1</a>.</span></dd>
         <dt>Azimuth / elevation</dt><dd>Horizontal angle around the array, and angle above or below its horizontal plane.</dd>
-        <dt>Calibration (quantization)</dt><dd>Running representative inputs through a model to record activation ranges before fixing int8 scales.</dd>
-        <dt>Cosine similarity</dt><dd>The cosine of the angle between two vectors, \(u\cdot v / (\lVert u\rVert\lVert v\rVert)\). <span class="see">See <a href="concepts/08-embeddings-ssl.html#cos">Concept 8</a>.</span></dd>
+        <dt>Cosine similarity</dt><dd>The cosine of the angle between two vectors, \(u\cdot v / (\lVert u\rVert\lVert v\rVert)\). <span class="see">See <a href="concepts/07-embeddings-ssl.html#cos">Concept 7</a>.</span></dd>
         <dt>dB, dBFS</dt><dd>Logarithmic ratio: \(10\log_{10}\) of a power ratio or \(20\log_{10}\) of an amplitude ratio. dBFS is relative to digital full scale.</dd>
         <dt>Depthwise-separable convolution</dt><dd>A per-channel spatial convolution followed by a 1×1 channel-mixing convolution; about \(k^2\) times cheaper than a standard one.</dd>
         <dt>Diffraction</dt><dd>Sound bending around obstacles and through openings, strongest when the wavelength is comparable to the obstacle.</dd>
@@ -126,9 +119,9 @@
         <dt>Extrinsics / intrinsics</dt><dd>Extrinsics: the rotation and translation between two coordinate frames. Intrinsics: a camera's focal lengths and principal point, the matrix \(K\).</dd>
         <dt>Far field</dt><dd>Source far enough away that wavefronts at the array are effectively flat.</dd>
         <dt>FFT / DFT</dt><dd>The discrete Fourier transform turns \(N\) samples into \(N\) frequency coefficients; the FFT is the fast algorithm for it.</dd>
-        <dt>GCC-PHAT</dt><dd>Generalized cross-correlation with phase transform: delay estimation from the whitened cross-spectrum of two channels. <span class="see">See <a href="concepts/10-mic-arrays-gcc-phat.html">Concept 10</a>.</span></dd>
+        <dt>GCC-PHAT</dt><dd>Generalized cross-correlation with phase transform: delay estimation from the whitened cross-spectrum of two channels. <span class="see">See <a href="concepts/09-mic-arrays-gcc-phat.html">Concept 9</a>.</span></dd>
         <dt>Hop length</dt><dd>Samples between the starts of consecutive STFT frames.</dd>
-        <dt>Image source (mirror source)</dt><dd>A virtual source behind a wall whose straight-line path to the listener matches a reflection's path. <span class="see">See <a href="concepts/12-room-acoustics-occlusion.html#ism">Concept 12</a>.</span></dd>
+        <dt>Image source (mirror source)</dt><dd>A virtual source behind a wall whose straight-line path to the listener matches a reflection's path. <span class="see">See <a href="concepts/11-room-acoustics-occlusion.html#ism">Concept 11</a>.</span></dd>
         <dt>InfoNCE</dt><dd>Contrastive loss: a softmax over similarities that picks the positive pair out of a batch.</dd>
         <dt>k-means</dt><dd>Clustering that alternates between assigning points to the nearest of \(k\) centroids and recomputing the centroids.</dd>
         <dt>Leakage</dt><dd>Any path by which test-set information influences training or model selection. <span class="see">See <a href="concepts/06-evaluation.html#splits">Concept 6</a>.</span></dd>
@@ -143,13 +136,10 @@
         <dt>Occlusion</dt><dd>A source hidden from the camera (or from the direct acoustic path) by a wall or object.</dd>
         <dt>Point cloud</dt><dd>A set of 3-D points, here obtained by back-projecting a depth image.</dd>
         <dt>Precedence effect</dt><dd>Perceiving direction from the first arrival and suppressing echoes that follow shortly after.</dd>
-        <dt>Pruning (structured / unstructured)</dt><dd>Removing whole channels or filters, versus zeroing individual weights.</dd>
         <dt>Pseudo-label</dt><dd>A label generated automatically (here, from visual co-occurrence or a teacher model) and used for training.</dd>
-        <dt>PTQ / QAT</dt><dd>Post-training quantization (no retraining, needs calibration) versus quantization-aware training (simulated rounding during fine-tuning).</dd>
         <dt>RANSAC</dt><dd>Robust model fitting by repeatedly fitting to random minimal subsets and keeping the model with the most inliers.</dd>
         <dt>RIR</dt><dd>Room impulse response: what a microphone records from an ideal click in a room; convolving with it adds that room's reverberation.</dd>
         <dt>RT60</dt><dd>Time for reverberation to decay by 60 dB.</dd>
-        <dt>Scale / zero point</dt><dd>The two parameters of affine quantization: \(r \approx s\,(q - z)\). <span class="see">See <a href="concepts/07-edge-compression.html#affine">Concept 7</a>.</span></dd>
         <dt>SNR</dt><dd>Signal-to-noise ratio, \(10\log_{10}(P_s/P_n)\) in dB.</dd>
         <dt>SpecAugment</dt><dd>Augmentation that masks random frequency bands and time spans of a spectrogram.</dd>
         <dt>Spatial aliasing</dt><dd>Ambiguous direction estimates for frequencies whose half-wavelength is shorter than the mic spacing.</dd>
@@ -170,6 +160,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="assets/js/site.js?v=20261027"></script>
+<script src="assets/js/site.js?v=20261028"></script>
 </body>
 </html>

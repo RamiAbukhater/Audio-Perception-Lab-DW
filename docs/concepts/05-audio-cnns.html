@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261027">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
 </head>
 <body data-page="c5" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -35,9 +35,9 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Concept 5 of 12 · Core · Everyone</div>
+      <div class="eyebrow">Concept 5 of 11 · Core · Everyone</div>
       <h1>Training CNNs on spectrograms</h1>
-      <p class="lede">Once audio is a log-mel image, we can borrow the most reliable tool in computer vision: the convolutional neural network. This page explains why that works, what is different about spectrograms compared with photos, how to build a network small enough for a microcontroller, and how to train it on UrbanSound8K without fooling yourself.</p>
+      <p class="lede">Once audio is a log-mel image, we can borrow the most reliable tool in computer vision: the convolutional neural network. This page explains why that works, what is different about spectrograms compared with photos, how to build a small, fast network, and how to train it on UrbanSound8K without fooling yourself.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -105,7 +105,7 @@
       </figure>
 
       <h2 id="model">A tiny audio CNN</h2>
-      <p>A reasonable Module 1 starting point: about 18,000 parameters, 72 KB in float32 and about 18 KB in int8. That fits comfortably in an ESP32's memory.</p>
+      <p>A reasonable starting point for the lab's audio encoder: about 18,000 parameters (72 KB in float32). It trains in minutes, which matters when Module 1 retrains it every generation.</p>
 <pre><code class="language-python">import torch
 import torch.nn as nn
 
@@ -142,7 +142,7 @@ print(sum(p.numel() for p in model.parameters()))   # 18474
         <ul>
           <li><code>bias=False</code> before <code>BatchNorm2d</code>: batch norm has its own shift, so a conv bias is redundant. After training, batch norm can be <em>folded</em> into the conv weights for deployment, which quantization tools do automatically.</li>
           <li>Stride-2 layers shrink the map early, which is where most of the compute savings come from.</li>
-          <li><code>ReLU</code> (or <code>ReLU6</code>) quantizes well. Fancier activations like GELU or Swish are slower and harder to quantize on microcontrollers.</li>
+          <li><code>ReLU</code> is cheap and stable, and is the usual default for small CNNs.</li>
         </ul>
       </div>
 
@@ -189,15 +189,14 @@ for epoch in range(epochs):
       <ul>
         <li><strong>PANNs</strong> (Kong et al., 2020): CNN14 and the much smaller MobileNetV1/V2 variants. Easy to use, great baselines.</li>
         <li><strong>YAMNet</strong>: a MobileNetV1 trained on AudioSet, the standard "small but pretrained" reference.</li>
-        <li><strong>AST, BEATs, and similar transformers</strong>: higher accuracy, far too large for microcontrollers, useful as teachers for knowledge distillation into a tiny student.</li>
+        <li><strong>AST, BEATs, and similar transformers</strong>: higher accuracy, too slow to retrain every generation, but useful as frozen encoders or as teachers for a smaller student.</li>
       </ul>
-      <p>For Module 1 a strong recipe is: train the tiny CNN from scratch as a baseline, then distil from a pretrained teacher and see how much of the gap closes. For Module 2 a pretrained encoder gives better clusters to start from.</p>
+      <p>For Module 1 a pretrained encoder gives better clusters to start from.</p>
 
       <h2 id="lab">Where this shows up in the lab</h2>
       <ul>
-        <li><strong>Module 1</strong>, <code>/models/edge_audio</code>: this is the model you compress in <a href="07-edge-compression.html">Concept 7</a>.</li>
-        <li><strong>Module 2</strong>, <code>/training</code>: the student audio encoder is a CNN like this one, retrained each generation on pseudo-labels.</li>
-        <li><strong>Module 3</strong>: an optional classifier tells you <em>what</em> the localised source is, needed for the "classification accuracy across visible versus occluded" benchmark.</li>
+        <li><strong>Module 1</strong>, <code>/training</code>: the student audio encoder is a CNN like this one, retrained each generation on pseudo-labels.</li>
+        <li><strong>Module 2</strong>: an optional classifier tells you <em>what</em> the localised source is, needed for the "classification accuracy across visible versus occluded" benchmark.</li>
       </ul>
 
       <h2 id="check">Check your understanding</h2>
@@ -232,6 +231,6 @@ for epoch in range(epochs):
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261027"></script>
+<script src="../assets/js/site.js?v=20261028"></script>
 </body>
 </html>
