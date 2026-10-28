@@ -773,3 +773,12 @@ table.keydates td:first-child { white-space: nowrap; font-family: var(--font-ui)
 .papers li { margin-bottom: 0.4rem; line-height: 1.4; color: var(--ink-soft); }
 .papers li a { color: var(--accent); }
 .site-footer .ai-line { font-style: italic; }
+
+/* ---------- faculty page ---------- */
+.idea.person { padding-bottom: 0.3rem; }
+.idea[data-theme="audio"] { border-top: 3px solid var(--d-red); }
+.badge.theme-audio { color: var(--d-red); border-color: currentColor; }
+.contact { display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 0.9rem; margin: 0 0 0.8rem; font-family: var(--font-ui); font-size: 0.92rem; }
+.contact dt { font-weight: 650; color: var(--ink-faint); }
+.contact dd { margin: 0; }
+.idea .field ol li { margin-bottom: 0.4rem; }
