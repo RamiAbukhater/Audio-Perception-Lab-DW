@@ -11,7 +11,7 @@ This repository holds the research code for the lab's three modules and a static
 - **Setup**: Python 3.11, the lab's libraries, GPU notebooks, data, and a smoke test (`scripts/smoke_test.py`) that must pass before anything else.
 - **Six core concept pages for everyone**: digital audio; the Fourier transform and STFT; log-mel spectrograms; noise, SNR, reverberation, and augmentation; CNNs on spectrograms; evaluation and experimental rigor.
 - **Six module concept pages**: quantization, pruning, and edge benchmarking (Module 1); embeddings and self-supervised learning, and cross-modal pseudo-labelling (Module 2); microphone arrays and GCC-PHAT, RGB-D point clouds and room geometry, and room acoustics with mirror sources and occlusion (Module 3).
-- **Project ideas**: the full blueprint for the three modules, mapped to this repository's folders, with prerequisites, a suggested path, the key result, and extensions for each.
+- **Project ideas**: the full blueprint for the three modules, with prerequisites, a suggested path, the key result, and extensions for each.
 - **Resources and glossary**: datasets, libraries, papers, courses, and terms.
 
 Each concept page opens with a short list of key papers, then has the intuition, the math, diagrams, copyable code with tensor shapes, click-to-reveal questions, and common mistakes. Seven pages include interactive demos (aliasing, the STFT window trade-off, mel filterbanks, SNR mixing with audio playback, int8 quantization, two-mic delay geometry, and a draggable mirror-source room with occlusion).

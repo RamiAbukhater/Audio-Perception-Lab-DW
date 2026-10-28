@@ -35,9 +35,9 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Projects · Blueprint and repository specification</div>
+      <div class="eyebrow">Projects · Research blueprint</div>
       <h1>Project ideas</h1>
-      <p class="lede">The Multi-Modal Audio Perception Lab runs three research modules. Together they target audio processing for perception under real constraints: <strong>edge deployment</strong>, <strong>self-supervised cross-modal bootstrapping</strong>, and <strong>physically grounded audio-visual sound source localization (AV-SSL)</strong>. Each module below gives the objective, the technical outline mapped to the repository's folders, the concept pages to read first, and a suggested path from first week to final result.</p>
+      <p class="lede">The Multi-Modal Audio Perception Lab runs three research modules. Together they target audio processing for perception under real constraints: <strong>edge deployment</strong>, <strong>self-supervised cross-modal bootstrapping</strong>, and <strong>physically grounded audio-visual sound source localization (AV-SSL)</strong>. Each module below gives the objective, the technical outline, the concept pages to read first, and a suggested path from first week to final result.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -63,10 +63,10 @@
 
           <div class="field"><strong>Technical outline.</strong>
             <ul>
-              <li><strong>Data pipeline</strong> (<code>/data</code>): scripts to process datasets (for example UrbanSound8K) with synthetic data augmentations including pink and white noise injection, room impulse response (RIR) reverberation, and dynamic gain drops.</li>
-              <li><strong>Model architecture</strong> (<code>/models/edge_audio</code>): compact audio feature extractors operating on log-mel spectrogram frames.</li>
-              <li><strong>Quantization and optimization</strong> (<code>/optim</code>): 8-bit integer post-training quantization (PTQ) and weight pruning, using tools like PyTorch or ONNX Runtime, targeting microcontrollers (ESP32 and Raspberry Pi Pico specs).</li>
-              <li><strong>Evaluation suite</strong> (<code>/eval</code>): benchmarking scripts tracking inference latency, memory footprint (RAM and flash), and accuracy degradation curves under varying signal-to-noise ratios (SNR).</li>
+              <li><strong>Data pipeline</strong>: scripts to process datasets (for example UrbanSound8K) with synthetic data augmentations including pink and white noise injection, room impulse response (RIR) reverberation, and dynamic gain drops.</li>
+              <li><strong>Model architecture</strong>: compact audio feature extractors operating on log-mel spectrogram frames.</li>
+              <li><strong>Quantization and optimization</strong>: 8-bit integer post-training quantization (PTQ) and weight pruning, using tools like PyTorch or ONNX Runtime, targeting microcontrollers (ESP32 and Raspberry Pi Pico specs).</li>
+              <li><strong>Evaluation suite</strong>: benchmarking scripts tracking inference latency, memory footprint (RAM and flash), and accuracy degradation curves under varying signal-to-noise ratios (SNR).</li>
             </ul></div>
 
           <div class="field"><strong>Read first.</strong>
@@ -107,14 +107,14 @@
 
           <div class="field"><strong>Technical outline.</strong>
             <ul>
-              <li><strong>Multimodal synchronization engine</strong> (<code>/core/sync</code>): captures time-aligned windows of ambient audio and RGB frames from a static indoor camera setup.</li>
-              <li><strong>Visual object detection wrapper</strong> (<code>/models/vision</code>): integrates a frozen object detector (for example YOLOv8) to extract bounding boxes and semantic class labels (<code>microwave</code>, <code>keyboard</code>, <code>doorbell</code>) from the visual stream.</li>
-              <li><strong>Cross-modal gating and pseudo-labeling</strong> (<code>/pipeline/bootstrap</code>):
+              <li><strong>Multimodal synchronization engine</strong>: captures time-aligned windows of ambient audio and RGB frames from a static indoor camera setup.</li>
+              <li><strong>Visual object detection wrapper</strong>: integrates a frozen object detector (for example YOLOv8) to extract bounding boxes and semantic class labels (<code>microwave</code>, <code>keyboard</code>, <code>doorbell</code>) from the visual stream.</li>
+              <li><strong>Cross-modal gating and pseudo-labeling</strong>:
                 <ul>
                   <li>computes audio embedding clusters via unsupervised representation learning;</li>
                   <li>implements a confidence-scoring policy: if audio clusters align temporally with high-confidence visual object tags, assign a pseudo-label.</li>
                 </ul></li>
-              <li><strong>Iterative fine-tuning loop</strong> (<code>/training</code>): periodically updates the student audio encoder weights using auto-curated pseudo-labels, to measure classification convergence over generation cycles.</li>
+              <li><strong>Iterative fine-tuning loop</strong>: periodically updates the student audio encoder weights using auto-curated pseudo-labels, to measure classification convergence over generation cycles.</li>
             </ul></div>
 
           <div class="field"><strong>Read first.</strong>
@@ -156,15 +156,15 @@
 
           <div class="field"><strong>Technical outline.</strong>
             <ul>
-              <li><strong>Stream A, acoustic direction of arrival</strong> (<code>/dsp/doa</code>): implements generalized cross-correlation with phase transform (GCC-PHAT) on microphone array feeds to calculate incoming sound azimuth and elevation angles.</li>
-              <li><strong>Stream B, visual room mapping</strong> (<code>/spatial/mapping</code>): interfaces with an RGB-D camera (or simulated depth datasets) to extract 3-D point clouds, wall locations, and layout boundaries using open-source tools (for example Open3D).</li>
-              <li><strong>Stream C, physics and occlusion reasoning layer</strong> (<code>/core/physics_fusion</code>):
+              <li><strong>Stream A, acoustic direction of arrival</strong>: implements generalized cross-correlation with phase transform (GCC-PHAT) on microphone array feeds to calculate incoming sound azimuth and elevation angles.</li>
+              <li><strong>Stream B, visual room mapping</strong>: interfaces with an RGB-D camera (or simulated depth datasets) to extract 3-D point clouds, wall locations, and layout boundaries using open-source tools (for example Open3D).</li>
+              <li><strong>Stream C, physics and occlusion reasoning layer</strong>:
                 <ul>
                   <li><em>Line-of-sight check</em>: cross-references the acoustic DOA vector against the 3-D room layout map.</li>
                   <li><em>Occlusion and out-of-sight handling</em>: filters out false-positive visual heatmaps when a sound vector points toward a blocked wall or open doorway, classifying the source as occluded.</li>
                   <li><em>Multi-path reflection mapping</em>: uses basic acoustic mirror-source concepts to track early wall reflections, rather than letting the model hallucinate false visual origins.</li>
                 </ul></li>
-              <li><strong>Evaluation benchmarks</strong> (<code>/eval/ssl</code>): measures angular localization error (degrees) and classification accuracy across visible versus occluded source scenarios.</li>
+              <li><strong>Evaluation benchmarks</strong>: measures angular localization error (degrees) and classification accuracy across visible versus occluded source scenarios.</li>
             </ul></div>
 
           <div class="field"><strong>Read first.</strong>
