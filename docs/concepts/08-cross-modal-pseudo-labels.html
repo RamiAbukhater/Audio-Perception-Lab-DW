@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261029">
 </head>
 <body data-page="c8" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -35,9 +35,9 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Concept 8 of 11 · Module 1 · Self-supervised learning</div>
+      <div class="eyebrow">Concept 8 of 11 · Project · Pseudo-labelling loop</div>
       <h1>Object detection, sync, and cross-modal pseudo-labels</h1>
-      <p class="lede">Module 1's central trick is to let a camera do the labelling. When the audio cluster for "beep-beep-beep" keeps showing up while a frozen object detector reports a microwave in view, we can guess that cluster means "microwave" and train an audio classifier on that guess. This page covers the detector, getting audio and video onto the same clock, deciding when a guess is trustworthy, and the iterative loop that improves the student model generation by generation.</p>
+      <p class="lede">The project's central trick is to let a camera do the labelling. When the audio cluster for "beep-beep-beep" keeps showing up while a frozen object detector reports a microwave in view, we can guess that cluster means "microwave" and train an audio classifier on that guess. This page covers the detector, getting audio and video onto the same clock, deciding when a guess is trustworthy, and the iterative loop that improves the student model generation by generation.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -46,7 +46,7 @@
       <aside class="papers" aria-label="Key papers">
         <span class="papers-title">Key papers for this page</span>
         <ul>
-          <li><a href="https://arxiv.org/abs/1610.09001">Aytar, Vondrick &amp; Torralba (2016). <em>SoundNet: Learning Sound Representations from Unlabeled Video</em></a>. Trains an audio network from a vision model's predictions on unlabelled video, the closest ancestor of Module 1.</li>
+          <li><a href="https://arxiv.org/abs/1610.09001">Aytar, Vondrick &amp; Torralba (2016). <em>SoundNet: Learning Sound Representations from Unlabeled Video</em></a>. Trains an audio network from a vision model's predictions on unlabelled video, the closest ancestor of the project.</li>
           <li><a href="https://arxiv.org/abs/1705.08168">Arandjelović &amp; Zisserman (2017). <em>Look, Listen and Learn</em></a>. Audio-visual correspondence as a self-supervised task.</li>
           <li><a href="https://arxiv.org/abs/1804.03641">Owens &amp; Efros (2018). <em>Audio-Visual Scene Analysis with Self-Supervised Multisensory Features</em></a>. Learning from whether audio and video are temporally aligned.</li>
           <li><a href="https://arxiv.org/abs/1506.02640">Redmon et al. (2016). <em>You Only Look Once: Unified, Real-Time Object Detection</em></a>. The original YOLO detector.</li>
@@ -61,7 +61,7 @@
         <li><a href="#pitfalls">Confirmation bias and other traps</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
 
       <h2 id="idea">The big idea</h2>
-      <p>Labelling sounds by hand is slow. Labelling images is a solved problem for many everyday objects: detectors trained on COCO find microwaves, keyboards, laptops, and sinks reliably. Sound and sight are correlated in time: a microwave beeps when someone is standing at it, typing happens when a person sits at a keyboard. Module 1 turns that correlation into labels:</p>
+      <p>Labelling sounds by hand is slow. Labelling images is a solved problem for many everyday objects: detectors trained on COCO find microwaves, keyboards, laptops, and sinks reliably. Sound and sight are correlated in time: a microwave beeps when someone is standing at it, typing happens when a person sits at a keyboard. The project turns that correlation into labels:</p>
       <ol>
         <li>Record synchronised audio and video in an indoor space.</li>
         <li>Run a frozen detector on video frames → "what is visible, and where" over time.</li>
@@ -76,11 +76,11 @@
           <desc id="d9d">Camera frames go through a frozen YOLO detector to give time-stamped object tags. Microphone audio goes through the student encoder and clustering. A gating step combines the two to produce pseudo-labels, which train the student encoder; the loop repeats each generation.</desc>
           <defs><marker id="a9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--d-line)"/></marker></defs>
           <g class="t-md">
-            <rect x="20" y="30" width="120" height="50" rx="6" class="box"/><text x="80" y="60" text-anchor="middle">camera</text>
+            <rect x="20" y="30" width="120" height="50" rx="6" class="box"/><text x="80" y="60" text-anchor="middle">RGB-D camera</text>
             <rect x="180" y="30" width="160" height="50" rx="6" class="box" style="stroke:var(--d-blue)"/><text x="260" y="52" text-anchor="middle">YOLO (frozen)</text><text x="260" y="70" text-anchor="middle" class="t-sm muted">class, box, conf, t</text>
-            <rect x="20" y="190" width="120" height="50" rx="6" class="box"/><text x="80" y="220" text-anchor="middle">microphone</text>
+            <rect x="20" y="190" width="120" height="50" rx="6" class="box"/><text x="80" y="220" text-anchor="middle">mic array</text>
             <rect x="180" y="190" width="160" height="50" rx="6" class="box" style="stroke:var(--d-green)"/><text x="260" y="212" text-anchor="middle">student encoder</text><text x="260" y="230" text-anchor="middle" class="t-sm muted">embed + cluster</text>
-            <rect x="390" y="110" width="150" height="60" rx="6" class="box2"/><text x="465" y="135" text-anchor="middle">gate</text><text x="465" y="155" text-anchor="middle" class="t-sm muted">co-occurrence + conf</text>
+            <rect x="390" y="110" width="150" height="60" rx="6" class="box2"/><text x="465" y="135" text-anchor="middle">gate</text><text x="465" y="155" text-anchor="middle" class="t-sm muted">co-occurrence + direction</text>
             <rect x="580" y="110" width="120" height="60" rx="6" class="box"/><text x="640" y="135" text-anchor="middle">pseudo-</text><text x="640" y="155" text-anchor="middle">labels</text>
           </g>
           <rect x="18" y="98" width="124" height="74" rx="6" fill="none" class="ln" stroke-dasharray="3 3"/>
@@ -95,7 +95,7 @@
           </g>
           <text x="450" y="292" text-anchor="middle" class="t-sm">fine-tune the student, then re-embed and repeat (generation g → g+1)</text>
         </svg>
-        <figcaption>The Module 1 loop. The vision side never changes; the audio side gets better every generation, and the gate decides how much of the student's own output it is allowed to learn from.</figcaption>
+        <figcaption>The pseudo-labelling loop. The vision side never changes; the audio side gets better every generation, and the gate decides how much of the student's own output it is allowed to learn from.</figcaption>
       </figure>
 
       <h2 id="yolo">What an object detector outputs</h2>
@@ -109,9 +109,20 @@ for box in results.boxes:
     conf = float(box.conf)
     x1, y1, x2, y2 = box.xyxy[0].tolist()
 </code></pre>
+      <p>For the project's open vocabulary and per-object identity, Ultralytics' YOLO-World takes a text list of class names, and <code>track</code> keeps an id per object across frames:</p>
+<pre><code class="language-python">from ultralytics import YOLOWorld
+
+detector = YOLOWorld("yolov8s-world.pt")           # open-vocabulary, frozen
+detector.set_classes(["microwave", "kettle", "coffee grinder", "door", "printer"])
+results = detector.track(frame, persist=True, verbose=False)[0]   # persist ids across calls
+for box in results.boxes:
+    name = results.names[int(box.cls)]
+    track_id = int(box.id) if box.id is not None else None        # "microwave #1" vs "#2"
+</code></pre>
       <div class="callout warn">
         <span class="callout-title">Check the vocabulary before you design the study</span>
         <p>COCO's 80 classes include <em>microwave, oven, toaster, sink, refrigerator, keyboard, mouse, laptop, cell phone, tv, clock, hair drier,</em> and <em>person</em>. They do <strong>not</strong> include doorbell, kettle, blender, door, or faucet. For classes outside the vocabulary you need an open-vocabulary detector (for example YOLO-World or OWL-ViT, prompted with text like "doorbell"), a fine-tuned detector, or a different visual cue (a door opening, a person at the door). Decide this early; it shapes the class list.</p>
+        <p>The project uses an open-vocabulary detector by default, because its targets are exactly the sounds a fixed audio ontology misses. Tracking adds identity, so two microwaves become <code>microwave #1</code> and <code>microwave #2</code>, which the spatial gate can tell apart.</p>
       </div>
       <p>Two other facts to keep in mind. First, <strong>visible is not sounding</strong>: a keyboard is in view all day but makes noise only when someone types. Useful visual cues are often about <em>activity</em> (a person's hands near the keyboard, the microwave door opening, a box that appears or moves) rather than mere presence. Second, the detector has its own errors; a confidence threshold of 0.5 or higher, plus requiring a detection to persist over several frames, removes most flicker.</p>
       <p><em>Licensing note:</em> Ultralytics YOLOv8 is AGPL-3.0. Fine for research use; if we ever ship code that bundles it, we must follow that license.</p>
@@ -160,24 +171,26 @@ def visual_tags_per_window(win_starts, win_len, frame_times, frame_dets, classes
 </code></pre>
 
       <h2 id="gate">Confidence gating</h2>
-      <p>The spec's "confidence-scoring policy" is the heart of Module 1: a pseudo-label is assigned only when several independent signals agree. A sensible first policy, applied per audio window:</p>
+      <p>The spec's "confidence-scoring policy" is the heart of the project: a pseudo-label is assigned only when several independent signals agree. A sensible first policy, applied per audio window:</p>
       <ol>
         <li><strong>Visual confidence</strong>: the matching class is detected in this window with confidence ≥ \(\tau_v\) (for example 0.6), and persists across frames.</li>
         <li><strong>Cluster–class association</strong>: the window's cluster has lift ≥ \(\tau_\ell\) with that class, based on enough support.</li>
         <li><strong>Audio confidence</strong>: the window is close to its cluster centroid (distance below a percentile threshold), or, from generation 2 on, the student classifier itself agrees with probability ≥ \(\tau_a\).</li>
         <li><strong>Temporal agreement</strong> (optional, stronger): the audio onset falls within a short tolerance of a visual change (door opening, person arriving).</li>
+        <li><strong>Spatial agreement</strong> (the project's addition): the sound must arrive from where the detected object is. A microphone array gives the sound's direction, the depth camera gives the object's 3-D position, and a room map says whether the path between them is clear. The label is kept if the direct path points at the object, or if the strongest arrival is an echo that the room geometry traces back to it. It is rejected if the sound comes from a different object, from a wall, or from off camera. This is the <a href="11-room-acoustics-occlusion.html#fusion">spatial gate</a>, built up over Concepts 9 to 11.</li>
       </ol>
+      <p>The spatial check matters most exactly where co-occurrence fails: when several labelled objects are visible at once (it picks the one the sound came from), when the true source is out of view (it refuses a label that co-occurrence alone would have given), and when echoes make a sound seem to come from a visible but silent object.</p>
       <p>Windows that fail any check get <strong>no label</strong>, not a "background" label. The output is a small, high-precision labelled set. Measure that precision on your hand-labelled check set every generation, and report the trade-off curve of pseudo-label precision versus how many windows got labelled as you vary the thresholds.</p>
 
       <h2 id="loop">The teacher-student loop</h2>
       <p>This is <strong>self-training</strong>, in the family of noisy student training (Xie et al., 2020) and pseudo-labelling (Lee, 2013):</p>
       <ol>
-        <li><strong>Generation 0</strong>: a pretrained or contrastively trained encoder produces embeddings; clustering plus gating gives the first pseudo-labels.</li>
+        <li><strong>Generation 0</strong>: an encoder trained self-supervised on the room's own audio produces embeddings (pretrained audio models are kept out of the loop and used as baselines); clustering plus gating gives the first pseudo-labels.</li>
         <li><strong>Train the student</strong> (encoder + classification head) on those labels, with strong augmentation (noise, SpecAugment, mixup). Augmentation is what lets the student generalise <em>beyond</em> its teacher instead of copying its mistakes.</li>
         <li><strong>Relabel</strong>: run the student over all unlabelled windows. Its confident predictions, still gated by visual evidence, become the next generation's labels. Re-embed and re-cluster with the new encoder.</li>
         <li><strong>Repeat</strong> and track, per generation: accuracy and macro-F1 on the hand-labelled test set, pseudo-label precision and coverage, and cluster quality. Those curves are the "classification convergence over generation cycles" the spec asks for.</li>
       </ol>
-      <p>A useful extra result: once trained, does the audio classifier recognise sounds when the object is <em>out of view</em>? That is the whole point of learning from sound, and it connects directly to Module 2's occlusion question.</p>
+      <p>A useful extra result: once trained, does the audio classifier recognise sounds when the object is <em>out of view</em>? That is the whole point of learning from sound, and the spatial gate is what makes those out-of-view examples identifiable.</p>
 
       <h2 id="pitfalls">Confirmation bias and other traps</h2>
       <ul>
@@ -220,6 +233,6 @@ def visual_tags_per_window(win_starts, win_len, frame_times, frame_dets, classes
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261028"></script>
+<script src="../assets/js/site.js?v=20261029"></script>
 </body>
 </html>

@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261029">
 </head>
 <body data-page="c4" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -163,7 +163,7 @@ def mix_at_snr(clean, noise, snr_db, eps=1e-10):
           <text x="430" y="135" text-anchor="middle" class="t-sm">late reverberation (exponential decay)</text>
           <text x="560" y="155" class="t-sm" style="fill:var(--d-red)">−60 dB at RT60</text>
         </svg>
-        <figcaption>A room impulse response. Augmentation convolves clean clips with RIRs to simulate rooms; Module 2 tries to explain the early reflections geometrically, with mirror sources (<a href="11-room-acoustics-occlusion.html">Concept 11</a>).</figcaption>
+        <figcaption>A room impulse response. Augmentation convolves clean clips with RIRs to simulate rooms; the spatial gate tries to explain the early reflections geometrically, with mirror sources (<a href="11-room-acoustics-occlusion.html">Concept 11</a>).</figcaption>
       </figure>
 
 <pre><code class="language-python">from scipy.signal import fftconvolve
@@ -213,8 +213,8 @@ x_train = spec_aug(logmel)                   # training only, never at evaluatio
 
       <h2 id="lab">Where this shows up in the lab</h2>
       <ul>
-        <li><strong>Module 1</strong>: the same augmentations create the two "views" of a clip used in contrastive learning (<a href="07-embeddings-ssl.html">Concept 7</a>), and help the student model generalise beyond its pseudo-labels.</li>
-        <li><strong>Module 2</strong>: reverberation is the enemy of localization. Strong reflections create false correlation peaks, which is why GCC-PHAT and the physics layer exist.</li>
+        <li><strong>Pseudo-labelling loop</strong>: the same augmentations create the two "views" of a clip used in contrastive learning (<a href="07-embeddings-ssl.html">Concept 7</a>), and help the student model generalise beyond its pseudo-labels.</li>
+        <li><strong>Spatial gate</strong>: reverberation is the enemy of direction finding. Strong reflections create false correlation peaks, which is why the gate uses GCC-PHAT and checks echoes against the room geometry.</li>
       </ul>
 
       <h2 id="check">Check your understanding</h2>
@@ -249,7 +249,7 @@ x_train = spec_aug(logmel)                   # training only, never at evaluatio
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261028"></script>
-<script src="../assets/js/demos.js?v=20261028"></script>
+<script src="../assets/js/site.js?v=20261029"></script>
+<script src="../assets/js/demos.js?v=20261029"></script>
 </body>
 </html>

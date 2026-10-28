@@ -9,9 +9,9 @@ torch>=2.2
 torchaudio>=2.2
 jupyterlab>=4.0
 
-# Module 1: object detection (AGPL-3.0; see README)
+# Visual naming: open-vocabulary detection and tracking (AGPL-3.0; see README)
 ultralytics>=8.1
 
-# Module 2: room simulation, DOA, point clouds
+# Spatial gate: room simulation, direction of arrival, point clouds
 pyroomacoustics>=0.7
 open3d>=0.18

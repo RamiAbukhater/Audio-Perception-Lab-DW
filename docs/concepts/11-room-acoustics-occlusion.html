@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261029">
 </head>
 <body data-page="c11" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -35,9 +35,9 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Concept 11 of 11 · Module 2 · Audio-visual localization</div>
+      <div class="eyebrow">Concept 11 of 11 · Project · Spatial gate</div>
       <h1>Room acoustics, mirror sources, and occlusion</h1>
-      <p class="lede">In a real room, the microphone array hears the source <em>and</em> its reflections off every wall, and sometimes only the reflections. Audio-visual localizers that ignore this point at walls and glowing visual "sources" that cannot be making the sound. Stream C of Module 2 is a physics layer that knows where the walls are. This page gives you the acoustics it needs: how sound behaves in rooms, the mirror-source model of reflections, and how to combine an acoustic direction with a 3-D room map to decide what is visible, what is occluded, and what is an echo.</p>
+      <p class="lede">In a real room, the microphone array hears the source <em>and</em> its reflections off every wall, and sometimes only the reflections. Audio-visual localizers that ignore this point at walls and glowing visual "sources" that cannot be making the sound. The project's spatial gate is a physics check that knows where the walls are, and it decides whether a visual pseudo-label is believable. This page gives you the acoustics it needs: how sound behaves in rooms, the mirror-source model of reflections, and how to combine an acoustic direction with a 3-D room map to decide what is visible, what is occluded, and what is an echo.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -49,18 +49,18 @@
           <li><a href="https://doi.org/10.1121/1.382599">Allen &amp; Berkley (1979). <em>Image Method for Efficiently Simulating Small-Room Acoustics</em></a>. The image-source (mirror-source) method.</li>
           <li><a href="https://arxiv.org/abs/1710.04196">Scheibler, Bezzam &amp; Dokmanić (2018). <em>Pyroomacoustics</em></a>. Room simulation and DOA algorithms used on this page.</li>
           <li><a href="https://arxiv.org/abs/1912.11474">Chen et al. (2020). <em>SoundSpaces: Audio-Visual Navigation in 3D Environments</em></a>. Acoustic rendering in scanned 3-D rooms, with occlusion and reflections.</li>
-          <li><a href="https://arxiv.org/abs/2206.08312">Chen et al. (2022). <em>SoundSpaces 2.0: A Simulation Platform for Visual-Acoustic Learning</em></a>. Continuous, configurable rendering with RGB-D; the best simulator for Module 2.</li>
-          <li><a href="https://arxiv.org/abs/1803.03849">Senocak et al. (2018). <em>Learning to Localize Sound Source in Visual Scenes</em></a>. Learned audio-visual heatmaps, the kind of output the physics layer checks.</li>
+          <li><a href="https://arxiv.org/abs/2206.08312">Chen et al. (2022). <em>SoundSpaces 2.0: A Simulation Platform for Visual-Acoustic Learning</em></a>. Continuous, configurable rendering with RGB-D; the best simulator for the project.</li>
+          <li><a href="https://arxiv.org/abs/1803.03849">Senocak et al. (2018). <em>Learning to Localize Sound Source in Visual Scenes</em></a>. Learned audio-visual heatmaps, a learned alternative to the spatial gate that relies on vision alone.</li>
         </ul>
       </aside>
 
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
         <li><a href="#idea">The big idea</a></li><li><a href="#propagation">How sound travels in a room</a></li><li><a href="#ism">The image-source method</a></li>
-        <li><a href="#try">Try it: reflections and occlusion</a></li><li><a href="#sim">Simulating rooms with pyroomacoustics</a></li><li><a href="#fusion">The physics fusion layer</a></li>
-        <li><a href="#eval">Evaluating it</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
+        <li><a href="#try">Try it: reflections and occlusion</a></li><li><a href="#sim">Simulating rooms with pyroomacoustics</a></li><li><a href="#fusion">The spatial gate</a></li>
+        <li><a href="#eval">Evaluating the gate</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
 
       <h2 id="idea">The big idea</h2>
-      <p>Light and sound behave differently around obstacles, and that difference is the opportunity in Module 2:</p>
+      <p>Light and sound behave differently around obstacles, and that difference is what the spatial gate exploits:</p>
       <ul>
         <li>A camera cannot see a kettle behind a wall or through a doorway. A microphone can hear it, because sound <strong>diffracts</strong> around edges (especially low frequencies, whose wavelengths are metres long) and <strong>reflects</strong> off walls into the array.</li>
         <li>So an acoustic direction estimate may point at a doorway (the sound came <em>through</em> it), or at a blank wall (the strongest arrival was a <em>reflection</em>). A purely visual or purely learned audio-visual model would then highlight whatever object happens to be in that direction, which is wrong.</li>
@@ -118,7 +118,7 @@ def mirror_point(p, plane):
       <p>With the partition on and S behind it, the direct path is blocked (red dashed), and the earliest unblocked arrival comes from a wall reflection. A DOA estimator will report that reflection's direction. Note what the readout ignores: diffraction through the doorway and over the partition, which in reality also reaches the mic, from the direction of the doorway edge.</p>
 
       <h2 id="sim">Simulating rooms with pyroomacoustics</h2>
-      <p><a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a> (Scheibler, Bezzam, and Dokmanić, 2018) simulates shoebox or polygonal rooms with the image-source method (plus optional ray tracing for the late tail), places microphone arrays, and includes DOA algorithms. It is the fastest way to build a labelled Module 2 test set with exact source positions.</p>
+      <p><a href="https://github.com/LCAV/pyroomacoustics">pyroomacoustics</a> (Scheibler, Bezzam, and Dokmanić, 2018) simulates shoebox or polygonal rooms with the image-source method (plus optional ray tracing for the late tail), places microphone arrays, and includes DOA algorithms. It is the fastest way to build a labelled test set for the spatial gate, with exact source positions.</p>
 <pre><code class="language-python">import numpy as np
 import pyroomacoustics as pra
 
@@ -143,25 +143,25 @@ print(np.degrees(doa.azimuth_recon))
         <tr><td>Anechoic (<code>max_order=0</code>)</td><td>157°</td><td>157°</td></tr>
         <tr><td>RT60 = 0.5 s</td><td>175° (18° off)</td><td>255° (wrong)</td></tr>
       </table></div>
-      <p>Same source, same array, same algorithms: reverberation alone moves SRP-PHAT by 18° and breaks MUSIC entirely. That gap is the problem Module 2 exists to attack, and a table like this, over many rooms and positions, is a natural first baseline.</p>
+      <p>Same source, same array, same algorithms: reverberation alone moves SRP-PHAT by 18° and breaks MUSIC entirely. That gap is why the gate cannot simply trust the strongest acoustic peak, and a table like this, over many rooms and positions, is a natural first baseline.</p>
 
-      <h2 id="fusion">The physics fusion layer</h2>
-      <p>Inputs for one time window: a few acoustic direction candidates from Stream A (peaks of the GCC-PHAT or SRP map, with strengths and arrival order), the room planes and occupancy from Stream B, and visual candidate sources (detections with 3-D positions from depth). All are expressed in one frame. The layer then reasons in three steps, matching the spec's three bullets.</p>
+      <h2 id="fusion">The spatial gate</h2>
+      <p>The spatial gate is one of the checks in the <a href="08-cross-modal-pseudo-labels.html#gate">confidence-scoring policy</a>. Co-occurrence has proposed a pseudo-label for an audio window ("this window is <em>microwave</em>, because a microwave was detected"); the gate decides whether the sound actually came from that microwave. Its inputs for the window: a few acoustic direction candidates (peaks of the GCC-PHAT or SRP map, with strengths and arrival order, <a href="09-mic-arrays-gcc-phat.html">Concept 9</a>), the room planes and occupancy (<a href="10-3d-geometry.html">Concept 10</a>), and the detected objects with 3-D positions from depth. All are expressed in one frame. It reasons in three steps.</p>
 
       <figure class="diagram">
         <svg viewBox="0 0 720 260" role="img" aria-labelledby="d12t d12d">
-          <title id="d12t">Decision logic of the physics fusion layer</title>
+          <title id="d12t">Decision logic of the spatial gate</title>
           <desc id="d12d">For each acoustic direction, cast a ray into the room map. If a visual candidate lies on the ray before the first wall hit, label the source visible. If the ray hits a wall or doorway with no candidate, check whether the direction matches a mirror image of a known candidate: if so, it is a reflection; otherwise the source is occluded or off-screen.</desc>
           <defs><marker id="a12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--d-line)"/></marker></defs>
           <g class="t-sm">
-            <rect x="20" y="105" width="130" height="50" rx="6" class="box"/><text x="85" y="126" text-anchor="middle">acoustic DOA</text><text x="85" y="143" text-anchor="middle" class="muted">(Stream A)</text>
-            <rect x="185" y="105" width="150" height="50" rx="6" class="box2"/><text x="260" y="126" text-anchor="middle">cast ray in room map</text><text x="260" y="143" text-anchor="middle" class="muted">(Stream B)</text>
+            <rect x="20" y="105" width="130" height="50" rx="6" class="box"/><text x="85" y="126" text-anchor="middle">acoustic DOA</text><text x="85" y="143" text-anchor="middle" class="muted">(Concept 9)</text>
+            <rect x="185" y="105" width="150" height="50" rx="6" class="box2"/><text x="260" y="126" text-anchor="middle">cast ray in room map</text><text x="260" y="143" text-anchor="middle" class="muted">(Concept 10)</text>
             <rect x="375" y="20" width="160" height="52" rx="6" class="box" style="stroke:var(--d-green)"/><text x="455" y="42" text-anchor="middle">candidate on ray,</text><text x="455" y="60" text-anchor="middle">before first hit</text>
             <rect x="375" y="104" width="160" height="52" rx="6" class="box" style="stroke:var(--d-amber)"/><text x="455" y="126" text-anchor="middle">matches a mirror</text><text x="455" y="144" text-anchor="middle">image of a candidate</text>
             <rect x="375" y="188" width="160" height="52" rx="6" class="box" style="stroke:var(--d-red)"/><text x="455" y="210" text-anchor="middle">hits wall / doorway,</text><text x="455" y="228" text-anchor="middle">no candidate explains it</text>
-            <text x="560" y="51" style="fill:var(--d-green)" class="t-md">VISIBLE → localise</text>
-            <text x="560" y="135" style="fill:var(--d-amber)" class="t-md">REFLECTION → reassign</text>
-            <text x="560" y="219" style="fill:var(--d-red)" class="t-md">OCCLUDED / OFF-SCREEN</text>
+            <text x="560" y="51" style="fill:var(--d-green)" class="t-md">VISIBLE → keep label</text>
+            <text x="560" y="135" style="fill:var(--d-amber)" class="t-md">ECHO → keep, credit object</text>
+            <text x="560" y="219" style="fill:var(--d-red)" class="t-md">OCCLUDED → no label</text>
           </g>
           <g class="ln" stroke-width="1.5">
             <line x1="150" y1="130" x2="183" y2="130" marker-end="url(#a12)"/>
@@ -170,17 +170,17 @@ print(np.degrees(doa.azimuth_recon))
             <line x1="335" y1="140" x2="373" y2="210" marker-end="url(#a12)"/>
           </g>
         </svg>
-        <figcaption>One acoustic direction, three possible explanations. The layer prefers the explanation that geometry supports, instead of trusting whatever is visible in that direction.</figcaption>
+        <figcaption>One acoustic direction, three possible explanations. The gate keeps a pseudo-label only when geometry says the labelled object really made the sound, directly or through an echo.</figcaption>
       </figure>
 
       <h3>1. Line-of-sight check</h3>
       <p>Cast a ray from the array centre along the DOA. Find the distance \(s_{\text{wall}}\) to the first surface it hits (<a href="10-3d-geometry.html#rays">ray casting</a>). For each visual candidate at position \(q\), compute its angle to the ray and its distance along it. A candidate is <strong>line-of-sight consistent</strong> if its angular offset is within the DOA's uncertainty (say 10–15°) and it lies <em>before</em> the wall (\(\lVert q - o\rVert < s_{\text{wall}}\)). Also check the reverse: is the straight segment from the array to the candidate free of walls? A candidate behind a partition fails even if the angle matches.</p>
 
       <h3>2. Occlusion and out-of-sight handling</h3>
-      <p>If the ray hits a wall, a doorway, or leaves the camera's field of view, and no candidate passes the check, do not force a visual match. Suppress the visual heatmap in that direction (this is the spec's "filter out false-positive visual heatmaps") and output <strong>occluded</strong> (ray enters a wall or a doorway) or <strong>off-screen</strong> (direction outside the camera's view), along with the direction itself. A doorway hit is especially informative: the source is probably in the next room, and the sound came through the opening.</p>
+      <p>If the ray hits a wall, a doorway, or leaves the camera's field of view, and no candidate passes the check, do not force a visual match: <strong>reject the pseudo-label</strong>, even if co-occurrence liked it. Record the window as <strong>occluded</strong> (ray enters a wall or a doorway) or <strong>off-screen</strong> (direction outside the camera's view), along with the direction itself. A doorway hit is especially informative: the source is probably in the next room, and the sound came through the opening.</p>
 
       <h3>3. Multi-path reflection mapping</h3>
-      <p>For each visual candidate (or each source already confirmed visible), compute its first-order mirror images across the detected wall planes, and the direction from the array to each image. If an acoustic peak matches one of those directions, and its arrival is later than the candidate's direct-path peak by about the expected extra path length divided by \(c\), label that peak a <strong>reflection of that source</strong>. It is then removed from the list of sources instead of becoming a hallucinated second source on the wall.</p>
+      <p>For each visual candidate (or each source already confirmed visible), compute its first-order mirror images across the detected wall planes, and the direction from the array to each image. If an acoustic peak matches one of those directions, and its arrival is later than the candidate's direct-path peak by about the expected extra path length divided by \(c\), label that peak a <strong>reflection of that source</strong>, so the pseudo-label can still be kept, credited to that object, instead of the peak becoming a hallucinated second source on the wall.</p>
 <pre><code class="language-python">def angle_between(u, v):
     u, v = u / np.linalg.norm(u), v / np.linalg.norm(v)
     return np.degrees(np.arccos(np.clip(u @ v, -1, 1)))
@@ -202,17 +202,31 @@ def explain_doa(doa_dir, array_pos, candidates, planes, room_hit_dist, tol_deg=1
             if angle_between(doa_dir, img - array_pos) &lt; tol_deg:
                 return "reflection", name
     return "occluded", None                                       # 2. nothing explains it
-</code></pre>
-      <p><code>segment_is_clear</code> is the line-of-sight test: cast the segment from the array to the candidate against the room mesh or planes (<a href="10-3d-geometry.html#rays">Concept 10</a>) and return <code>False</code> if any surface is hit before the candidate. This is deliberately simple. Good projects will replace hard thresholds with probabilities (each explanation gets a likelihood from angular error, arrival order, and level), handle several simultaneous sources, and reason over time (a source that was visible a second ago and now produces a doorway DOA probably walked out).</p>
 
-      <h2 id="eval">Evaluating it</h2>
-      <p>The spec's benchmark (<code>/eval/ssl</code>) splits results by scenario. Build the test set so every clip has a known source position and a known category:</p>
+def spatial_gate(proposed, doa_dir, array_pos, candidates, planes, room_hit_dist):
+    """Keep a co-occurrence pseudo-label only if the sound came from the object that proposed it.
+
+    proposed: name of the detected object (e.g. "microwave_0") whose class would label this window.
+    Returns (keep, reason).
+    """
+    verdict, name = explain_doa(doa_dir, array_pos, candidates, planes, room_hit_dist)
+    if verdict in ("visible", "reflection") and name == proposed:
+        return True, verdict                        # direct path, or a known echo of that object
+    if verdict in ("visible", "reflection"):
+        return False, f"sound came from {name}"     # another visible object made it
+    return False, "occluded or off-screen"          # nothing seen explains it: keep for the out-of-view test
+</code></pre>
+      <p><code>segment_is_clear</code> is the line-of-sight test: cast the segment from the array to the candidate against the room mesh or planes (<a href="10-3d-geometry.html#rays">Concept 10</a>) and return <code>False</code> if any surface is hit before the candidate. This is deliberately simple. A stronger version turns the hard yes/no into a spatial confidence score (a likelihood from angular error, arrival order, and level) that is multiplied into the overall pseudo-label confidence, handles several simultaneous sources, and reasons over time (a source that was visible a second ago and now produces a doorway DOA probably walked out).</p>
+
+      <h2 id="eval">Evaluating the gate</h2>
+      <p>The gate exists to make pseudo-labels more correct, so it is judged mainly on the labels it lets through, with localization accuracy as a diagnostic. Build the test set so every clip has a known source, a known position, and a known category:</p>
       <ul>
         <li><strong>Visible</strong>: line of sight from array and camera to the source.</li>
         <li><strong>Occluded</strong>: behind a partition or furniture, in the room.</li>
         <li><strong>Off-screen / other room</strong>: outside the camera's view or through a doorway.</li>
+        <li><strong>Distractor</strong>: the true source is visible, but so is another detected object of a class the gate could wrongly assign.</li>
       </ul>
-      <p>Report, for each category: median and mean angular error (<a href="06-evaluation.html#angle">wrapped</a>), the fraction within 10° and 20°, the accuracy of the visible / occluded / off-screen classification itself (a confusion matrix), and the rate of hallucinated sources (visual heatmap peaks where nothing is making sound). Compare against two baselines: Stream A alone (plain GCC-PHAT or SRP-PHAT), and a naive fusion that picks the visual detection closest to the DOA. Add an ablation for each of the three physics steps.</p>
+      <p>Report, for each category and each generation: <strong>pseudo-label precision</strong> (fraction of accepted labels that are right) and <strong>coverage</strong> (fraction of windows labelled), with and without the spatial gate; the student's macro-F1 on the hand-labelled test set; and, as a diagnostic, wrapped angular error (<a href="06-evaluation.html#angle">median, within 10° and 20°</a>) of the direction estimates. Ablate each physics step (direction check, line of sight, echo attribution) and compare against co-occurrence gating alone. The headline result is whether the gate keeps precision high across generations, where co-occurrence alone lets confirmation bias creep in.</p>
 
       <h2 id="check">Check your understanding</h2>
       <details class="q"><summary><span class="qn">Q1.</span>A source is at \(x = 1\) m in a room whose wall is the plane \(x = 0\). Where is its mirror image, and how much longer is the reflected path to a mic at \(x = 3\), same \(y\) and \(z\)?</summary>
@@ -230,7 +244,7 @@ def explain_doa(doa_dir, array_pos, candidates, planes, room_hit_dist, tol_deg=1
         <li><strong>Assuming sound is blocked like light.</strong> Occluded sources are still heard, mostly through reflections and diffraction, and mostly at low frequencies.</li>
         <li><strong>Mirroring across a plane whose normal is not unit length</strong>, which puts the image in the wrong place. Normalise \((a, b, c)\) first and divide \(d\) by the same factor.</li>
         <li><strong>Forgetting to check that each image is valid</strong> (reflection point on the actual wall, both legs unblocked).</li>
-        <li><strong>Evaluating only on visible sources</strong>, which hides the cases the physics layer exists for.</li>
+        <li><strong>Evaluating only on visible sources</strong>, which hides the cases the spatial gate exists for.</li>
         <li><strong>Testing in the same simulated rooms you tuned on.</strong> Hold out room shapes and RT60s.</li>
       </ul>
 
@@ -246,7 +260,7 @@ def explain_doa(doa_dir, array_pos, candidates, planes, room_hit_dist, tol_deg=1
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261028"></script>
-<script src="../assets/js/demos.js?v=20261028"></script>
+<script src="../assets/js/site.js?v=20261029"></script>
+<script src="../assets/js/demos.js?v=20261029"></script>
 </body>
 </html>

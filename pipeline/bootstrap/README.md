@@ -1,9 +1,9 @@
-# `pipeline/bootstrap/`: Cross-modal gating and pseudo-labeling
+# `pipeline/bootstrap/`: clustering and co-occurrence proposals
 
-**Module 1.** Computes audio embedding clusters via unsupervised representation learning, and implements the confidence-scoring policy: if audio clusters align temporally with high-confidence visual object tags, assign a pseudo-label.
+**Pseudo-labelling loop.** Embeds and clusters audio windows, and proposes a pseudo-label when a cluster co-occurs with a named object far more often than chance. Every proposal is passed to the spatial gate in `core/physics_fusion/` before it can be used.
 
 Read first:
 - [07-embeddings-ssl.html](../../docs/concepts/07-embeddings-ssl.html)
 - [08-cross-modal-pseudo-labels.html](../../docs/concepts/08-cross-modal-pseudo-labels.html#gate)
 
-See [Project ideas](../../docs/project-ideas.html) for the full module outline.
+See [Project ideas](../../docs/project-ideas.html) for the full plan.

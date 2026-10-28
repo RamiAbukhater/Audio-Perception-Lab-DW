@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261029">
 </head>
 <body data-page="c1" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -114,9 +114,9 @@
       <div class="table-scroll"><table class="plain">
         <tr><th>Rate</th><th>Nyquist</th><th>Typical use</th></tr>
         <tr><td>8 kHz</td><td>4 kHz</td><td>Telephone speech. Too low for most environmental sounds.</td></tr>
-        <tr><td>16 kHz</td><td>8 kHz</td><td>Speech models, most compact audio models, and the default for <strong>Module 1</strong>. Keeps compute small.</td></tr>
+        <tr><td>16 kHz</td><td>8 kHz</td><td>Speech models, most compact audio models, and the default for the project's classifier. Keeps compute small.</td></tr>
         <tr><td>22.05 kHz</td><td>11.025 kHz</td><td>librosa's default; many UrbanSound8K tutorials.</td></tr>
-        <tr><td>44.1 / 48 kHz</td><td>22 / 24 kHz</td><td>Music, consumer mics, and most microphone arrays. Higher rates also give finer time resolution, which matters for <strong>Module 2</strong> (see <a href="09-mic-arrays-gcc-phat.html">GCC-PHAT</a>).</td></tr>
+        <tr><td>44.1 / 48 kHz</td><td>22 / 24 kHz</td><td>Music, consumer mics, and most microphone arrays. Higher rates also give finer time resolution, which matters for the spatial gate (see <a href="09-mic-arrays-gcc-phat.html">GCC-PHAT</a>).</td></tr>
       </table></div>
       <p>UrbanSound8K files come at many different sample rates and bit depths. Your data pipeline must <strong>resample everything to one rate</strong> before computing features, or the same sound will produce different spectrograms depending on which recorder it came from.</p>
 
@@ -152,8 +152,8 @@
       <h2 id="channels">Channels and file formats</h2>
       <p>A <strong>mono</strong> recording has one channel; a <strong>stereo</strong> one has two; a microphone array has one channel per microphone (4, 6, 8 or more). Libraries disagree about array layout: torchaudio returns <span class="shape">(channels, samples)</span>, while soundfile returns <span class="shape">(samples, channels)</span>. Always print the shape.</p>
       <ul>
-        <li>For <strong>classification</strong> (Module 1) we usually average channels down to mono.</li>
-        <li>For <strong>localization</strong> (Module 2), the differences <em>between</em> channels are the whole signal. Never average them, never resample channels separately, and never apply per-channel gain normalisation before you compute delays.</li>
+        <li>For <strong>classification</strong> (the student audio model) we usually average channels down to mono, or use one channel.</li>
+        <li>For <strong>direction finding</strong> (the spatial gate), the differences <em>between</em> channels are the whole signal. Never average them, never resample channels separately, and never apply per-channel gain normalisation before you compute delays.</li>
       </ul>
       <p><strong>Formats.</strong> WAV and FLAC are lossless; use them for everything in the lab. MP3, AAC, and Opus are lossy: they throw away detail the encoder thinks you won't hear, which can include exactly the high-frequency cues a model uses. If a dataset ships in MP3, decode it once to WAV and keep that.</p>
 
@@ -192,8 +192,8 @@ print(f"{rms_dbfs(wav.numpy()):.1f} dBFS")     # a 0.5-amplitude sine gives abou
       <h2 id="lab">Where this shows up in the lab</h2>
       <ul>
         <li><strong>Everyone</strong>: every clip (UrbanSound8K in the core pages, your own recordings later) is resampled, converted to mono, and padded or cropped to a fixed length before any feature is computed.</li>
-        <li><strong>Module 1</strong>, <code>/core/sync</code>: sample indices are converted to timestamps (\(t = n / f_s\)) to line audio up with video frames.</li>
-        <li><strong>Module 2</strong>, <code>/dsp/doa</code>: delays between microphones are measured in samples, so the sample rate directly sets the angular resolution.</li>
+        <li><strong>Sync engine</strong>, <code>/core/sync</code>: sample indices are converted to timestamps (\(t = n / f_s\)) to line audio up with video frames.</li>
+        <li><strong>Spatial gate</strong>, <code>/dsp/doa</code>: delays between microphones are measured in samples, so the sample rate directly sets the angular resolution.</li>
       </ul>
 
       <h2 id="check">Check your understanding</h2>
@@ -203,7 +203,7 @@ print(f"{rms_dbfs(wav.numpy()):.1f} dBFS")     # a 0.5-amplitude sine gives abou
         <div class="answer"><p>\(20\log_{10}(0.5) \approx -6\) dB. Its power drops to a quarter, and \(10\log_{10}(0.25)\) is also about −6 dB.</p></div></details>
       <details class="q"><summary><span class="qn">Q3.</span>A 4-second stereo clip at 48 kHz is loaded with torchaudio. What is the tensor's shape, and what is it after the code above?</summary>
         <div class="answer"><p>Loaded: <span class="shape">(2, 192000)</span>. After averaging to mono and resampling to 16 kHz: <span class="shape">(1, 64000)</span>.</p></div></details>
-      <details class="q"><summary><span class="qn">Q4.</span>Why must Module 2 never convert its microphone array recording to mono?</summary>
+      <details class="q"><summary><span class="qn">Q4.</span>Why must the spatial gate never work on a mono version of the microphone array recording?</summary>
         <div class="answer"><p>Direction is estimated from the tiny time differences between channels. Averaging the channels destroys exactly that information.</p></div></details>
 
       <h2 id="mistakes">Common mistakes</h2>
@@ -228,7 +228,7 @@ print(f"{rms_dbfs(wav.numpy()):.1f} dBFS")     # a 0.5-amplitude sine gives abou
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261028"></script>
-<script src="../assets/js/demos.js?v=20261028"></script>
+<script src="../assets/js/site.js?v=20261029"></script>
+<script src="../assets/js/demos.js?v=20261029"></script>
 </body>
 </html>

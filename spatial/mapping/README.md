@@ -1,8 +1,8 @@
-# `spatial/mapping/`: Stream B: visual room mapping
+# `spatial/mapping/`: room map
 
-**Module 2.** Interfaces with an RGB-D camera (or simulated depth datasets) to extract 3-D point clouds, wall locations, and layout boundaries with open-source tools such as Open3D.
+**Spatial gate.** Builds the 3-D room map from the RGB-D camera (or a simulated scene): point cloud, wall and floor planes, doorways, and a ray-casting query.
 
 Read first:
 - [10-3d-geometry.html](../../docs/concepts/10-3d-geometry.html)
 
-See [Project ideas](../../docs/project-ideas.html) for the full module outline.
+See [Project ideas](../../docs/project-ideas.html) for the full plan.

@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Project ideas · DataWorks Audio Perception Lab</title>
-<meta name="description" content="The lab&#x27;s two research modules: vision-grounded self-supervised audio learning, and audio-visual sound source localization.">
+<meta name="description" content="The lab&#x27;s research project: a camera, checked by a microphone array and a 3-D room map, teaches an audio model the sounds that pretrained models miss.">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="assets/css/style.css?v=20261028">
+<link rel="stylesheet" href="assets/css/style.css?v=20261029">
 </head>
 <body data-page="ideas" data-root="">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -37,7 +37,7 @@
     <article class="content">
       <div class="eyebrow">Projects · Research blueprint</div>
       <h1>Project ideas</h1>
-      <p class="lede">The Multi-Modal Audio Perception Lab runs two research modules. Together they target audio processing for perception under real constraints: <strong>self-supervised cross-modal bootstrapping</strong> and <strong>physically grounded audio-visual sound source localization (AV-SSL)</strong>. Each module below opens with the closest prior work and what is still open, then gives the objective, the technical outline, the concept pages to read first, and a suggested path from first week to final result.</p>
+      <p class="lede">The Multi-Modal Audio Perception Lab runs one research project: <strong>teaching an audio model the sounds that pretrained models get wrong, using a camera instead of a person</strong>. Off-the-shelf audio models such as CLAP already recognise common sounds like "microwave" or "typing". They cannot tell <em>which</em> microwave beeped, they have no word for many room-specific sounds, and they degrade on far-field audio from a fixed room microphone. In this project a fixed camera names the sounds, and a spatial gate built from a microphone array and a 3-D room map checks which visible object actually made each one before its label is trusted.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -45,150 +45,119 @@
       </div>
 
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
-        <li><a href="#module-1">Module 1: Self-supervised learning via vision</a></li>
-        <li><a href="#module-2">Module 2: AV-SSL with spatial physics</a></li>
-        <li><a href="#compare">Comparing the modules</a></li>
-        <li><a href="#how">How to pick and propose</a></li></ol></nav>
+        <li><a href="#project">The project</a></li>
+        <li><a href="#why">What is new, and what is not</a></li>
+        <li><a href="#baselines">Baselines the project must beat</a></li>
+        <li><a href="#split">How the work splits</a></li>
+        <li><a href="#how">How to propose your part</a></li></ol></nav>
 
       <div class="ideas">
-
-        <!-- ================= Module 1 ================= -->
-        <article class="idea" id="module-1" data-theme="selfsup">
+        <article class="idea" id="project" data-theme="selfsup">
           <header>
-            <h3><span class="idea-num">1</span> Self-supervised audio learning via vision grounding</h3>
-            <div class="badges"><span class="badge theme-selfsup">Self-supervised</span><span class="badge">Cross-modal</span><span class="badge">YOLOv8 (frozen)</span><span class="badge">Indoor recordings</span></div>
+            <h3>Hearing what pretrained models can't: spatially verified pseudo-labels from a camera</h3>
+            <div class="badges"><span class="badge theme-selfsup">Self-supervised</span><span class="badge">Open-vocabulary detector</span><span class="badge">Mic array · GCC-PHAT</span><span class="badge">RGB-D · Open3D</span><span class="badge">CLAP baseline</span></div>
           </header>
           <aside class="prior" aria-label="Closest prior work">
             <span class="prior-title">Closest prior work</span>
             <ul>
-              <li><a href="https://arxiv.org/abs/1610.09001">Aytar, Vondrick &amp; Torralba (2016). <em>SoundNet: Learning Sound Representations from Unlabeled Video</em></a>. <strong>Already does:</strong> pretrained image classifiers teach an audio network through two million unlabelled videos, with no sound labels. <strong>Does not:</strong> gate labels by confidence, cluster audio, or iterate over generations; it distils soft labels once, from YouTube rather than a fixed indoor camera.</li>
-              <li><a href="https://papers.neurips.cc/paper_files/paper/1993/hash/e0ec453e28e061cc58ac43f91dc2f3f0-Abstract.html">de Sa (1994). <em>Learning Classification with Unlabeled Data</em></a>. <strong>Already does:</strong> the core principle: two senses supervise each other by agreeing on a category. <strong>Does not:</strong> use object detectors, deep audio models, or real indoor recordings.</li>
-              <li><a href="https://arxiv.org/abs/1804.03641">Owens &amp; Efros (2018). <em>Audio-Visual Scene Analysis with Self-Supervised Multisensory Features</em></a>. <strong>Already does:</strong> learns from whether audio and video are in sync, and separates on-screen from off-screen sound. <strong>Does not:</strong> produce a classifier with named sound classes.</li>
-              <li><a href="https://openaccess.thecvf.com/content/CVPR2022/papers/Afouras_Self-Supervised_Object_Detection_From_Audio-Visual_Correspondence_CVPR_2022_paper.pdf">Afouras et al. (2022). <em>Self-Supervised Object Detection from Audio-Visual Correspondence</em></a>. <strong>Already does:</strong> turns audio-visual agreement into pseudo-labels and trains a standard model on them. <strong>Does not:</strong> run in our direction: audio teaches the object detector, not the other way round.</li>
+              <li><a href="https://doi.org/10.1145/3313831.3376875">Wu, Harrison, Bigham &amp; Laput (2020). <em>Automated Class Discovery and One-Shot Interactions for Acoustic Activity Recognition</em> (Listen Learner)</a>. <strong>Already does:</strong> discovers a home's own sound classes by clustering audio embeddings on a 4-mic device, then asks a person once per class ("what was that sound?"). <strong>Does not:</strong> use a camera; every class still needs a human answer.</li>
+              <li><a href="https://doi.org/10.1145/3610907">Patidar, Goel &amp; Agarwal (2023). <em>VAX: Using Existing Video and Audio-based Activity Recognition Models to Bootstrap Privacy-Sensitive Sensors</em></a>. <strong>Already does:</strong> pretrained video models and YAMNet label activities in 10 homes, and those labels train other sensors, including a microphone array's sound direction. <strong>Does not:</strong> use direction to check whether a label is right, or learn anything the pretrained models cannot already name (about 2 of 17 activities still needed a person's label); the model it trains is not an audio classifier.</li>
+              <li><a href="https://arxiv.org/abs/2202.11134">Jain et al. (2022). <em>ProtoSound: A Personalized and Scalable Sound Recognition System for Deaf and Hard-of-Hearing Users</em></a>. <strong>Already does:</strong> fine-grained, home-specific sound classes from a few user recordings. <strong>Does not:</strong> use a camera or spatial checks; a person records every class.</li>
+              <li><a href="https://arxiv.org/abs/2003.04210">Vasudevan, Dai &amp; Van Gool (2020)</a>, <a href="https://arxiv.org/abs/1910.11760">Gan et al. (2019)</a>, and <a href="https://arxiv.org/abs/2103.01353">Valverde et al. (2021)</a>. <strong>Already do:</strong> a vision teacher trains binaural, stereo, or array audio to predict what is where. <strong>Do not:</strong> verify the teacher's labels, or handle walls, echoes, and occlusion; they work outdoors on vehicles and street scenes.</li>
+              <li><a href="https://arxiv.org/abs/2510.02313">Yang et al. (2025). <em>Clink! Chop! Thud! Learning Object Sounds from Real-World Interactions</em></a>. <strong>Already does:</strong> picks which candidate object is making a sound in egocentric video. <strong>Does not:</strong> use a microphone array or room physics; the choice is learned from appearance.</li>
+              <li><a href="https://arxiv.org/abs/1711.07791">An, Son, Manocha &amp; Yoon (2017). <em>Reflection-Aware Sound Source Localization</em></a>. <strong>Already does:</strong> a 3-D map from RGB-D, echo tracing, and localization without line of sight. <strong>Does not:</strong> recognise anything or feed into learning.</li>
             </ul>
-            <p class="prior-gap"><strong>What is still open:</strong> a gated, multi-generation loop in which a frozen object detector names indoor sound classes for an audio model, and a measurement of where confirmation bias sets in. We found no paper that does this, from one targeted search.</p>
+            <p class="prior-gap"><strong>What is still open:</strong> replacing Listen Learner's human question with a camera, so new and room-specific sound classes get names with zero human labels, and using a spatial gate (direction of arrival checked against a 3-D room map, including line of sight and echoes) to decide which visible object made each sound before its label is trusted. VAX records sound direction but never uses it to accept or reject a label. We found no paper that combines these, from about 16 targeted searches; read Listen Learner and VAX in full before writing a proposal.</p>
           </aside>
-          <p><strong>Objective.</strong> Bootstrap an indoor audio classifier iteratively, using visual co-occurrence cues (for example YOLO object detection), without relying on manually labelled sound datasets from scratch.</p>
 
-          <div class="field"><strong>Technical outline.</strong>
-            <ul>
-              <li><strong>Multimodal synchronization engine</strong>: captures time-aligned windows of ambient audio and RGB frames from a static indoor camera setup.</li>
-              <li><strong>Visual object detection wrapper</strong>: integrates a frozen object detector (for example YOLOv8) to extract bounding boxes and semantic class labels (<code>microwave</code>, <code>keyboard</code>, <code>doorbell</code>) from the visual stream.</li>
-              <li><strong>Cross-modal gating and pseudo-labeling</strong>:
-                <ul>
-                  <li>computes audio embedding clusters via unsupervised representation learning;</li>
-                  <li>implements a confidence-scoring policy: if audio clusters align temporally with high-confidence visual object tags, assign a pseudo-label.</li>
-                </ul></li>
-              <li><strong>Iterative fine-tuning loop</strong>: periodically updates the student audio encoder weights using auto-curated pseudo-labels, to measure classification convergence over generation cycles.</li>
-            </ul></div>
+          <p><strong>Objective.</strong> In a fixed indoor space, learn to recognise sounds that pretrained audio models such as CLAP get wrong or cannot name (specific instances, room-specific events, and sounds outside AudioSet's 527 classes), with no human sound labels. A fixed camera supplies the names; a spatial gate verifies that each named object really produced the sound; an audio model trained only on the room's own recordings learns from the verified labels, and is compared directly against CLAP and the other baselines below.</p>
 
-          <div class="field"><strong>Read first.</strong>
-            <ul class="prereqs">
-              <li><a href="concepts/01-digital-audio.html">1 · Digital audio</a></li><li><a href="concepts/03-mel-spectrograms.html">3 · Log-mel</a></li>
-              <li><a href="concepts/04-noise-reverb-augmentation.html">4 · Augmentation</a></li><li><a href="concepts/05-audio-cnns.html">5 · CNNs</a></li>
-              <li><a href="concepts/06-evaluation.html">6 · Evaluation</a></li><li><a href="concepts/07-embeddings-ssl.html">7 · Embeddings and SSL</a></li>
-              <li><a href="concepts/08-cross-modal-pseudo-labels.html">8 · Pseudo-labels</a></li>
-            </ul></div>
-
-          <div class="field"><strong>Suggested path.</strong>
+          <div class="field"><strong>How the system works.</strong>
             <ol>
-              <li><strong>Capture rig and consent.</strong> One static camera and one microphone on the same machine, both stamped with one monotonic clock. Clap test to measure offset. Get consent from everyone who uses the space; agree on what is stored and for how long.</li>
-              <li><strong>Class list and check set.</strong> Pick 6–10 indoor sound classes. Confirm the detector's vocabulary covers them (COCO has microwave and keyboard but no doorbell; plan an open-vocabulary detector or another visual cue). Hand-label 200+ windows from held-out days as the test set.</li>
-              <li><strong>Generation 0.</strong> Embed windows with a pretrained encoder, drop silence, over-cluster, compute cluster–tag lift, apply the gate, inspect and listen to every cluster that received a label.</li>
-              <li><strong>Iterate.</strong> Train the student with strong augmentation, relabel, re-embed, re-cluster. Track test macro-F1, pseudo-label precision and coverage, and cluster quality per generation.</li>
-              <li><strong>Out-of-view test.</strong> Does the final audio model recognise events when the object is off camera? Compare with a supervised model trained on the hand labels alone.</li>
-            </ol></div>
-
-          <div class="field"><strong>Key result.</strong> Convergence curves over generations (macro-F1, pseudo-label precision, number of labelled windows), compared against a small fully supervised baseline. The research question: <em>how close can vision-grounded pseudo-labels get to human labels, and where does confirmation bias set in?</em></div>
-
-          <div class="field"><strong>Extensions.</strong>
-            <ul>
-              <li>Learned gating: replace fixed thresholds with a small model that predicts whether a pseudo-label is correct.</li>
-              <li>Activity cues instead of object presence (hand–object proximity, door state changes).</li>
-              <li>Contrastive audio pretraining on the unlabelled recordings before generation 0.</li>
-              <li>Transfer: train in one room, test in another.</li>
-            </ul></div>
-          <p class="builds">Needs: a webcam and a USB microphone (or a laptop's built-in ones), a GPU for training, and a shared indoor space where everyone has agreed to be recorded.</p>
-        </article>
-
-        <!-- ================= Module 2 ================= -->
-        <article class="idea" id="module-2" data-theme="avssl">
-          <header>
-            <h3><span class="idea-num">2</span> Audio-visual sound source localization (AV-SSL) with spatial physics</h3>
-            <div class="badges"><span class="badge theme-avssl">Spatial audio</span><span class="badge">GCC-PHAT</span><span class="badge">RGB-D · Open3D</span><span class="badge">Physics reasoning</span></div>
-          </header>
-          <aside class="prior" aria-label="Closest prior work">
-            <span class="prior-title">Closest prior work</span>
-            <ul>
-              <li><a href="https://arxiv.org/abs/1711.07791">An, Son, Manocha &amp; Yoon (2017). <em>Reflection-Aware Sound Source Localization</em></a>. <strong>Already does:</strong> builds a 3-D map from an RGB-D camera and laser scanner (via SLAM), traces direct and reflected acoustic rays through it, and localizes sources without line of sight (0.8 m average error in a 7 × 7 m room). <strong>Does not:</strong> use visual recognition: no object candidates, no visible / occluded / off-screen decision, and no rejection of wrong visual matches.</li>
-              <li><a href="https://arxiv.org/abs/2412.16861">He et al. (2024). <em>SoundLoc3D: Invisible 3D Sound Source Localization and Classification Using a Multimodal RGB-D Acoustic Camera</em></a>. <strong>Already does:</strong> pairs an RGB-D camera with a four-mic array to localize and classify sources that are not visible in the image. <strong>Does not:</strong> model reflections or occlusion explicitly (it is learned end to end), evaluate in real rooms (simulation only), or handle sources behind walls (it places the rig so no source is blocked).</li>
-              <li><a href="https://arxiv.org/abs/2108.01246">Zhang et al. (2021). <em>AcousticFusion: Fusing Sound Source Localization to Visual SLAM in Dynamic Environments</em></a>. <strong>Already does:</strong> projects microphone-array directions into an RGB-D image. <strong>Does not:</strong> reason about echoes or blocked paths; it uses sound only to flag moving objects for SLAM.</li>
-              <li><a href="https://arxiv.org/abs/1803.03849">Senocak et al. (2018). <em>Learning to Localize Sound Source in Visual Scenes</em></a>. <strong>Already does:</strong> learned heatmaps of which pixels make a sound. <strong>Does not:</strong> use a microphone array or geometry, so it highlights a visible object even when the sound comes from elsewhere.</li>
-            </ul>
-            <p class="prior-gap"><strong>What is still open:</strong> the 3-D map and reflection tracing are already done (An et al.). What remains is the link between acoustics and vision: using the map to decide whether a seen object can be the source, labelling sources visible, occluded, or off-screen, attributing echoes to specific seen objects, and reporting errors separately for each case.</p>
-          </aside>
-          <p><strong>Objective.</strong> Build an advanced localization pipeline that integrates spatial audio direction with 3-D room geometry, to resolve occlusions, off-screen sound sources, and echoes.</p>
-
-          <div class="field"><strong>Technical outline.</strong>
-            <ul>
-              <li><strong>Stream A, acoustic direction of arrival</strong>: implements generalized cross-correlation with phase transform (GCC-PHAT) on microphone array feeds to calculate incoming sound azimuth and elevation angles.</li>
-              <li><strong>Stream B, visual room mapping</strong>: interfaces with an RGB-D camera (or simulated depth datasets) to extract 3-D point clouds, wall locations, and layout boundaries using open-source tools (for example Open3D).</li>
-              <li><strong>Stream C, physics and occlusion reasoning layer</strong>:
+              <li><strong>Synchronised capture</strong>: a static microphone array and an RGB-D camera record a shared indoor space, every sample and frame stamped on one clock.</li>
+              <li><strong>Visual naming</strong>: an open-vocabulary detector (for example YOLO-World, OWL-ViT, or Grounding DINO) finds and names objects from a text vocabulary far larger than COCO's 80 classes, object tracking gives each one a persistent identity ("microwave #1", "microwave #2"), and depth gives its 3-D position.</li>
+              <li><strong>In-room audio clusters</strong>: an audio encoder trained only on this room's recordings (self-supervised, <a href="concepts/07-embeddings-ssl.html">Concept 7</a>) embeds each window, and clustering groups windows that sound alike. Pretrained audio models are kept out of the labelling path, so the comparison with them is fair.</li>
+              <li><strong>Co-occurrence proposals</strong>: a cluster that appears far more often than chance with an object, or with an action on it (a door opening, a hand at the kettle), proposes that object as the label.</li>
+              <li><strong>Spatial gate</strong>, the core contribution:
                 <ul>
-                  <li><em>Line-of-sight check</em>: cross-references the acoustic DOA vector against the 3-D room layout map.</li>
-                  <li><em>Occlusion and out-of-sight handling</em>: filters out false-positive visual heatmaps when a sound vector points toward a blocked wall or open doorway, classifying the source as occluded.</li>
-                  <li><em>Multi-path reflection mapping</em>: uses basic acoustic mirror-source concepts to track early wall reflections, rather than letting the model hallucinate false visual origins.</li>
+                  <li><em>Direction check</em>: GCC-PHAT or SRP-PHAT on the array gives the sound's azimuth and elevation, which must point at the proposed object, and at that instance rather than another of the same class.</li>
+                  <li><em>Line-of-sight check</em>: ray casting against the room map (point cloud, walls, doorways) confirms nothing blocks the path between array and object.</li>
+                  <li><em>Echo attribution</em>: when the strongest arrival comes from a wall, mirror-source geometry tests whether it is an echo of the proposed object; if so, the label is kept and credited to that object.</li>
+                  <li><em>Rejection</em>: if the sound comes from another object, from a wall with no matching mirror image, or from off camera, the label is refused and the window is kept for the out-of-view test.</li>
                 </ul></li>
-              <li><strong>Evaluation benchmarks</strong>: measures angular localization error (degrees) and classification accuracy across visible versus occluded source scenarios.</li>
-            </ul></div>
+              <li><strong>Iterative self-training</strong>: the student audio model trains on the gated labels with strong augmentation, relabels the unlabelled windows, and the loop repeats, with the gate applied every generation.</li>
+            </ol></div>
 
           <div class="field"><strong>Read first.</strong>
             <ul class="prereqs">
               <li><a href="concepts/01-digital-audio.html">1 · Digital audio</a></li><li><a href="concepts/02-fourier-stft.html">2 · Fourier and STFT</a></li>
-              <li><a href="concepts/04-noise-reverb-augmentation.html">4 · Reverb</a></li><li><a href="concepts/06-evaluation.html">6 · Evaluation</a></li>
+              <li><a href="concepts/03-mel-spectrograms.html">3 · Log-mel</a></li><li><a href="concepts/04-noise-reverb-augmentation.html">4 · Augmentation and reverb</a></li>
+              <li><a href="concepts/05-audio-cnns.html">5 · CNNs</a></li><li><a href="concepts/06-evaluation.html">6 · Evaluation</a></li>
+              <li><a href="concepts/07-embeddings-ssl.html">7 · Embeddings and SSL</a></li><li><a href="concepts/08-cross-modal-pseudo-labels.html">8 · Pseudo-labels and gating</a></li>
               <li><a href="concepts/09-mic-arrays-gcc-phat.html">9 · GCC-PHAT</a></li><li><a href="concepts/10-3d-geometry.html">10 · 3-D geometry</a></li>
-              <li><a href="concepts/11-room-acoustics-occlusion.html">11 · Room acoustics</a></li>
+              <li><a href="concepts/11-room-acoustics-occlusion.html">11 · Room acoustics and the gate</a></li>
             </ul></div>
 
           <div class="field"><strong>Suggested path.</strong>
             <ol>
-              <li><strong>Simulation first.</strong> Build test rooms in pyroomacoustics (shoebox, then with partitions) with a simulated array. Implement GCC-PHAT and SRP-PHAT; reproduce the anechoic-versus-reverberant gap; tabulate angular error against RT60.</li>
-              <li><strong>Geometry stream.</strong> From RGB-D frames (a simulated dataset or a RealSense), produce a point cloud, RANSAC planes for floor and walls, doorway gaps, and a ray-casting query.</li>
-              <li><strong>Calibration.</strong> Put array, camera, and room in one frame. Validate with a phone playing noise from known positions.</li>
-              <li><strong>Physics layer.</strong> Line-of-sight check, occlusion and off-screen classification, first-order reflection mapping. Ablate each.</li>
-              <li><strong>Benchmark.</strong> Visible, occluded, and off-screen scenarios in simulation, then in a real room. Report wrapped angular error (median, within 10° and 20°), scenario classification accuracy, and hallucinated-source rate against DOA-only and naive-fusion baselines.</li>
+              <li><strong>Find the gap first.</strong> Record a few days of audio in the target room and run CLAP zero-shot (and an open-vocabulary detector such as Detect Any Sound) on it. List the sounds it gets wrong, confuses between instances, or has no class for. That list is the project's target set; if it is empty, pick a different room.</li>
+              <li><strong>Simulation.</strong> In SoundSpaces 2.0 (or pyroomacoustics for audio only), place sounding objects, including two of the same kind, render audio at a simulated array plus RGB-D views, and measure how often the spatial gate picks the right instance in visible, occluded, off-screen, and distractor cases.</li>
+              <li><strong>Capture rig and consent.</strong> A synchronised array (for example a ReSpeaker 4- or 6-mic array) and an RGB-D camera (for example a RealSense) on one machine and clock; calibrate array-to-camera with a phone playing noise from known spots; build the room map once. Get consent from everyone who uses the space.</li>
+              <li><strong>Check set.</strong> Hand-label 200+ windows from held-out days, covering both common sounds and the target set, so every method is scored on the same data.</li>
+              <li><strong>Generation 0 and iteration.</strong> Cluster, propose labels by co-occurrence, gate them, train the student, relabel, repeat. Track pseudo-label precision and coverage, test macro-F1, and how many labels each spatial check rejected, per generation, with the gate on and off.</li>
+              <li><strong>Compare and probe.</strong> Score the student against every baseline below on the target set, on common sounds, and on sounds whose source was out of view (the gate's rejected windows are a ready-made test set).</li>
             </ol></div>
 
-          <div class="field"><strong>Key result.</strong> A table of angular error and scenario accuracy split by visible, occluded, and off-screen, with and without each physics step. The research question: <em>how much does explicit room geometry reduce localization errors and false visual matches caused by occlusion and reflections?</em></div>
+          <div class="field"><strong>Key result.</strong> A table of macro-F1 on the target set (instance-level, room-specific, and out-of-ontology sounds) for CLAP zero-shot, an open-vocabulary detector, camera labels without the gate, camera labels with the gate, and a Listen Learner-style one-label-per-class human upper bound, plus precision-over-generations curves with the gate on and off. The research question: <em>can a camera, checked by room physics, teach an audio model the sounds that pretrained models miss, with no human labels, and come close to a system that asks a person?</em></div>
 
           <div class="field"><strong>Extensions.</strong>
             <ul>
-              <li>SoundSpaces scenes for realistic geometry with rendered audio and RGB-D.</li>
-              <li>Probabilistic fusion: a likelihood for each explanation instead of thresholds; tracking over time.</li>
-              <li>Second-order reflections and diffraction around doorway edges.</li>
-              <li>A learned AV-SSL heatmap model as Stream D, with the physics layer used to veto its impossible answers.</li>
+              <li>A soft spatial confidence (likelihood from angular error and arrival order) multiplied into the pseudo-label score, instead of a yes/no gate.</li>
+              <li>Hybrid: fall back to one Listen Learner-style human question only for clusters the camera cannot name, and measure how many questions that saves.</li>
+              <li>Learned direction of arrival trained on the gate's accepted labels, so the spatial side improves each generation too.</li>
+              <li>Remove the camera after training and keep only the audio model, as VAX does for its sensors, for a privacy-preserving deployment.</li>
+              <li>Transfer: train in one room, test in another with the same kinds of objects.</li>
             </ul></div>
-          <p class="builds">Needs: Python and pyroomacoustics for the simulation phase. For the real-room phase: a synchronised multichannel array (for example a ReSpeaker 4- or 6-mic array) and an RGB-D camera (for example an Intel RealSense).</p>
+          <p class="builds">Needs: Python, CLAP, pyroomacoustics, and SoundSpaces for the first phases; a synchronised microphone array, an RGB-D camera, and a GPU for the real-room phase; a shared indoor space where everyone has agreed to be recorded.</p>
         </article>
       </div>
 
-      <h2 id="compare">Comparing the modules</h2>
+      <h2 id="why">What is new, and what is not</h2>
+      <p>Each ingredient exists. Listen Learner discovers a home's own sound classes but asks a person to name each one. VAX uses a camera and pretrained models to bootstrap a model in each home, and even records sound direction, but never uses direction to check a label, and cannot learn what its pretrained models cannot name. Vision teaching spatial audio has been done outdoors, and room-aware localization has been done without recognition. A reviewer will read this project as "Listen Learner plus VAX plus room-aware localization", so the claim has to be specific:</p>
+      <ol>
+        <li><strong>The camera replaces the human question</strong>, turning one question per class into zero.</li>
+        <li><strong>The spatial gate decides which object to credit</strong>, including which of two identical objects and whether a visible object is a silent bystander. No paper above does this.</li>
+        <li><strong>The targets are the sounds pretrained models miss</strong>, and the comparison against CLAP is made on exactly those.</li>
+      </ol>
+      <p>One honest limit: a camera can only name what an open-vocabulary detector can name. The project moves the vocabulary from an audio ontology to a much larger visual one, plus object identity from tracking. A sound whose source is never visible, or that no detector can describe, is still out of reach without a person.</p>
+
+      <h2 id="baselines">Baselines the project must beat</h2>
       <div class="table-scroll"><table class="plain">
-        <tr><th></th><th>Module 1</th><th>Module 2</th></tr>
-        <tr><td>Core skill</td><td>Learning without labels</td><td>Signal processing and geometry</td></tr>
-        <tr><td>Data</td><td>You record it</td><td>Simulated first, then recorded</td></tr>
-        <tr><td>Hardware</td><td>Webcam and mic</td><td>Mic array and RGB-D camera (later phase)</td></tr>
-        <tr><td>Math load</td><td>Medium</td><td>Highest</td></tr>
-        <tr><td>Fastest first result</td><td>After the capture rig works</td><td>Week 1 in simulation</td></tr>
-        <tr><td>Biggest risk</td><td>Confirmation bias, privacy</td><td>Calibration between frames; overlap with reflection-aware localization (see prior work)</td></tr>
+        <tr><th>Baseline</th><th>What it tests</th></tr>
+        <tr><td>CLAP zero-shot (prompted with the target class names)</td><td>Is a camera needed at all?</td></tr>
+        <tr><td>An open-vocabulary sound event detector (for example Detect Any Sound)</td><td>The strongest audio-only model with free-text classes</td></tr>
+        <tr><td>Camera labels with co-occurrence only (VAX-style, no spatial gate)</td><td>What the spatial gate adds</td></tr>
+        <tr><td>Clustering plus one human label per class (Listen Learner-style)</td><td>The human-in-the-loop upper bound the project tries to match with no human</td></tr>
       </table></div>
 
-      <h2 id="how">How to pick and propose</h2>
+      <h2 id="split">How the work splits</h2>
+      <div class="table-scroll"><table class="plain">
+        <tr><th>Part</th><th>What it delivers</th><th>Concept pages</th></tr>
+        <tr><td>Gap analysis and baselines</td><td>CLAP and open-vocabulary runs on the room's audio; the target set; the human-in-the-loop baseline</td><td>3, 6, 7</td></tr>
+        <tr><td>Capture and sync</td><td>Array audio and RGB-D frames on one clock; array-to-camera calibration</td><td>1, 8, 10</td></tr>
+        <tr><td>Visual naming</td><td>Open-vocabulary detector, tracking for object identity, 3-D positions from depth</td><td>8, 10</td></tr>
+        <tr><td>Audio clusters and student</td><td>In-room self-supervised encoder, clustering, iterative training</td><td>3, 4, 5, 7, 8</td></tr>
+        <tr><td>Direction of arrival</td><td>GCC-PHAT / SRP-PHAT per window, with peaks and arrival order</td><td>2, 9</td></tr>
+        <tr><td>Room map and spatial gate</td><td>Point cloud, planes, doorways, ray casting; direction, line-of-sight, and echo checks; gate on/off evaluation</td><td>6, 10, 11</td></tr>
+      </table></div>
+      <p>Agree the interfaces in writing first: timestamps, the shared coordinate frame, the format of a proposal (window, object name, object id, 3-D position), and the format of a gate verdict (keep or reject, reason).</p>
+
+      <h2 id="how">How to propose your part</h2>
       <ol class="checklist">
-        <li>Finish <a href="setup.html">setup</a> and the six core concept pages, so you can judge each module from the inside.</li>
-        <li>Read the module pages for the one or two modules you are drawn to.</li>
-        <li>Write a half-page proposal: which module, which question within it (one of the extensions, or your own), the single figure or table you expect to produce, the baseline you will beat, and the data and hardware you need.</li>
-        <li>Bring it to the lab leads. Teams can split a module by stream or stage (for example one person on Module 2's Stream A and another on Stream B), as long as the interfaces between pieces are agreed in writing first.</li>
+        <li>Finish <a href="setup.html">setup</a> and the six core concept pages.</li>
+        <li>Read the concept pages for the part you want (table above), and Listen Learner and VAX in full.</li>
+        <li>Write a half-page proposal: which part, the one figure or table you expect to produce, the baseline you will beat, and the data and hardware you need.</li>
+        <li>Bring it to the lab leads, so parts and interfaces can be assigned without gaps or overlaps.</li>
       </ol>
 
       <nav class="pager" id="pager"></nav>
@@ -203,6 +172,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="assets/js/site.js?v=20261028"></script>
+<script src="assets/js/site.js?v=20261029"></script>
 </body>
 </html>

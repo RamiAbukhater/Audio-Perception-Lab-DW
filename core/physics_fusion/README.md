@@ -1,8 +1,8 @@
-# `core/physics_fusion/`: Stream C: physics and occlusion reasoning
+# `core/physics_fusion/`: the spatial gate
 
-**Module 2.** Line-of-sight check of the acoustic DOA vector against the 3-D room layout; occlusion and out-of-sight handling that filters false-positive visual heatmaps when a sound vector points toward a blocked wall or open doorway; multi-path reflection mapping with mirror sources so early wall reflections are not mistaken for visual origins.
+**Spatial gate.** Decides whether a pseudo-label is believable: does the sound's direction point at the proposed object (and that instance), is the line of sight clear, and if the strongest arrival is a wall, is it an echo of that object (mirror sources)? Returns keep or reject with a reason; rejected out-of-view windows feed the out-of-view test.
 
 Read first:
 - [11-room-acoustics-occlusion.html](../../docs/concepts/11-room-acoustics-occlusion.html#fusion)
 
-See [Project ideas](../../docs/project-ideas.html) for the full module outline.
+See [Project ideas](../../docs/project-ideas.html) for the full plan.

@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261029">
 </head>
 <body data-page="c6" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -37,7 +37,7 @@
     <article class="content">
       <div class="eyebrow">Concept 6 of 11 · Core · Everyone</div>
       <h1>Evaluation and experimental rigor</h1>
-      <p class="lede">Every module ends in an evaluation suite: convergence over pseudo-label generations in Module 1, angular error on visible versus occluded sources in Module 2. A research result is only as good as the measurement behind it. This page covers the metrics we use, the traps that inflate them, and how to report numbers other people can trust.</p>
+      <p class="lede">The project ends in an evaluation suite: pseudo-label precision and student accuracy over generations, with and without the spatial gate, split by visible, occluded, and off-screen sources. A research result is only as good as the measurement behind it. This page covers the metrics we use, the traps that inflate them, and how to report numbers other people can trust.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -69,18 +69,18 @@
       <h2 id="splits">Splits and leakage</h2>
       <p>Use three disjoint sets: <strong>train</strong> (fit weights), <strong>validation</strong> (choose hyperparameters, epochs, thresholds), and <strong>test</strong> (report once, at the end). <strong>Leakage</strong> is anything that lets test information influence the model. Audio is especially prone to it, because one long recording is usually cut into many clips:</p>
       <ul>
-        <li><strong>Recording-level leakage</strong>: clips from the same source recording, room, or session in both train and test. Split by recording or session, not by clip. (UrbanSound8K's folds do this for you; your own Module 1 and Module 2 recordings will not.)</li>
+        <li><strong>Recording-level leakage</strong>: clips from the same source recording, room, or session in both train and test. Split by recording or session, not by clip. (UrbanSound8K's folds do this for you; the project's own recordings will not.)</li>
         <li><strong>Augmentation leakage</strong>: the same noise or RIR files used in training augmentation and in the robustness test.</li>
         <li><strong>Preprocessing leakage</strong>: normalisation statistics or cluster centroids fitted on all data.</li>
         <li><strong>Selection leakage</strong>: looking at test results while iterating. The fix is discipline, not code.</li>
       </ul>
-      <p>For Module 1 and Module 2, where you record your own data, decide the split <strong>before</strong> recording: for example, sessions on Mondays and Tuesdays are training, Wednesday is validation, Thursday is test; or room A is train and room B is test (which also measures generalisation to new rooms).</p>
+      <p>For the project, where you record your own data, decide the split <strong>before</strong> recording: for example, sessions on Mondays and Tuesdays are training, Wednesday is validation, Thursday is test; or room A is train and room B is test (which also measures generalisation to new rooms).</p>
 
       <h2 id="metrics">Classification metrics</h2>
       <ul>
         <li><strong>Accuracy</strong>: fraction correct. Fine when classes are roughly balanced, as in UrbanSound8K (mostly).</li>
         <li><strong>Per-class precision and recall</strong>: of the clips the model called "siren", what fraction were sirens (precision); of the real sirens, what fraction did it find (recall).</li>
-        <li><strong>F1</strong> is their harmonic mean; <strong>macro-F1</strong> averages F1 over classes equally, so rare classes count as much as common ones. Use it for Module 1, where indoor classes like "doorbell" are rare.</li>
+        <li><strong>F1</strong> is their harmonic mean; <strong>macro-F1</strong> averages F1 over classes equally, so rare classes count as much as common ones. Use it for the project, where indoor classes like "doorbell" are rare.</li>
         <li><strong>Confusion matrix</strong>: rows are true classes, columns are predictions. It tells you <em>which</em> mistakes happen (air conditioner vs engine idling is the classic UrbanSound8K confusion). Always look at it.</li>
       </ul>
 <pre><code class="language-python">from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
@@ -92,7 +92,7 @@ print(classification_report(y_true, y_pred, target_names=CLASSES, digits=3))
 </code></pre>
 
       <h2 id="curves">Degradation curves</h2>
-      <p>A <strong>degradation curve</strong> shows how performance falls as conditions get harder: one line per model, the stressor on the x-axis, for example SNR from −10 dB to clean. In Module 1 it answers whether the pseudo-label student holds up in a noisy kitchen; in Module 2, plot angular error against RT60. The same pattern works for any stressor: RT60 on the x-axis for reverberation, gain in dB for level drops.</p>
+      <p>A <strong>degradation curve</strong> shows how performance falls as conditions get harder: one line per model, the stressor on the x-axis, for example SNR from −10 dB to clean. Here it answers whether the student holds up in a noisy kitchen, and whether the spatial gate's direction estimates (plotted as angular error against RT60) stay reliable enough to trust. The same pattern works for any stressor: RT60 on the x-axis for reverberation, gain in dB for level drops.</p>
       <figure class="diagram">
         <svg viewBox="0 0 720 260" role="img" aria-labelledby="d6t d6d">
           <title id="d6t">Example accuracy versus SNR curves</title>
@@ -115,7 +115,7 @@ print(classification_report(y_true, y_pred, target_names=CLASSES, digits=3))
       <p>Summarise a curve with one number when you need to rank models: for example, accuracy at 0 dB, or the SNR at which accuracy falls to half its clean value.</p>
 
       <h2 id="angle">Angular error</h2>
-      <p>Module 2 measures how far the estimated direction is from the true one. Angles wrap around: 350° and 10° are 20° apart, not 340°. Always wrap the difference into \([-180°, 180°)\):</p>
+      <p>The spatial gate is only as good as its direction estimates, so measure how far the estimated direction is from the true one. Angles wrap around: 350° and 10° are 20° apart, not 340°. Always wrap the difference into \([-180°, 180°)\):</p>
 <pre><code class="language-python">import numpy as np
 
 def angular_error_deg(pred, true):
@@ -131,8 +131,8 @@ angular_error_deg(np.array([350, 10, 180]), np.array([10, 350, -180]))   # -> [2
       <ul>
         <li><strong>Seeds.</strong> Fix them (<code>torch.manual_seed</code>, <code>numpy</code>, <code>random</code>) so runs are repeatable, then run at least three seeds and report mean ± standard deviation. A 0.8-point improvement inside a 1.5-point seed spread is not an improvement.</li>
         <li><strong>Folds.</strong> On UrbanSound8K, cross-validation across the 10 folds gives you a spread for free.</li>
-        <li><strong>Baselines.</strong> Every result needs something to beat: majority class, an SVM on mean MFCCs, the uncompressed model, or (for Module 2) plain GCC-PHAT without the physics layer. A fancy method that does not beat a simple baseline is a finding too; report it.</li>
-        <li><strong>Ablations.</strong> When a pipeline has several parts (Module 2's line-of-sight check, occlusion filter, and reflection mapping), remove one at a time to show what each contributes.</li>
+        <li><strong>Baselines.</strong> Every result needs something to beat: majority class, an SVM on mean MFCCs, CLAP zero-shot, or (for the gate) co-occurrence gating without any spatial check. A fancy method that does not beat a simple baseline is a finding too; report it.</li>
+        <li><strong>Ablations.</strong> When a pipeline has several parts (the spatial gate's direction check, line-of-sight check, and reflection mapping), remove one at a time to show what each contributes.</li>
       </ul>
 
       <h2 id="report">Reporting checklist</h2>
@@ -146,7 +146,7 @@ angular_error_deg(np.array([350, 10, 180]), np.array([10, 350, -180]))   # -> [2
       </ol>
 
       <h2 id="check">Check your understanding</h2>
-      <details class="q"><summary><span class="qn">Q1.</span>You record Module 1 data for two weeks, then shuffle all 10-second windows and split 80/20. Why is the test accuracy too optimistic?</summary>
+      <details class="q"><summary><span class="qn">Q1.</span>You record project data for two weeks, then shuffle all 10-second windows and split 80/20. Why is the test accuracy too optimistic?</summary>
         <div class="answer"><p>Neighbouring windows share the same events, the same background, and the same day's conditions. Many test windows are near-copies of training windows. Split by day or session instead.</p></div></details>
       <details class="q"><summary><span class="qn">Q2.</span>A model predicts "dog bark" for everything in a dataset that is 60% dog barks. What are its accuracy and macro-F1 over, say, 5 classes?</summary>
         <div class="answer"><p>Accuracy is 60%. Macro-F1 is low: the dog-bark class has F1 = 2(0.6·1)/(0.6+1) = 0.75 and the other four have 0, so macro-F1 = 0.15. Macro-F1 exposes the model; accuracy hides it.</p></div></details>
@@ -177,6 +177,6 @@ angular_error_deg(np.array([350, 10, 180]), np.array([10, 350, -180]))   # -> [2
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261028"></script>
+<script src="../assets/js/site.js?v=20261029"></script>
 </body>
 </html>

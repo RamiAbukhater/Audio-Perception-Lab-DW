@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261029">
 </head>
 <body data-page="c5" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -105,7 +105,7 @@
       </figure>
 
       <h2 id="model">A tiny audio CNN</h2>
-      <p>A reasonable starting point for the lab's audio encoder: about 18,000 parameters (72 KB in float32). It trains in minutes, which matters when Module 1 retrains it every generation.</p>
+      <p>A reasonable starting point for the lab's audio encoder: about 18,000 parameters (72 KB in float32). It trains in minutes, which matters when the project retrains it every generation.</p>
 <pre><code class="language-python">import torch
 import torch.nn as nn
 
@@ -191,12 +191,12 @@ for epoch in range(epochs):
         <li><strong>YAMNet</strong>: a MobileNetV1 trained on AudioSet, the standard "small but pretrained" reference.</li>
         <li><strong>AST, BEATs, and similar transformers</strong>: higher accuracy, too slow to retrain every generation, but useful as frozen encoders or as teachers for a smaller student.</li>
       </ul>
-      <p>For Module 1 a pretrained encoder gives better clusters to start from.</p>
+      <p>In the project these models play a specific role: they are <strong>baselines</strong>, not starting points. The project targets sounds they get wrong or cannot name, so its labelling path uses an encoder trained only on the room's own audio, and CLAP or PANNs are scored on the same test set to show what the camera adds (<a href="../project-ideas.html#baselines">Project ideas</a>).</p>
 
       <h2 id="lab">Where this shows up in the lab</h2>
       <ul>
-        <li><strong>Module 1</strong>, <code>/training</code>: the student audio encoder is a CNN like this one, retrained each generation on pseudo-labels.</li>
-        <li><strong>Module 2</strong>: an optional classifier tells you <em>what</em> the localised source is, needed for the "classification accuracy across visible versus occluded" benchmark.</li>
+        <li><strong>Pseudo-labelling loop</strong>, <code>/training</code>: the student audio encoder is a CNN like this one, retrained each generation on pseudo-labels.</li>
+        <li><strong>Evaluation</strong>: the final test is whether this CNN, trained only on spatially gated pseudo-labels, recognises sounds whose source is off camera.</li>
       </ul>
 
       <h2 id="check">Check your understanding</h2>
@@ -231,6 +231,6 @@ for epoch in range(epochs):
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261028"></script>
+<script src="../assets/js/site.js?v=20261029"></script>
 </body>
 </html>

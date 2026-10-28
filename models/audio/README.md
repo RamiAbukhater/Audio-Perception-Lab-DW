@@ -1,9 +1,9 @@
-# `models/audio/`: shared front end and student audio encoder
+# `models/audio/`: in-room audio encoder and front end
 
-**Module 1.** The lab's log-mel front end (`frontend.py`, imported everywhere so its parameters never drift) and the compact audio encoder that Module 1 retrains each pseudo-label generation.
+**Pseudo-labelling loop.** The lab's log-mel front end (`frontend.py`, imported everywhere so its parameters never drift) and the audio encoder, trained self-supervised on the room's own recordings and then as the student each pseudo-label generation. Pretrained audio models do not go here; they are baselines in `eval/baselines/`.
 
 Read first:
 - [03-mel-spectrograms.html](../../docs/concepts/03-mel-spectrograms.html#code)
-- [05-audio-cnns.html](../../docs/concepts/05-audio-cnns.html)
+- [07-embeddings-ssl.html](../../docs/concepts/07-embeddings-ssl.html)
 
-See [Project ideas](../../docs/project-ideas.html) for the full module outline.
+See [Project ideas](../../docs/project-ideas.html) for the full plan.

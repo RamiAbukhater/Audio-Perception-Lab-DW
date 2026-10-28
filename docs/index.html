@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DataWorks Audio Perception Lab</title>
-<meta name="description" content="Home of the DataWorks Audio Perception Lab: self-supervised cross-modal audio learning and audio-visual sound source localization.">
+<meta name="description" content="Home of the DataWorks Audio Perception Lab: a camera, checked by a microphone array and a 3-D room map, teaches an audio model the sounds pretrained models miss.">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="assets/css/style.css?v=20261028">
+<link rel="stylesheet" href="assets/css/style.css?v=20261029">
 </head>
 <body data-page="home" data-root="">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -39,7 +39,7 @@
         <div class="eyebrow">UCSD DataWorks · Research lab</div>
         <h1>DataWorks Audio Perception Lab</h1>
         <p class="people">Lab lead: <strong>Rami Abukhater</strong></p>
-        <p class="lede">We build systems that understand the world through sound: audio models that teach themselves by watching a camera, and localizers that know where the walls are. This site teaches the concepts every member needs and lays out the two research modules.</p>
+        <p class="lede">We teach audio models to recognise the sounds that off-the-shelf models miss, using a camera instead of a person, and a microphone array plus a 3-D map of the room to check which object really made each sound. This site teaches the concepts every member needs and lays out the research project.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -48,16 +48,12 @@
       </div>
 
       <h2>What this lab is about</h2>
-      <p>Most audio machine learning assumes clean clips, plenty of labels, and a big GPU. Perception in the real world gets none of those. A smoke-alarm detector has to run on a coin-sized board next to a running dishwasher. A home assistant cannot ask anyone to label ten thousand kitchen sounds. A robot that hears a crash has to work out whether it came from the doorway, the wall it echoed off, or the next room.</p>
-      <p>Our two modules each take on one of those gaps:</p>
-      <ol>
-        <li><strong>Self-supervised audio learning via vision grounding.</strong> Let a frozen object detector watching a room supply pseudo-labels for the sounds it hears, and train an audio classifier from those, generation after generation.</li>
-        <li><strong>Audio-visual sound source localization with spatial physics.</strong> Combine microphone-array directions with a 3-D map of the room to tell visible sources from occluded ones and true sources from echoes.</li>
-      </ol>
-      <p>The details, including the repository folders each module owns, are on <a href="project-ideas.html">Project ideas</a>.</p>
+      <p>Pretrained audio models such as CLAP already know what a microwave or typing sounds like. What they cannot do is tell <em>which</em> microwave beeped, name sounds that are specific to one room or missing from their training ontology, or stay accurate on far-field audio from a microphone across the room. Teaching them those sounds normally means a person labelling recordings, or answering "what was that sound?" for every new class.</p>
+      <p>Our project replaces that person with a camera. A fixed camera with an open-vocabulary object detector names what is happening, and a <strong>spatial gate</strong> checks each name before it is trusted: a microphone array measures the direction the sound came from, and a 3-D map of the room (from a depth camera) says whether that direction leads to the named object, to an echo off a wall, or to something the camera cannot see. Only verified labels train the audio model, and it is compared directly against CLAP on the sounds CLAP misses.</p>
+      <p>The full plan, the closest prior work, the baselines, and how the work splits are on <a href="project-ideas.html">Project ideas</a>.</p>
 
       <h2>Start here</h2>
-      <p>Everyone does setup and the six core concept pages, in order. They cover what all three modules rely on.</p>
+      <p>Everyone does setup and the six core concept pages, in order. They cover everything the project builds on.</p>
       <ol class="start-path">
         <li><a href="setup.html"><span><span class="t">Environment setup</span><span class="d">Python, PyTorch, torchaudio, the lab's other tools, and a smoke test that must pass.</span></span></a></li>
         <li><a href="concepts/01-digital-audio.html"><span><span class="t">Digital audio: sampling, bit depth, decibels</span><span class="d">What the numbers in an audio file mean, the Nyquist limit, aliasing, and dB.</span></span></a></li>
@@ -68,13 +64,13 @@
         <li><a href="concepts/06-evaluation.html"><span><span class="t">Evaluation and experimental rigor</span><span class="d">Leakage, macro-F1, degradation curves, angular error, and reporting.</span></span></a></li>
       </ol>
 
-      <h2>Then read your module's pages</h2>
+      <h2>Then read the project concepts</h2>
       <div class="table-scroll"><table class="plain">
-        <tr><th>Module</th><th>Concept pages</th></tr>
-        <tr><td><span class="track-tag m1" style="margin:0">M1</span> Vision-grounded self-supervision</td><td><a href="concepts/07-embeddings-ssl.html">7 · Embeddings, clustering, and SSL</a><br><a href="concepts/08-cross-modal-pseudo-labels.html">8 · Object detection, sync, and pseudo-labels</a></td></tr>
-        <tr><td><span class="track-tag m2" style="margin:0">M2</span> Audio-visual localization</td><td><a href="concepts/09-mic-arrays-gcc-phat.html">9 · Mic arrays, TDOA, and GCC-PHAT</a><br><a href="concepts/10-3d-geometry.html">10 · RGB-D, point clouds, and room geometry</a><br><a href="concepts/11-room-acoustics-occlusion.html">11 · Room acoustics, mirror sources, and occlusion</a></td></tr>
+        <tr><th>Part of the project</th><th>Concept pages</th></tr>
+        <tr><td><span class="track-tag m1" style="margin:0">Loop</span> Camera-named pseudo-labels and self-training</td><td><a href="concepts/07-embeddings-ssl.html">7 · Embeddings, clustering, and SSL</a><br><a href="concepts/08-cross-modal-pseudo-labels.html">8 · Object detection, sync, and pseudo-labels</a></td></tr>
+        <tr><td><span class="track-tag m2" style="margin:0">Gate</span> Checking which object made the sound</td><td><a href="concepts/09-mic-arrays-gcc-phat.html">9 · Mic arrays, TDOA, and GCC-PHAT</a><br><a href="concepts/10-3d-geometry.html">10 · RGB-D, point clouds, and room geometry</a><br><a href="concepts/11-room-acoustics-occlusion.html">11 · Room acoustics, mirror sources, and the spatial gate</a></td></tr>
       </table></div>
-      <p>Reading the other module's pages is encouraged: Module 2's occlusion question is the spatial version of Module 1's "can the model hear what the camera cannot see?"</p>
+      <p>Everyone on the project should read all five: the loop only works if its labels pass the gate, and the gate only matters because of what the loop does with them.</p>
 
       <h2>How each concept page works</h2>
       <ul>
@@ -87,7 +83,7 @@
 
       <div class="callout">
         <span class="callout-title">How long will this take?</span>
-        <p>Setup takes about 30 minutes. Each concept page takes 30 to 45 minutes to read properly with the demos and questions. Budget a week for the six core pages alongside your other commitments, then a few days for your module's pages.</p>
+        <p>Setup takes about 30 minutes. Each concept page takes 30 to 45 minutes to read properly with the demos and questions. Budget a week for the six core pages alongside your other commitments, then a few days for the five project pages.</p>
       </div>
 
       <h2>What you need to know already</h2>
@@ -117,6 +113,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="assets/js/site.js?v=20261028"></script>
+<script src="assets/js/site.js?v=20261029"></script>
 </body>
 </html>

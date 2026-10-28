@@ -1,30 +1,33 @@
 # DataWorks Audio Perception Lab
 
-A UCSD DataWorks research lab on audio processing for perception: self-supervised audio learning bootstrapped from vision, and audio-visual sound source localization (AV-SSL) grounded in room physics.
+A UCSD DataWorks research lab on audio for perception. Our project teaches an audio model the sounds that pretrained models such as CLAP miss, using a camera instead of a person, with a microphone array and a 3-D room map checking which object really made each sound.
 
 **Lab lead:** Rami Abukhater.
 
-> **AI-generated content.** The course site's pages, the module READMEs, and the smoke test were written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong, please point it out to Rami so it can be fixed.
+> **AI-generated content.** The course site's pages, the folder READMEs, and the smoke test were written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong, please point it out to Rami so it can be fixed.
 
-This repository holds the research code for the lab's two modules and a static website that teaches the concepts every member needs:
+This repository holds the research code for the lab's project and a static website that teaches the concepts every member needs:
 
 - **Setup**: Python 3.11, the lab's libraries, GPU notebooks, data, and a smoke test (`scripts/smoke_test.py`) that must pass before anything else.
 - **Six core concept pages for everyone**: digital audio; the Fourier transform and STFT; log-mel spectrograms; noise, SNR, reverberation, and augmentation; CNNs on spectrograms; evaluation and experimental rigor.
-- **Five module concept pages**: embeddings and self-supervised learning, and cross-modal pseudo-labelling (Module 1); microphone arrays and GCC-PHAT, RGB-D point clouds and room geometry, and room acoustics with mirror sources and occlusion (Module 2).
-- **Project ideas**: the full blueprint for the two modules, opening each with the closest prior work and what is still open, then prerequisites, a suggested path, the key result, and extensions for each.
-- **UCSD faculty to contact**: eight professors whose work overlaps the modules, each with their lab, email, and three papers to read first.
+- **Five project concept pages**: embeddings and self-supervised learning, and cross-modal pseudo-labelling (the pseudo-labelling loop); microphone arrays and GCC-PHAT, RGB-D point clouds and room geometry, and room acoustics with mirror sources and the spatial gate (the spatial gate).
+- **Project ideas**: the full blueprint, opening with the closest prior work (Listen Learner, VAX, ProtoSound, and others) and what is still open, then the system, the baselines it must beat, a suggested path, the key result, extensions, and how the work splits.
+- **UCSD faculty to contact**: eight professors whose work overlaps the project, each with their lab, email, and three papers to read first.
 - **Resources and glossary**: datasets, libraries, papers, courses, and terms.
 
 Each concept page opens with a short list of key papers, then has the intuition, the math, diagrams, copyable code with tensor shapes, click-to-reveal questions, and common mistakes. Six pages include interactive demos (aliasing, the STFT window trade-off, mel filterbanks, SNR mixing with audio playback, two-mic delay geometry, and a draggable mirror-source room with occlusion).
 
-## The two modules
+## The project
 
-| Module | Question | Folders |
-| --- | --- | --- |
-| 1. Self-supervised audio learning via vision grounding | Can a frozen object detector's view of a room supply good enough pseudo-labels to train an indoor audio classifier, generation after generation? | `core/sync/`, `models/vision/`, `pipeline/bootstrap/`, `training/` |
-| 2. AV-SSL with spatial physics | Can a room map decide whether a seen object can be the source, separating visible, occluded, and off-screen sources and attributing echoes to the objects that made them? | `dsp/doa/`, `spatial/mapping/`, `core/physics_fusion/`, `eval/ssl/` |
+**Hearing what pretrained models can't: spatially verified pseudo-labels from a camera.** In a fixed indoor space, a camera with an open-vocabulary detector names the objects and actions around each sound, and a spatial gate (microphone-array direction of arrival checked against a 3-D room map, with line-of-sight and echo checks) decides which visible object made it before the label is trusted. An audio model trained only on the room's own recordings learns from the verified labels, and is compared against CLAP zero-shot, an open-vocabulary sound event detector, camera labels without the gate, and a one-human-label-per-class baseline, on the sounds pretrained models get wrong.
 
-Details: [`docs/project-ideas.html`](docs/project-ideas.html). Each folder also has a short README.
+| Part | Folders |
+| --- | --- |
+| Pseudo-labelling loop | `core/sync/`, `models/vision/`, `models/audio/`, `pipeline/bootstrap/`, `training/` |
+| Spatial gate | `dsp/doa/`, `spatial/mapping/`, `core/physics_fusion/`, `eval/ssl/` |
+| Baselines | `eval/baselines/` |
+
+Details, including the closest prior work and how the work splits: [`docs/project-ideas.html`](docs/project-ideas.html). Each folder also has a short README.
 
 ## Viewing the site
 
@@ -54,33 +57,34 @@ uv pip install -r requirements.txt
 python scripts/smoke_test.py
 ```
 
-Conda works too; see the [setup page](docs/setup.html). `requirements.txt` is grouped by module, so you can skip a heavy dependency (Open3D, Ultralytics) until your module needs it.
+Conda works too; see the [setup page](docs/setup.html). `requirements.txt` is grouped by part of the project, so you can skip a heavy dependency (Open3D, Ultralytics) until your part needs it.
 
 ## Repository layout
 
 ```
 README.md               this file
 LICENSE                 MIT for code, CC BY 4.0 for written content
-requirements.txt        Python dependencies, grouped by module
+requirements.txt        Python dependencies, grouped by part of the project
 scripts/
   smoke_test.py         environment check: SNR mixing, WAV I/O, log-mel, CNN, GCC-PHAT
-notebooks/              exploration notebooks (name-module-topic.ipynb)
+notebooks/              exploration notebooks (name-part-topic.ipynb)
 
-models/audio/           M1  shared log-mel front end and student audio encoder
-core/sync/              M1  time-aligned audio + RGB capture
-models/vision/          M1  frozen object detector wrapper
-pipeline/bootstrap/     M1  embedding clusters, gating, pseudo-labels
-training/               M1  iterative student fine-tuning
-dsp/doa/                M2  GCC-PHAT direction of arrival
-spatial/mapping/        M2  RGB-D point clouds and room layout
-core/physics_fusion/    M2  line of sight, occlusion, reflections
-eval/ssl/               M2  localization benchmarks
+core/sync/              Loop  synchronised mic-array + RGB-D capture, calibration
+models/vision/          Loop  open-vocabulary detector + tracking, 3-D object positions
+models/audio/           Loop  log-mel front end, in-room audio encoder and student
+pipeline/bootstrap/     Loop  clustering and co-occurrence label proposals
+training/               Loop  iterative self-training on gated labels
+dsp/doa/                Gate  GCC-PHAT / SRP-PHAT direction of arrival
+spatial/mapping/        Gate  RGB-D point cloud, walls, doorways, ray casting
+core/physics_fusion/    Gate  the spatial gate: direction, line of sight, echoes
+eval/ssl/               Gate  gate on/off precision and coverage, angular error
+eval/baselines/         Eval  CLAP, open-vocabulary SED, no-gate, one-human-label baselines
 
 docs/                   the website (GitHub Pages serves this folder)
   index.html            home
   setup.html            environment setup
   concepts/             01-digital-audio.html … 11-room-acoustics-occlusion.html
-  project-ideas.html    the two-module blueprint
+  project-ideas.html    the project blueprint
   faculty.html          UCSD professors to contact, with labs, emails, and papers
   resources.html        datasets, libraries, papers, glossary
   assets/css/style.css  all styles; light and dark themes follow the system setting
@@ -92,7 +96,7 @@ docs/                   the website (GitHub Pages serves this folder)
 ### Editing the site
 
 - Pages are plain HTML. Edit them directly.
-- The page order, sidebar, prev/next links, step numbers, and module tags (M1, M2) all come from the `PAGES` list at the top of `docs/assets/js/site.js`. To add or reorder a page, edit that list and give the new page's `<body>` a matching `data-page` id and the right `data-root` (`""` at the top level, `"../"` inside `concepts/`). Copy an existing page as a template.
+- The page order, sidebar, prev/next links, step numbers, and part tags (Loop, Gate) all come from the `PAGES` list at the top of `docs/assets/js/site.js`. To add or reorder a page, edit that list and give the new page's `<body>` a matching `data-page` id and the right `data-root` (`""` at the top level, `"../"` inside `concepts/`). Copy an existing page as a template.
 - The lab lead's name in the footer is the `LEADS` constant in `site.js`, and also appears on the home page.
 - Math uses KaTeX with `\( … \)` for inline and `\[ … \]` for display math.
 - Diagrams are inline SVG that use the CSS colour tokens (`--d-blue`, `--d-red`, …), so they follow light and dark mode.

@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Embeddings, clustering, and self-supervised learning · DataWorks Audio Perception Lab</title>
-<meta name="description" content="Audio embeddings, cosine similarity, k-means and its pitfalls, contrastive learning, and pretrained audio encoders.">
+<meta name="description" content="Audio embeddings, cosine similarity, k-means and its pitfalls, contrastive learning, and pretrained audio encoders as baselines.">
 <link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Source+Sans+3:wght@400;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="../assets/css/style.css?v=20261028">
+<link rel="stylesheet" href="../assets/css/style.css?v=20261029">
 </head>
 <body data-page="c7" data-root="../">
 <a class="skip" href="#content" style="position:absolute;left:-9999px">Skip to content</a>
@@ -35,9 +35,9 @@
   </nav>
   <main class="main" id="content">
     <article class="content">
-      <div class="eyebrow">Concept 7 of 11 · Module 1 · Self-supervised learning</div>
+      <div class="eyebrow">Concept 7 of 11 · Project · Pseudo-labelling loop</div>
       <h1>Embeddings, clustering, and self-supervised learning</h1>
-      <p class="lede">Module 1 starts with no sound labels at all. To find structure in hours of unlabelled kitchen and office audio, we first turn each short window into an <strong>embedding</strong>, a vector where similar sounds land close together, and then look for groups. This page covers what makes a good embedding, how to learn one without labels, and how to cluster it without fooling yourself.</p>
+      <p class="lede">The project starts with no sound labels at all. To find structure in hours of unlabelled kitchen and office audio, we first turn each short window into an <strong>embedding</strong>, a vector where similar sounds land close together, and then look for groups. This page covers what makes a good embedding, how to learn one without labels, and how to cluster it without fooling yourself.</p>
 
       <div class="ai-notice" role="note">
         <span class="ai-notice-title">AI-generated content</span>
@@ -59,7 +59,7 @@
         <li><a href="#viz">Looking at embeddings</a></li><li><a href="#lab">Where this shows up</a></li><li><a href="#check">Check your understanding</a></li><li><a href="#mistakes">Common mistakes</a></li></ol></nav>
 
       <h2 id="idea">The big idea</h2>
-      <p>A classifier maps a sound to one of a fixed set of labels. An <strong>encoder</strong> maps a sound to a point in a space of, say, 128 or 512 dimensions, with no labels involved. If the encoder is good, microwave beeps form one tight cloud, keyboard clatter another, and running water a third, even though nobody told it those words. Once the clouds exist, naming them takes very few labels, or, in Module 1, none: we borrow the names from what the camera sees at the same moment.</p>
+      <p>A classifier maps a sound to one of a fixed set of labels. An <strong>encoder</strong> maps a sound to a point in a space of, say, 128 or 512 dimensions, with no labels involved. If the encoder is good, microwave beeps form one tight cloud, keyboard clatter another, and running water a third, even though nobody told it those words. Once the clouds exist, naming them takes very few labels, or, in this project, none: we borrow the names from what the camera sees at the same moment.</p>
 
       <h2 id="embed">What an embedding is</h2>
       <p>Take any trained audio network and cut off its final classification layer. The vector going into that layer (after global pooling) is an embedding. In TinyAudioNet (<a href="05-audio-cnns.html">Concept 5</a>) that is the 128-dimensional output of <code>self.pool(x).flatten(1)</code>.</p>
@@ -73,9 +73,9 @@
 </code></pre>
       <p>Where do good encoders come from?</p>
       <ul>
-        <li><strong>Supervised pretraining</strong> on a big labelled set such as AudioSet (PANNs, YAMNet). Strong, and a good starting point for Module 1's first generation.</li>
-        <li><strong>Self-supervised pretraining</strong> on unlabelled audio (below). This is what lets Module 1 adapt to <em>your</em> room's sounds, which AudioSet may describe poorly.</li>
-        <li><strong>Cross-modal pretraining</strong>, aligning audio with images or text (for example CLAP for audio–text). A neighbour of what Module 1 does with vision.</li>
+        <li><strong>Supervised pretraining</strong> on a big labelled set such as AudioSet (PANNs, YAMNet). Strong, and in this project the main <em>baseline</em>: the project targets sounds these models miss, so it does not use them to label.</li>
+        <li><strong>Self-supervised pretraining</strong> on unlabelled audio (below). This is what lets the project adapt to <em>your</em> room's sounds, which AudioSet may describe poorly.</li>
+        <li><strong>Cross-modal pretraining</strong>, aligning audio with images or text (for example CLAP for audio–text). A neighbour of what the project does with vision, and its first baseline: CLAP can classify a sound from a text prompt with no training at all.</li>
       </ul>
 
       <h2 id="cos">Distances and cosine similarity</h2>
@@ -88,7 +88,7 @@
       <ul>
         <li><strong>Contrastive</strong>: two augmented views of the same clip should have similar embeddings, and views of different clips should not (SimCLR-style, COLA for audio).</li>
         <li><strong>Masked prediction</strong>: hide patches of the spectrogram and predict them (masked autoencoders, BEATs, wav2vec 2.0 for speech).</li>
-        <li><strong>Cross-modal correspondence</strong>: does this audio go with this video frame? (Audio-visual correspondence, Arandjelović and Zisserman, 2017.) This is closest to Module 1's spirit.</li>
+        <li><strong>Cross-modal correspondence</strong>: does this audio go with this video frame? (Audio-visual correspondence, Arandjelović and Zisserman, 2017.) This is closest to the project's spirit.</li>
       </ul>
 
       <h2 id="contrastive">Contrastive learning and InfoNCE</h2>
@@ -115,7 +115,7 @@ def info_nce(z1, z2, temperature=0.1):
       </div>
 
       <h2 id="cluster">Clustering embeddings</h2>
-      <p><strong>k-means</strong> picks \(k\) centroids and assigns each point to the nearest one, alternating until stable. It is fast and simple, and it is the default in Module 1's spec, but know its assumptions: you must choose \(k\), and it assumes round, similarly sized clusters.</p>
+      <p><strong>k-means</strong> picks \(k\) centroids and assigns each point to the nearest one, alternating until stable. It is fast and simple, and it is the default in the project spec, but know its assumptions: you must choose \(k\), and it assumes round, similarly sized clusters.</p>
 <pre><code class="language-python">from sklearn.cluster import KMeans
 from sklearn.preprocessing import normalize
 
@@ -128,7 +128,7 @@ dist = km.transform(emb).min(axis=1)                # distance to own centroid: 
         <li><strong>Over-cluster.</strong> Choose \(k\) larger than the number of classes you expect (say 2–3×). Several clusters can later map to the same label ("microwave hum" and "microwave beep"), and a cluster that is never claimed is just background.</li>
         <li><strong>Background dominates ambient audio.</strong> Most windows are silence, HVAC, or chatter. Remove near-silent windows by energy before clustering, or the clusters will mostly describe the room's hum.</li>
         <li><strong>Alternatives</strong>: HDBSCAN finds clusters of varying density and labels outliers as noise (useful: not every window should get a label); agglomerative clustering lets you cut a tree at different levels.</li>
-        <li><strong>Measuring cluster quality</strong> without labels: silhouette score. With a small labelled check set: purity, adjusted Rand index, or normalised mutual information. Hand-label 100–200 windows early; you will need them for every evaluation in Module 1.</li>
+        <li><strong>Measuring cluster quality</strong> without labels: silhouette score. With a small labelled check set: purity, adjusted Rand index, or normalised mutual information. Hand-label 100–200 windows early; you will need them for every evaluation in the project.</li>
       </ul>
 
       <figure class="diagram">
@@ -153,13 +153,13 @@ dist = km.transform(emb).min(axis=1)                # distance to own centroid: 
       </figure>
 
       <h2 id="viz">Looking at embeddings</h2>
-      <p>You cannot see 128 dimensions, so project them to 2-D with <strong>PCA</strong> (linear, fast, preserves global layout), <strong>t-SNE</strong>, or <strong>UMAP</strong> (non-linear, preserve local neighbourhoods). Colour points by cluster, by time of day, or by the visual tag, and make it clickable so you can listen to a few windows from each cluster. Listening to clusters is the single most useful debugging step in Module 1.</p>
+      <p>You cannot see 128 dimensions, so project them to 2-D with <strong>PCA</strong> (linear, fast, preserves global layout), <strong>t-SNE</strong>, or <strong>UMAP</strong> (non-linear, preserve local neighbourhoods). Colour points by cluster, by time of day, or by the visual tag, and make it clickable so you can listen to a few windows from each cluster. Listening to clusters is the single most useful debugging step in the project.</p>
       <p>Treat t-SNE and UMAP pictures with care: distances between far-apart groups, and the sizes of groups, mean little. Use them to look, not to measure.</p>
 
       <h2 id="lab">Where this shows up in the lab</h2>
       <ul>
-        <li><strong>Module 1</strong>, <code>/pipeline/bootstrap</code>: "computes audio embedding clusters via unsupervised representation learning". That is this page: an encoder (pretrained or contrastive), normalised embeddings, and clustering.</li>
-        <li><strong>Module 1</strong>, <code>/training</code>: the student encoder is retrained each generation; its embeddings, and so the clusters, should get sharper over generations. Track silhouette or purity per generation as a convergence curve.</li>
+        <li><strong>Pseudo-labelling loop</strong>, <code>/pipeline/bootstrap</code>: "computes audio embedding clusters via unsupervised representation learning". That is this page: a contrastive encoder trained on the room's own audio, normalised embeddings, and clustering.</li>
+        <li><strong>Pseudo-labelling loop</strong>, <code>/training</code>: the student encoder is retrained each generation; its embeddings, and so the clusters, should get sharper over generations. Track silhouette or purity per generation as a convergence curve.</li>
       </ul>
 
       <h2 id="check">Check your understanding</h2>
@@ -193,6 +193,6 @@ dist = km.transform(emb).min(axis=1)                # distance to own centroid: 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="../assets/js/site.js?v=20261028"></script>
+<script src="../assets/js/site.js?v=20261029"></script>
 </body>
 </html>
