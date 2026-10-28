@@ -1,120 +1,152 @@
-# DataWorks Audio Perception Lab
+# <div align="center">DataWorks Audio Perception Lab</div>
+### <div align="center">UC San Diego DataWorks Research Group</div>
+#### <div align="center">Teaching audio models what pretrained models can't hear, with a camera and room physics</div>
 
-A UCSD DataWorks research lab on audio for perception. Our project teaches an audio model the sounds that pretrained models such as CLAP miss, using a camera instead of a person, with a microphone array and a 3-D room map checking which object really made each sound.
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white">
+  <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-torchaudio-EE4C2C?style=flat-square&logo=pytorch&logoColor=white">
+  <img alt="Microphone array" src="https://img.shields.io/badge/Mic%20array-GCC--PHAT-7B1FA2?style=flat-square">
+  <img alt="RGB-D" src="https://img.shields.io/badge/RGB--D-Open3D-0D47A1?style=flat-square">
+  <img alt="YOLO-World" src="https://img.shields.io/badge/YOLO--World-open%20vocabulary-111F68?style=flat-square">
+  <img alt="CLAP" src="https://img.shields.io/badge/CLAP-baseline-F57C00?style=flat-square">
+  <img alt="GitHub Pages" src="https://img.shields.io/badge/GitHub%20Pages-course%20site-222222?style=flat-square&logo=github&logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/License-MIT%20%2B%20CC%20BY%204.0-2E7D32?style=flat-square">
+</p>
 
-**Lab lead:** Rami Abukhater.
+<p align="center"><strong><a href="https://ramiabukhater.github.io/Audio-Perception-Lab-DW/">Course site: ramiabukhater.github.io/Audio-Perception-Lab-DW</a></strong></p>
+
+Repository for the UC San Diego DataWorks Audio Perception Lab. It holds the project code and the course site, which walks members through setup, every concept the project relies on, the research plan, and the faculty worth talking to.
+
+In meetings we cover the ideas at a high level. Setup and the concept pages are done on your own, so the site is written to be followed without help.
 
 > **AI-generated content.** The course site's pages, the folder READMEs, and the smoke test were written with Claude, an AI model, and may contain inaccuracies or mistakes. If something looks wrong, please point it out to Rami so it can be fixed.
 
-This repository holds the research code for the lab's project and a static website that teaches the concepts every member needs:
+## Abstract
 
-- **Setup**: Python 3.11, the lab's libraries, GPU notebooks, data, and a smoke test (`scripts/smoke_test.py`) that must pass before anything else.
-- **Six core concept pages for everyone**: digital audio; the Fourier transform and STFT; log-mel spectrograms; noise, SNR, reverberation, and augmentation; CNNs on spectrograms; evaluation and experimental rigor.
-- **Five project concept pages**: embeddings and self-supervised learning, and cross-modal pseudo-labelling (the pseudo-labelling loop); microphone arrays and GCC-PHAT, RGB-D point clouds and room geometry, and room acoustics with mirror sources and the spatial gate (the spatial gate).
-- **Project ideas**: the full blueprint, opening with the closest prior work (Listen Learner, VAX, ProtoSound, and others) and what is still open, then the system, the baselines it must beat, a suggested path, the key result, extensions, and how the work splits.
-- **UCSD faculty to contact**: eight professors whose work overlaps the project, each with their lab, email, and three papers to read first.
-- **Resources and glossary**: datasets, libraries, papers, courses, and terms.
+Pretrained audio models such as [CLAP](https://arxiv.org/abs/2211.06687) already recognise common sounds like "microwave" or "typing". They cannot tell *which* microwave beeped, they have no word for many sounds specific to one room, and they degrade on far-field audio from a microphone across the room. Teaching them those sounds normally takes a person: labelling recordings, or answering "what was that sound?" for every new class, as in [Listen Learner](https://doi.org/10.1145/3313831.3376875) (Wu et al., 2020).
 
-Each concept page opens with a short list of key papers, then has the intuition, the math, diagrams, copyable code with tensor shapes, click-to-reveal questions, and common mistakes. Six pages include interactive demos (aliasing, the STFT window trade-off, mel filterbanks, SNR mixing with audio playback, two-mic delay geometry, and a draggable mirror-source room with occlusion).
+This lab replaces that person with a camera. A fixed camera with an open-vocabulary object detector names the objects and actions around each sound. A **spatial gate** then checks each name before it is trusted: a microphone array measures where the sound came from, and a 3-D map of the room from a depth camera says whether that direction leads to the named object, to an echo of it off a wall, or to something the camera cannot see. Only verified labels train an audio model built from the room's own recordings, which is compared against CLAP, an open-vocabulary sound detector, camera labels without the gate, and a one-human-label-per-class baseline on exactly the sounds pretrained models miss.
 
-## The project
+- **Organization**: UC San Diego DataWorks
+- **Lab lead**: Rami Abukhater
+- **Closest prior work**: [Listen Learner](https://doi.org/10.1145/3313831.3376875) (CHI 2020) · [VAX](https://doi.org/10.1145/3610907) (IMWUT 2023) · [Reflection-Aware Sound Source Localization](https://arxiv.org/abs/1711.07791) (2017); the full comparison is on the [Project ideas](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/project-ideas.html) page
 
-**Hearing what pretrained models can't: spatially verified pseudo-labels from a camera.** In a fixed indoor space, a camera with an open-vocabulary detector names the objects and actions around each sound, and a spatial gate (microphone-array direction of arrival checked against a 3-D room map, with line-of-sight and echo checks) decides which visible object made it before the label is trusted. An audio model trained only on the room's own recordings learns from the verified labels, and is compared against CLAP zero-shot, an open-vocabulary sound event detector, camera labels without the gate, and a one-human-label-per-class baseline, on the sounds pretrained models get wrong.
+## Project Goals
 
-| Part | Folders |
-| --- | --- |
-| Pseudo-labelling loop | `core/sync/`, `models/vision/`, `models/audio/`, `pipeline/bootstrap/`, `training/` |
-| Spatial gate | `dsp/doa/`, `spatial/mapping/`, `core/physics_fusion/`, `eval/ssl/` |
-| Baselines | `eval/baselines/` |
+- Find, in a real room, the sounds that CLAP and other pretrained audio models get wrong, confuse between instances, or cannot name.
+- Label those sounds with no human sound labels, using a fixed camera and an open-vocabulary detector with object tracking.
+- Build a spatial gate (direction of arrival, line of sight, and echo attribution against a 3-D room map) and measure how much it raises pseudo-label precision across self-training generations.
+- Beat CLAP zero-shot and camera labels without the gate on the target sounds, and come close to a system that asks a person once per class.
+- Give every member a self-contained path from setup to research, with each concept explained in plain language.
 
-Details, including the closest prior work and how the work splits: [`docs/project-ideas.html`](docs/project-ideas.html). Each folder also has a short README.
+## Repository Structure
 
-## Viewing the site
-
-**Locally.** Open `docs/index.html` in a browser. Every link is relative, so the site works straight from the file system. Fonts, KaTeX (math), and Prism (code highlighting) load from CDNs, so you need to be online for those. If your browser blocks scripts on `file://` pages, serve the folder instead:
-
-```bash
-python3 -m http.server 8000 --directory docs
+```text
+Audio-Perception-Lab-DW/
+├── README.md
+├── LICENSE                          # MIT for code, CC BY 4.0 for written content
+├── requirements.txt                 # Python dependencies, grouped by part of the project
+├── docs/                            # the course site, served by GitHub Pages
+│   ├── index.html                   # home
+│   ├── setup.html                   # environment setup and smoke test
+│   ├── concepts/                    # eleven concept pages, 01 to 11
+│   ├── project-ideas.html           # the research plan, prior work, baselines
+│   ├── faculty.html                 # UCSD professors to contact
+│   ├── resources.html               # datasets, libraries, papers, glossary
+│   └── assets/                      # css, js (site and interactive demos), favicon
+├── core/
+│   ├── sync/                        # loop: synchronised mic-array + RGB-D capture
+│   └── physics_fusion/              # gate: direction, line-of-sight, and echo checks
+├── models/
+│   ├── vision/                      # loop: open-vocabulary detector + tracking
+│   └── audio/                       # loop: log-mel front end, in-room encoder, student
+├── pipeline/bootstrap/              # loop: clustering and co-occurrence label proposals
+├── training/                        # loop: iterative self-training on gated labels
+├── dsp/doa/                         # gate: GCC-PHAT / SRP-PHAT direction of arrival
+├── spatial/mapping/                 # gate: point cloud, walls, doorways, ray casting
+├── eval/
+│   ├── ssl/                         # gate on/off precision and coverage, angular error
+│   └── baselines/                   # CLAP, open-vocabulary SED, no-gate, one-human-label
+├── notebooks/                       # exploration notebooks (name-part-topic.ipynb)
+└── scripts/
+    └── smoke_test.py                # environment check: SNR, WAV I/O, log-mel, CNN, GCC-PHAT
 ```
 
-and open <http://localhost:8000>.
+Each project folder has a short README saying what goes there and which concept pages to read first.
 
-**On GitHub Pages.** The site is plain HTML in `docs/`, so no build step or Actions workflow is needed.
+## Quick Start
 
-1. Push this repository to GitHub.
-2. Go to the repository's **Settings → Pages**.
-3. Under **Build and deployment**, set **Source** to **Deploy from a branch**.
-4. Set **Branch** to `main` and the folder to `/docs`, then click **Save**.
-5. After a minute or so the page shows the site's address, usually `https://<user-or-org>.github.io/dataworks-audio-perception-lab/`.
-
-`docs/.nojekyll` tells GitHub Pages to serve the files as they are, without Jekyll processing.
-
-## Getting started
+**Members.** Open the [course site](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/) and start with [Environment setup](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/setup.html). In short:
 
 ```bash
+git clone https://github.com/RamiAbukhater/Audio-Perception-Lab-DW.git
+cd Audio-Perception-Lab-DW
 uv venv --python 3.11 && source .venv/bin/activate
 uv pip install -r requirements.txt
 python scripts/smoke_test.py
 ```
 
-Conda works too; see the [setup page](docs/setup.html). `requirements.txt` is grouped by part of the project, so you can skip a heavy dependency (Open3D, Ultralytics) until your part needs it.
+The smoke test should end with `All checks passed`. Conda works too; see the setup page. You can skip the heavy packages (Open3D, Ultralytics) until your part of the project needs them.
 
-## Repository layout
+**Viewing the site locally.** Open `docs/index.html` in a browser, or serve the folder:
 
-```
-README.md               this file
-LICENSE                 MIT for code, CC BY 4.0 for written content
-requirements.txt        Python dependencies, grouped by part of the project
-scripts/
-  smoke_test.py         environment check: SNR mixing, WAV I/O, log-mel, CNN, GCC-PHAT
-notebooks/              exploration notebooks (name-part-topic.ipynb)
-
-core/sync/              Loop  synchronised mic-array + RGB-D capture, calibration
-models/vision/          Loop  open-vocabulary detector + tracking, 3-D object positions
-models/audio/           Loop  log-mel front end, in-room audio encoder and student
-pipeline/bootstrap/     Loop  clustering and co-occurrence label proposals
-training/               Loop  iterative self-training on gated labels
-dsp/doa/                Gate  GCC-PHAT / SRP-PHAT direction of arrival
-spatial/mapping/        Gate  RGB-D point cloud, walls, doorways, ray casting
-core/physics_fusion/    Gate  the spatial gate: direction, line of sight, echoes
-eval/ssl/               Gate  gate on/off precision and coverage, angular error
-eval/baselines/         Eval  CLAP, open-vocabulary SED, no-gate, one-human-label baselines
-
-docs/                   the website (GitHub Pages serves this folder)
-  index.html            home
-  setup.html            environment setup
-  concepts/             01-digital-audio.html … 11-room-acoustics-occlusion.html
-  project-ideas.html    the project blueprint
-  faculty.html          UCSD professors to contact, with labs, emails, and papers
-  resources.html        datasets, libraries, papers, glossary
-  assets/css/style.css  all styles; light and dark themes follow the system setting
-  assets/js/site.js     sidebar, prev/next links, footer, copy buttons, math
-  assets/js/demos.js    the interactive demos (each looks for its own element id)
-  assets/img/           favicon
+```bash
+python3 -m http.server 8000 --directory docs
 ```
 
-### Editing the site
+## Recommended Reading Order
 
-- Pages are plain HTML. Edit them directly.
-- The page order, sidebar, prev/next links, step numbers, and part tags (Loop, Gate) all come from the `PAGES` list at the top of `docs/assets/js/site.js`. To add or reorder a page, edit that list and give the new page's `<body>` a matching `data-page` id and the right `data-root` (`""` at the top level, `"../"` inside `concepts/`). Copy an existing page as a template.
-- The lab lead's name in the footer is the `LEADS` constant in `site.js`, and also appears on the home page.
-- Math uses KaTeX with `\( … \)` for inline and `\[ … \]` for display math.
-- Diagrams are inline SVG that use the CSS colour tokens (`--d-blue`, `--d-red`, …), so they follow light and dark mode.
-- Demos live in `demos.js`. Each is wrapped in its own function that returns early if its element (for example `id="demo-snr"`) is not on the page.
+1. [Home](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/) and [Environment setup](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/setup.html)
+2. Core concepts 1 to 6: [digital audio](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/concepts/01-digital-audio.html), the Fourier transform and STFT, log-mel spectrograms, noise and reverberation, CNNs on spectrograms, evaluation
+3. Pseudo-labelling loop, concepts 7 and 8: [embeddings and self-supervised learning](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/concepts/07-embeddings-ssl.html), object detection and cross-modal pseudo-labels
+4. Spatial gate, concepts 9 to 11: [microphone arrays and GCC-PHAT](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/concepts/09-mic-arrays-gcc-phat.html), RGB-D and room geometry, room acoustics and the gate
+5. [Project ideas](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/project-ideas.html): the plan, the closest prior work, the baselines, and how the work splits
+6. [UCSD faculty to contact](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/faculty.html), once you know which part you want
 
-## What was checked
+## Development Workflow
 
-- Every Python snippet on the concept pages was run before publishing (PyTorch 2.2, torchaudio 2.2, scikit-learn 1.3, pyroomacoustics 0.10, NumPy 1.26), except those that need Open3D, Ultralytics, or real hardware, which follow those libraries' documented APIs. The quoted numbers (18,474 parameters, GCC-PHAT's 3.375-sample estimate, the 3-D DOA recovery, and the SRP-PHAT / MUSIC anechoic-versus-reverberant table) come from those runs.
-- `scripts/smoke_test.py` passes.
-- All internal links and anchors resolve; all external links were fetched, and every cited paper's arXiv or DOI record was checked against its title.
-- All pages were viewed in a browser at desktop and phone widths, in dark mode, with no horizontal scrolling, and every demo renders and responds.
+The site is plain HTML, CSS, and a little JavaScript, with no build step. Commit to `main` and GitHub Pages republishes `docs/` within a minute or two (Settings → Pages → Deploy from a branch → `main`, folder `/docs`; `docs/.nojekyll` is already there).
 
-## Data, privacy, and licensing
+- **Pages:** edit the files in `docs/` directly. The page order, sidebar, prev/next links, step numbers, and part tags (Loop, Gate) come from the `PAGES` list in `docs/assets/js/site.js`, and the footer is defined there too. Math uses KaTeX (`\( … \)` and `\[ … \]`); code blocks are `<pre><code class="language-python">`.
+- **Demos:** the interactive demos live in `docs/assets/js/demos.js`. Each one looks for its own element id (for example `id="demo-snr"`) and does nothing on pages without it.
+- **Cache version:** pages load `style.css`, `site.js`, and `demos.js` with a `?v=` query. After changing any of those files, bump the version on every page so browsers fetch the new copy:
 
-- **Never commit data, recordings, or weights.** `.gitignore` excludes common audio, video, point-cloud, and checkpoint formats. UrbanSound8K is CC BY-NC 3.0, and the lab's own recordings contain people. Get consent from everyone in a recorded space and check with the faculty advisor whether IRB review applies.
-- **Our content.** Code in this repository is under the **MIT License**. Written content on the site (explanations, diagrams, questions) is under **Creative Commons Attribution 4.0 International (CC BY 4.0)**. See [`LICENSE`](LICENSE).
-- **Third-party software and weights** keep their own licenses. Note in particular that Ultralytics YOLOv8 is **AGPL-3.0**: fine for research use, but code that bundles it must follow that license.
+  ```bash
+  sed -i '' 's/?v=20261029"/?v=YYYYMMDD"/g' docs/*.html docs/concepts/*.html
+  ```
 
-## Credits
+- **Code on the concept pages:** every Python snippet was run before publishing, except those needing Open3D, Ultralytics, or real hardware, which follow those libraries' documented APIs. If you change a snippet, run it.
+- **Shared code:** the log-mel front end, SNR mixer, and GCC-PHAT should live in one place in the project folders and be imported, not copied between notebooks.
+- **Never commit** data, recordings, or model weights. `.gitignore` excludes common audio, video, point-cloud, and checkpoint formats. UrbanSound8K is CC BY-NC 3.0, and the project's recordings contain people: get consent from everyone in a recorded space and check with the faculty advisor whether IRB review applies.
 
-Built for UCSD DataWorks by Rami Abukhater. Papers, datasets, and tools the site builds on are credited where they are used and on the [Resources](docs/resources.html) page.
+## Acknowledgments
+
+The project builds on Listen Learner (Wu, Harrison, Bigham, and Laput, 2020), VAX (Patidar, Goel, and Agarwal, 2023), and reflection-aware sound source localization (An, Son, Manocha, and Yoon, 2017), among the other papers credited on the [Project ideas](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/project-ideas.html) and [Resources](https://ramiabukhater.github.io/Audio-Perception-Lab-DW/resources.html) pages. Explanations, diagrams, and demos on the site are our own. Third-party software and weights keep their own licenses; note that Ultralytics YOLO models, including YOLO-World, are **AGPL-3.0**.
+
+Our code is MIT-licensed and our written content is CC BY 4.0; see [`LICENSE`](LICENSE).
+
+```bibtex
+@inproceedings{wu2020listenlearner,
+  title     = {Automated Class Discovery and One-Shot Interactions for Acoustic Activity Recognition},
+  author    = {Jason Wu and Chris Harrison and Jeffrey P. Bigham and Gierad Laput},
+  booktitle = {Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems},
+  year      = {2020},
+  doi       = {10.1145/3313831.3376875}
+}
+
+@article{patidar2023vax,
+  title   = {VAX: Using Existing Video and Audio-based Activity Recognition Models to Bootstrap Privacy-Sensitive Sensors},
+  author  = {Prasoon Patidar and Mayank Goel and Yuvraj Agarwal},
+  journal = {Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies},
+  volume  = {7},
+  number  = {3},
+  articleno = {117},
+  pages   = {1--24},
+  year    = {2023},
+  doi     = {10.1145/3610907}
+}
+```
+
+## Contacts
+
+* Rami Abukhater: [@RamiAbukhater](https://github.com/RamiAbukhater)

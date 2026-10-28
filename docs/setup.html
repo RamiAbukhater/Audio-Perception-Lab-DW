@@ -67,8 +67,8 @@
         </section>
         <section class="step">
           <h2>Clone the repository</h2>
-<pre><code class="language-bash">git clone https://github.com/&lt;org&gt;/dataworks-audio-perception-lab.git
-cd dataworks-audio-perception-lab
+<pre><code class="language-bash">git clone https://github.com/RamiAbukhater/Audio-Perception-Lab-DW.git
+cd Audio-Perception-Lab-DW
 </code></pre>
           <p>Replace <code>&lt;org&gt;</code> with the GitHub organisation or user that hosts the lab repository.</p>
         </section>
@@ -111,8 +111,8 @@ All checks passed.</code></pre>
       <ol>
         <li>Open a new notebook on <a href="https://colab.research.google.com/">Colab</a> (Runtime → Change runtime type → GPU) or <a href="https://www.kaggle.com/code">Kaggle</a> (Settings → Accelerator → GPU; Kaggle requires phone verification for GPUs and internet access).</li>
         <li>Clone and install in the first cell. PyTorch and torchaudio are preinstalled, so install only what is missing:
-<pre><code class="language-bash">!git clone https://github.com/&lt;org&gt;/dataworks-audio-perception-lab.git
-%cd dataworks-audio-perception-lab
+<pre><code class="language-bash">!git clone https://github.com/RamiAbukhater/Audio-Perception-Lab-DW.git
+%cd Audio-Perception-Lab-DW
 !pip install -q pyroomacoustics soundfile
 </code></pre></li>
         <li>Check the GPU: <code>import torch; torch.cuda.is_available()</code> should be <code>True</code>.</li>
