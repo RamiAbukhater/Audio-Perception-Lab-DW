@@ -27,7 +27,7 @@
     { id: "c11", href: "concepts/11-3d-geometry.html", title: "RGB-D, point clouds, and room geometry", short: "3D geometry and point clouds", group: "Module concepts", step: true, track: "m3" },
     { id: "c12", href: "concepts/12-room-acoustics-occlusion.html", title: "Room acoustics, mirror sources, and occlusion", short: "Room acoustics and occlusion", group: "Module concepts", step: true, track: "m3" },
     { id: "ideas", href: "project-ideas.html", title: "Project ideas", group: "Projects", icon: "&#9670;" },
-    { id: "faculty", href: "faculty.html", title: "UCSD faculty to contact", short: "Faculty to contact", group: "Projects", icon: "&#9993;" },
+    { id: "faculty", href: "faculty.html", title: "UCSD faculty to contact", short: "Faculty to contact", group: "People", icon: "&#9993;" },
     { id: "resources", href: "resources.html", title: "Resources and glossary", short: "Resources and glossary", group: "Reference", icon: "&#9733;" }
   ];
 
