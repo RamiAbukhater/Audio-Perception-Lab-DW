@@ -45,28 +45,11 @@
       </div>
 
       <nav class="page-toc" aria-label="On this page"><strong>On this page</strong><ol>
-        <li><a href="#overview">Repository overview</a></li>
         <li><a href="#module-1">Module 1: Edge audio classification</a></li>
         <li><a href="#module-2">Module 2: Self-supervised learning via vision</a></li>
         <li><a href="#module-3">Module 3: AV-SSL with spatial physics</a></li>
         <li><a href="#compare">Comparing the modules</a></li>
         <li><a href="#how">How to pick and propose</a></li></ol></nav>
-
-      <h2 id="overview">Repository overview</h2>
-      <p>This repository houses experimental research frameworks targeting audio processing for perception, focusing on edge deployment constraints, self-supervised cross-modal bootstrapping, and physically grounded audio-visual sound source localization. Code for each module lives in the folders named in its outline; the site you are reading lives in <code>docs/</code>.</p>
-<pre class="code"><code>data/                   Module 1: dataset processing and augmentation
-models/edge_audio/      Module 1: compact log-mel feature extractors and classifiers
-optim/                  Module 1: int8 post-training quantization and pruning
-eval/                   Module 1: latency, memory, and accuracy-vs-SNR benchmarks
-core/sync/              Module 2: time-aligned audio and RGB capture
-models/vision/          Module 2: frozen object detector wrapper
-pipeline/bootstrap/     Module 2: embedding clusters, gating, pseudo-labels
-training/               Module 2: iterative student fine-tuning
-dsp/doa/                Module 3: GCC-PHAT direction of arrival
-spatial/mapping/        Module 3: RGB-D point clouds and room layout
-core/physics_fusion/    Module 3: line of sight, occlusion, reflections
-eval/ssl/               Module 3: localization benchmarks
-docs/                   this website</code></pre>
 
       <div class="ideas">
 
